@@ -1,0 +1,32 @@
+# Virtual environment — never commit this
+venv/
+.venv/
+env/
+
+# Environment variables — contains secrets
+.env
+
+# Database — recreated on startup, but may contain user data
+data/
+*.sqlite
+*.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log

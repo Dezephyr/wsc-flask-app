@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Identity verification — Wall Street Capital</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<canvas id="scene-canvas"></canvas>
+<div class="page">
+  <header class="nav">
+    <a class="nav-mark" href="/">Wall Street <em>Capital</em></a>
+    <div class="nav-links"><a href="/dashboard.html">Skip to dashboard</a></div>
+  </header>
+
+  <div class="wrap" style="max-width:720px; padding-top:70px; padding-bottom:60px;">
+    <div class="card">
+      <h1 style="font-size:26px;">Verify your identity</h1>
+      <p style="margin-bottom:26px;">This information is submitted to our brokerage partner for identity verification (KYC/CIP) and account approval — it is not stored or reviewed by app admins beyond a status flag.</p>
+
+      <div class="error-box" id="error"></div>
+      <div class="success-box" id="success"></div>
+
+      <form id="kyc-form">
+        <div class="field-row">
+          <div class="field"><label for="given_name">Legal first name</label><input id="given_name" required></div>
+          <div class="field"><label for="family_name">Legal last name</label><input id="family_name" required></div>
+        </div>
+        <div class="field"><label for="date_of_birth">Date of birth</label><input id="date_of_birth" type="date" required></div>
+        <div class="field"><label for="address_line1">Street address</label><input id="address_line1" required></div>
+        <div class="field"><label for="address_line2">Apt / suite (optional)</label><input id="address_line2"></div>
+        <div class="field-row">
+          <div class="field"><label for="city">City</label><input id="city" required></div>
+          <div class="field"><label for="state_region">State / region</label><input id="state_region" required></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label for="postal_code">Postal code</label><input id="postal_code" required></div>
+          <div class="field">
+            <label for="country">Country</label>
+            <select id="country" required>
+              <option value="USA">United States</option>
+              <option value="CAN">Canada</option>
+              <option value="GBR">United Kingdom</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="employment_status">Employment status</label>
+          <select id="employment_status">
+            <option value="employed">Employed</option>
+            <option value="self_employed">Self-employed</option>
+            <option value="retired">Retired</option>
+            <option value="student">Student</option>
+            <option value="unemployed">Not currently employed</option>
+          </select>
+        </div>
+        <p class="muted" style="margin:10px 0 18px;">A tax ID (SSN) field would go here for a real deployment — collect it directly over TLS to your Broker API integration, never log it, and never store it in your own database in plaintext.</p>
+        <button class="btn btn-solid btn-block" type="submit">Submit for review</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="/js/three-bg.js"></script>
+<script src="/js/api.js"></script>
+<script>
+requireAuth();
+document.getElementById("kyc-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const errorBox = document.getElementById("error");
+  const successBox = document.getElementById("success");
+  errorBox.style.display = "none";
+  successBox.style.display = "none";
+  try {
+    const data = await Api.request("/kyc", {
+      method: "POST",
+      body: JSON.stringify({
+        given_name: document.getElementById("given_name").value,
+        family_name: document.getElementById("family_name").value,
+        date_of_birth: document.getElementById("date_of_birth").value,
+        address_line1: document.getElementById("address_line1").value,
+        address_line2: document.getElementById("address_line2").value,
+        city: document.getElementById("city").value,
+        state_region: document.getElementById("state_region").value,
+        postal_code: document.getElementById("postal_code").value,
+        country: document.getElementById("country").value,
+        employment_status: document.getElementById("employment_status").value,
+      }),
+    });
+    successBox.textContent = "Submitted. Status: " + data.status + ". You can check progress on your dashboard.";
+    successBox.style.display = "block";
+  } catch (err) {
+    errorBox.textContent = err.message;
+    errorBox.style.display = "block";
+  }
+});
+</script>
+</body>
+</html>

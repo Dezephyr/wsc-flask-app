@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Wall Street Capital</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div class="page">
+  <header class="nav">
+    <a class="nav-mark" href="/">Wall Street <em>Capital</em></a>
+    <div class="nav-links">
+      <span class="muted" id="who"></span>
+      <a href="#" id="logout">Log out</a>
+    </div>
+  </header>
+
+  <div class="wrap" style="padding-top:40px; padding-bottom:60px;">
+
+    <div class="card" style="margin-bottom:24px;">
+      <h2 style="font-size:19px;">Account status</h2>
+      <div id="kyc-status" class="muted">Loading…</div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:24px;">
+      <div class="card">
+        <h2 style="font-size:19px;">Portfolio</h2>
+        <p class="muted" style="margin-bottom:14px;">Pulled live from your brokerage account. Bar height and color reflect real position size and P/L — nothing here is simulated.</p>
+        <div id="portfolio-canvas"></div>
+        <div id="portfolio-table" style="margin-top:18px;"></div>
+      </div>
+
+      <div class="card">
+        <h2 style="font-size:19px;">Bank &amp; transfers</h2>
+        <div id="bank-status" class="muted" style="margin-bottom:14px;">Loading…</div>
+        <button class="btn" id="link-bank-btn" style="margin-bottom:20px;">Link a bank account</button>
+
+        <form id="transfer-form">
+          <div class="field-row">
+            <div class="field">
+              <label for="direction">Type</label>
+              <select id="direction">
+                <option value="deposit">Deposit</option>
+                <option value="withdrawal">Withdrawal</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="amount">Amount (USD)</label>
+              <input id="amount" type="number" min="1" step="0.01" required>
+            </div>
+          </div>
+          <button class="btn btn-solid btn-block" type="submit">Request transfer</button>
+        </form>
+        <div class="error-box" id="transfer-error"></div>
+        <div class="success-box" id="transfer-success"></div>
+
+        <h3 style="font-size:15px; margin-top:24px;">Recent transfers</h3>
+        <table id="transfers-table"><thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Status</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:19px;">Support</h2>
+      <form id="ticket-form">
+        <div class="field"><label for="subject">Subject</label><input id="subject" required></div>
+        <div class="field"><label for="message">Message</label><textarea id="message" rows="3" required></textarea></div>
+        <button class="btn" type="submit">Send to support</button>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="/js/portfolio-3d.js"></script>
+<script src="/js/api.js"></script>
+<script>
+requireAuth();
+document.getElementById("who").textContent = (Api.user() || {}).email || "";
+document.getElementById("logout").addEventListener("click", (e) => {
+  e.preventDefault(); Api.clearToken(); localStorage.removeItem("wsc_user"); window.location.href = "/login.html";
+});
+
+async function loadKyc() {
+  try {
+    const kyc = await Api.request("/kyc");
+    const box = document.getElementById("kyc-status");
+    if (!kyc) {
+      box.innerHTML = 'No identity verification on file yet. <a href="/kyc.html">Start verification</a>.';
+    } else {
+      const badgeClass = kyc.status === "approved" ? "ok" : kyc.status === "rejected" ? "bad" : "warn";
+      box.innerHTML = `Status: <span class="badge ${badgeClass}">${kyc.status}</span>` +
+        (kyc.alpaca_account_status ? ` &middot; Brokerage status: ${kyc.alpaca_account_status}` : "");
+    }
+  } catch (err) {
+    document.getElementById("kyc-status").textContent = "Could not load status: " + err.message;
+  }
+}
+
+async function loadPortfolio() {
+  try {
+    const data = await Api.request("/portfolio");
+    if (data.status === "no_account") {
+      document.getElementById("portfolio-table").innerHTML =
+        '<p class="muted">Complete identity verification to open a brokerage account.</p>';
+      renderPortfolio3D("portfolio-canvas", []);
+      return;
+    }
+    renderPortfolio3D("portfolio-canvas", data.positions || []);
+    const rows = (data.positions || []).map(p =>
+      `<tr><td>${p.symbol}</td><td>${p.qty}</td><td>$${parseFloat(p.market_value).toFixed(2)}</td>
+       <td>${parseFloat(p.unrealized_pl) >= 0 ? "+" : ""}$${parseFloat(p.unrealized_pl).toFixed(2)}</td></tr>`
+    ).join("");
+    document.getElementById("portfolio-table").innerHTML =
+      `<table><thead><tr><th>Symbol</th><th>Qty</th><th>Value</th><th>Unrealized P/L</th></tr></thead>
+       <tbody>${rows || '<tr><td colspan="4" class="muted">No open positions</td></tr>'}</tbody></table>`;
+  } catch (err) {
+    document.getElementById("portfolio-table").innerHTML =
+      `<p class="muted">Could not load portfolio: ${err.message} (expected until Broker API credentials are configured)</p>`;
+    renderPortfolio3D("portfolio-canvas", []);
+  }
+}
+
+async function loadBankAndTransfers() {
+  try {
+    const links = await Api.request("/banking/links");
+    document.getElementById("bank-status").textContent = links.length
+      ? `${links.length} bank account(s) linked.`
+      : "No bank account linked yet.";
+  } catch (err) {
+    document.getElementById("bank-status").textContent = "Could not load bank links.";
+  }
+  try {
+    const transfers = await Api.request("/banking/transfers");
+    const tbody = document.querySelector("#transfers-table tbody");
+    tbody.innerHTML = transfers.map(t =>
+      `<tr><td>${new Date(t.requested_at).toLocaleDateString()}</td><td>${t.direction}</td><td>$${t.amount_usd}</td><td><span class="badge">${t.status}</span></td></tr>`
+    ).join("") || '<tr><td colspan="4" class="muted">No transfers yet</td></tr>';
+  } catch (err) { /* ignore */ }
+}
+
+document.getElementById("link-bank-btn").addEventListener("click", async () => {
+  // Real flow: fetch a Plaid link_token from /api/banking/plaid/link-token,
+  // open Plaid Link with it (their hosted widget, loaded via Plaid's own
+  // <script> include), then POST the resulting public_token to
+  // /api/banking/plaid/exchange. Wire up the actual Plaid Link SDK here.
+  alert("Wire up Plaid Link here using the token from POST /api/banking/plaid/link-token.");
+});
+
+document.getElementById("transfer-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const errorBox = document.getElementById("transfer-error");
+  const successBox = document.getElementById("transfer-success");
+  errorBox.style.display = "none"; successBox.style.display = "none";
+  try {
+    await Api.request("/banking/transfer", {
+      method: "POST",
+      body: JSON.stringify({
+        direction: document.getElementById("direction").value,
+        amount_usd: document.getElementById("amount").value,
+        bank_link_id: (await Api.request("/banking/links"))[0]?.id,
+      }),
+    });
+    successBox.textContent = "Transfer requested.";
+    successBox.style.display = "block";
+    loadBankAndTransfers();
+  } catch (err) {
+    errorBox.textContent = err.message;
+    errorBox.style.display = "block";
+  }
+});
+
+document.getElementById("ticket-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  try {
+    await Api.request("/support-tickets", {
+      method: "POST",
+      body: JSON.stringify({
+        subject: document.getElementById("subject").value,
+        message: document.getElementById("message").value,
+      }),
+    });
+    e.target.reset();
+    alert("Sent to support.");
+  } catch (err) { alert(err.message); }
+});
+
+loadKyc();
+loadPortfolio();
+loadBankAndTransfers();
+</script>
+</body>
+</html>

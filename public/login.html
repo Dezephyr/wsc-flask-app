@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log in — Wall Street Capital</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="auth-shell">
+  <div class="brand-badge">
+    <div class="v">WSC</div>
+    <div class="label">Wall Street Capital</div>
+  </div>
+
+  <div class="auth-card">
+
+    <!-- LOGIN PANEL -->
+    <div class="auth-panel active" id="panel-login">
+      <h1>Welcome back</h1>
+      <p class="sub">Enter your credentials to access your account.</p>
+
+      <div class="error-box" id="login-error"></div>
+
+      <form id="login-form">
+        <div class="field">
+          <label for="login-email">Email address</label>
+          <div class="input-icon">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2"/>
+              <path d="m22 6-10 7L2 6"/>
+            </svg>
+            <input id="login-email" type="email" placeholder="name@example.com" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="login-password">Password</label>
+          <div class="input-icon">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <input id="login-password" type="password" placeholder="••••••••" required>
+          </div>
+        </div>
+
+        <div class="form-row-between">
+          <label class="check">
+            <input type="checkbox">
+            <span class="box"></span>
+            Remember me
+          </label>
+          <a href="/forgot.html">Forgot password?</a>
+        </div>
+
+        <button class="btn btn-solid btn-block" type="submit">Sign in &rarr;</button>
+      </form>
+
+      <div class="divider">or continue with</div>
+
+      <div class="sso-row">
+        <button class="sso-btn" type="button" onclick="ssoStub('Google')">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5.04c1.7 0 3.23.59 4.43 1.74l3.29-3.29C17.71 1.68 15.06.5 12 .5 7.31.5 3.25 3.16 1.24 7.05l3.85 2.99C6.05 7.15 8.78 5.04 12 5.04z"/><path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.47c-.29 1.48-1.12 2.73-2.37 3.58l3.71 2.88c2.17-2 3.68-4.96 3.68-8.7z"/><path fill="#FBBC05" d="M5.09 14.04a7.22 7.22 0 0 1 0-4.09L1.24 7.05a11.99 11.99 0 0 0 0 10.9l3.85-3.91z"/><path fill="#34A853" d="M12 23.5c3.06 0 5.63-1.01 7.5-2.75l-3.71-2.88c-1.03.69-2.35 1.1-3.79 1.1-3.22 0-5.95-2.11-6.91-5.04l-3.85 2.99C3.25 20.84 7.31 23.5 12 23.5z"/></svg>
+          Google
+        </button>
+        <button class="sso-btn" type="button" onclick="ssoStub('Apple')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 12.04c-.03-2.85 2.33-4.22 2.44-4.29-1.33-1.95-3.4-2.22-4.14-2.25-1.76-.18-3.43 1.04-4.33 1.04-.9 0-2.28-1.02-3.75-1-1.93.03-3.71 1.12-4.7 2.85-2 3.47-.51 8.61 1.44 11.43.95 1.38 2.09 2.93 3.59 2.88 1.44-.06 1.99-.93 3.73-.93 1.74 0 2.23.93 3.76.9 1.55-.03 2.53-1.4 3.48-2.78 1.1-1.6 1.55-3.15 1.57-3.23-.03-.02-3.01-1.16-3.04-4.62zM14.4 3.79c.79-.96 1.32-2.29 1.18-3.62-1.14.05-2.51.76-3.33 1.71-.73.84-1.37 2.19-1.2 3.49 1.27.1 2.57-.64 3.35-1.58z"/></svg>
+          Apple
+        </button>
+      </div>
+
+      <div class="auth-footer">
+        Don't have an account? <a href="/signup.html" id="to-signup">Sign up</a>
+      </div>
+    </div>
+
+    <!-- SIGNUP PANEL (hidden by default; shown by toggle) -->
+    <div class="auth-panel" id="panel-signup">
+      <h1>Create account</h1>
+      <p class="sub">Join us today to access the platform and services.</p>
+
+      <div class="error-box" id="signup-error"></div>
+
+      <form id="signup-form">
+        <div class="field">
+          <label for="signup-name">Full name</label>
+          <div class="input-icon">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            <input id="signup-name" placeholder="Bruce Wayne" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="signup-email">Email address</label>
+          <div class="input-icon">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2"/>
+              <path d="m22 6-10 7L2 6"/>
+            </svg>
+            <input id="signup-email" type="email" placeholder="name@example.com" required>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="signup-password">Password</label>
+            <div class="input-icon">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <input id="signup-password" type="password" placeholder="••••••••" minlength="10" required>
+            </div>
+          </div>
+          <div class="field">
+            <label for="signup-confirm">Confirm password</label>
+            <div class="input-icon">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <input id="signup-confirm" type="password" placeholder="••••••••" minlength="10" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row-between">
+          <label class="check">
+            <input type="checkbox" id="agree" required>
+            <span class="box"></span>
+            I agree to the <a href="/terms.html">Terms</a> &amp; <a href="/privacy.html">Privacy Policy</a>
+          </label>
+        </div>
+
+        <button class="btn btn-solid btn-block" type="submit">Create account &rarr;</button>
+      </form>
+
+      <div class="divider">or continue with</div>
+
+      <div class="sso-row">
+        <button class="sso-btn" type="button" onclick="ssoStub('Google')">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5.04c1.7 0 3.23.59 4.43 1.74l3.29-3.29C17.71 1.68 15.06.5 12 .5 7.31.5 3.25 3.16 1.24 7.05l3.85 2.99C6.05 7.15 8.78 5.04 12 5.04z"/><path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.47c-.29 1.48-1.12 2.73-2.37 3.58l3.71 2.88c2.17-2 3.68-4.96 3.68-8.7z"/><path fill="#FBBC05" d="M5.09 14.04a7.22 7.22 0 0 1 0-4.09L1.24 7.05a11.99 11.99 0 0 0 0 10.9l3.85-3.91z"/><path fill="#34A853" d="M12 23.5c3.06 0 5.63-1.01 7.5-2.75l-3.71-2.88c-1.03.69-2.35 1.1-3.79 1.1-3.22 0-5.95-2.11-6.91-5.04l-3.85 2.99C3.25 20.84 7.31 23.5 12 23.5z"/></svg>
+          Google
+        </button>
+        <button class="sso-btn" type="button" onclick="ssoStub('Apple')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 12.04c-.03-2.85 2.33-4.22 2.44-4.29-1.33-1.95-3.4-2.22-4.14-2.25-1.76-.18-3.43 1.04-4.33 1.04-.9 0-2.28-1.02-3.75-1-1.93.03-3.71 1.12-4.7 2.85-2 3.47-.51 8.61 1.44 11.43.95 1.38 2.09 2.93 3.59 2.88 1.44-.06 1.99-.93 3.73-.93 1.74 0 2.23.93 3.76.9 1.55-.03 2.53-1.4 3.48-2.78 1.1-1.6 1.55-3.15 1.57-3.23-.03-.02-3.01-1.16-3.04-4.62zM14.4 3.79c.79-.96 1.32-2.29 1.18-3.62-1.14.05-2.51.76-3.33 1.71-.73.84-1.37 2.19-1.2 3.49 1.27.1 2.57-.64 3.35-1.58z"/></svg>
+          Apple
+        </button>
+      </div>
+
+      <div class="auth-footer">
+        Already have an account? <a href="/login.html" id="to-login">Sign in</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="/js/theme.js"></script>
+<script src="/js/api.js"></script>
+<script>
+  // ---- Panel switching without page reload ----
+  function showPanel(name, push) {
+    var login = document.getElementById("panel-login");
+    var signup = document.getElementById("panel-signup");
+    if (name === "signup") {
+      login.classList.remove("active");
+      signup.classList.add("active");
+      if (push) history.pushState({ panel: "signup" }, "", "/signup.html");
+    } else {
+      signup.classList.remove("active");
+      login.classList.add("active");
+      if (push) history.pushState({ panel: "login" }, "", "/login.html");
+    }
+  }
+
+  document.getElementById("to-signup").addEventListener("click", function (e) {
+    e.preventDefault();
+    showPanel("signup", true);
+  });
+  document.getElementById("to-login").addEventListener("click", function (e) {
+    e.preventDefault();
+    showPanel("login", true);
+  });
+
+  window.addEventListener("popstate", function () {
+    var path = window.location.pathname;
+    showPanel(path.indexOf("signup") !== -1 ? "signup" : "login", false);
+  });
+
+  // If the user landed on /signup.html directly, start with the signup panel
+  if (window.location.pathname.indexOf("signup") !== -1) {
+    showPanel("signup", false);
+  }
+
+  // ---- SSO stub ----
+  function ssoStub(provider) {
+    alert(provider + " sign-in is not configured yet. Backend OAuth integration required.");
+  }
+
+  // ---- Form handlers ----
+  document.getElementById("login-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var errorBox = document.getElementById("login-error");
+    errorBox.style.display = "none";
+    try {
+      var data = await Api.request("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({
+          email: document.getElementById("login-email").value,
+          password: document.getElementById("login-password").value,
+        }),
+      });
+      Api.setToken(data.token);
+      Api.setUser(data.user);
+      window.location.href =
+        data.user.role === "admin" || data.user.role === "support"
+          ? "/admin/index.html"
+          : "/dashboard.html";
+    } catch (err) {
+      errorBox.textContent = err.message;
+      errorBox.style.display = "block";
+    }
+  });
+
+  document.getElementById("signup-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var errorBox = document.getElementById("signup-error");
+    errorBox.style.display = "none";
+
+    var pw = document.getElementById("signup-password").value;
+    var confirm = document.getElementById("signup-confirm").value;
+    if (pw !== confirm) {
+      errorBox.textContent = "Passwords do not match.";
+      errorBox.style.display = "block";
+      return;
+    }
+
+    try {
+      var data = await Api.request("/auth/signup", {
+        method: "POST",
+        body: JSON.stringify({
+          full_name: document.getElementById("signup-name").value,
+          email: document.getElementById("signup-email").value,
+          password: pw,
+        }),
+      });
+      Api.setToken(data.token);
+      Api.setUser(data.user);
+      window.location.href = "/kyc.html";
+    } catch (err) {
+      errorBox.textContent = err.message;
+      errorBox.style.display = "block";
+    }
+  });
+</script>
+</body>
+</html>

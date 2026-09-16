@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Wall Street Capital</title>
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div class="page">
+  <header class="nav">
+    <a class="nav-mark" href="/">Wall Street <em>Capital</em> <span class="muted" style="font-size:13px;">/ admin</span></a>
+    <div class="nav-links">
+      <span class="muted" id="who"></span>
+      <a href="#" id="logout">Log out</a>
+    </div>
+  </header>
+
+  <div class="wrap" style="padding-top:36px; padding-bottom:60px;">
+    <div class="tabs">
+      <div class="tab active" data-tab="kyc">KYC queue</div>
+      <div class="tab" data-tab="content">Content</div>
+      <div class="tab" data-tab="compliance">Compliance docs</div>
+      <div class="tab" data-tab="tickets">Support tickets</div>
+      <div class="tab" data-tab="users">Users</div>
+    </div>
+
+    <div id="panel-kyc" class="card">
+      <p class="muted" style="margin-bottom:16px;">This mirrors Alpaca's decision — it does not make one. Use "sync" after checking the Broker dashboard or an Events webhook.</p>
+      <table><thead><tr><th>User</th><th>Legal name</th><th>Local status</th><th>Brokerage status</th><th>Actions</th></tr></thead><tbody id="kyc-rows"></tbody></table>
+    </div>
+
+    <div id="panel-content" class="card" style="display:none;">
+      <div class="field"><label for="c-slug">Page slug (e.g. "privacy-policy")</label><input id="c-slug"></div>
+      <div class="field"><label for="c-title">Title</label><input id="c-title"></div>
+      <div class="field"><label for="c-body">Body (Markdown)</label><textarea id="c-body" rows="8"></textarea></div>
+      <button class="btn btn-solid" id="save-content">Save page</button>
+      <h3 style="margin-top:28px; font-size:15px;">Existing pages</h3>
+      <table><thead><tr><th>Slug</th><th>Title</th><th>Updated</th></tr></thead><tbody id="content-rows"></tbody></table>
+    </div>
+
+    <div id="panel-compliance" class="card" style="display:none;">
+      <p class="muted" style="margin-bottom:16px;">Stores document metadata. Point file_path at your real object storage (e.g. S3 with server-side encryption) — this scaffold does not handle uploads directly.</p>
+      <div class="field-row">
+        <div class="field"><label for="d-title">Title</label><input id="d-title"></div>
+        <div class="field"><label for="d-category">Category</label><input id="d-category" placeholder="e.g. Form ADV, Privacy Notice"></div>
+      </div>
+      <div class="field"><label for="d-path">File path / URL</label><input id="d-path" placeholder="s3://.../form-adv.pdf"></div>
+      <button class="btn btn-solid" id="save-doc">Add document</button>
+      <table style="margin-top:20px;"><thead><tr><th>Title</th><th>Category</th><th>Uploaded</th></tr></thead><tbody id="doc-rows"></tbody></table>
+    </div>
+
+    <div id="panel-tickets" class="card" style="display:none;">
+      <table><thead><tr><th>User</th><th>Subject</th><th>Status</th><th>Updated</th><th>Actions</th></tr></thead><tbody id="ticket-rows"></tbody></table>
+    </div>
+
+    <div id="panel-users" class="card" style="display:none;">
+      <table><thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Joined</th></tr></thead><tbody id="user-rows"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+requireAuth();
+const u = Api.user();
+if (!u || (u.role !== "admin" && u.role !== "support")) window.location.href = "/login.html";
+document.getElementById("who").textContent = u.email;
+document.getElementById("logout").addEventListener("click", (e) => {
+  e.preventDefault(); Api.clearToken(); localStorage.removeItem("wsc_user"); window.location.href = "/login.html";
+});
+
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll("[id^='panel-']").forEach(p => p.style.display = "none");
+    tab.classList.add("active");
+    document.getElementById("panel-" + tab.dataset.tab).style.display = "block";
+  });
+});
+
+async function loadKyc() {
+  const rows = await Api.request("/admin/kyc-queue");
+  document.getElementById("kyc-rows").innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.email}</td>
+      <td>${r.legal_name}</td>
+      <td><span class="badge ${r.status === "approved" ? "ok" : r.status === "rejected" ? "bad" : "warn"}">${r.status}</span></td>
+      <td>${r.alpaca_account_status || "—"}</td>
+      <td>
+        <button class="btn" data-sync-approve="${r.id}">Mark approved</button>
+        <button class="btn" data-sync-reject="${r.id}">Mark rejected</button>
+      </td>
+    </tr>`).join("") || '<tr><td colspan="5" class="muted">No submissions</td></tr>';
+
+  document.querySelectorAll("[data-sync-approve]").forEach(b => b.addEventListener("click", () =>
+    syncKyc(b.dataset.syncApprove, "approved")));
+  document.querySelectorAll("[data-sync-reject]").forEach(b => b.addEventListener("click", () =>
+    syncKyc(b.dataset.syncReject, "rejected")));
+}
+
+async function syncKyc(id, status) {
+  await Api.request(`/admin/kyc-queue/${id}/sync-status`, { method: "PATCH", body: JSON.stringify({ status }) });
+  loadKyc();
+}
+
+async function loadContent() {
+  const rows = await Api.request("/admin/content");
+  document.getElementById("content-rows").innerHTML = rows.map(r =>
+    `<tr><td>${r.slug}</td><td>${r.title}</td><td>${new Date(r.updated_at).toLocaleString()}</td></tr>`
+  ).join("") || '<tr><td colspan="3" class="muted">No pages yet</td></tr>';
+}
+
+document.getElementById("save-content").addEventListener("click", async () => {
+  const slug = document.getElementById("c-slug").value.trim();
+  if (!slug) return alert("Slug is required");
+  await Api.request(`/admin/content/${encodeURIComponent(slug)}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      title: document.getElementById("c-title").value,
+      body_markdown: document.getElementById("c-body").value,
+    }),
+  });
+  loadContent();
+});
+
+async function loadDocs() {
+  const rows = await Api.request("/admin/compliance-docs");
+  document.getElementById("doc-rows").innerHTML = rows.map(r =>
+    `<tr><td>${r.title}</td><td>${r.category}</td><td>${new Date(r.uploaded_at).toLocaleString()}</td></tr>`
+  ).join("") || '<tr><td colspan="3" class="muted">No documents yet</td></tr>';
+}
+
+document.getElementById("save-doc").addEventListener("click", async () => {
+  await Api.request("/admin/compliance-docs", {
+    method: "POST",
+    body: JSON.stringify({
+      title: document.getElementById("d-title").value,
+      category: document.getElementById("d-category").value,
+      file_path: document.getElementById("d-path").value,
+    }),
+  });
+  loadDocs();
+});
+
+async function loadTickets() {
+  const rows = await Api.request("/admin/support-tickets");
+  document.getElementById("ticket-rows").innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.email}</td><td>${r.subject}</td>
+      <td><span class="badge ${r.status === "closed" ? "ok" : "warn"}">${r.status}</span></td>
+      <td>${new Date(r.updated_at).toLocaleString()}</td>
+      <td>
+        <button class="btn" data-close="${r.id}">Close</button>
+      </td>
+    </tr>`).join("") || '<tr><td colspan="5" class="muted">No tickets</td></tr>';
+
+  document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", async () => {
+    await Api.request(`/admin/support-tickets/${b.dataset.close}`, { method: "PATCH", body: JSON.stringify({ status: "closed" }) });
+    loadTickets();
+  }));
+}
+
+async function loadUsers() {
+  const rows = await Api.request("/admin/users").catch(() => []);
+  document.getElementById("user-rows").innerHTML = rows.map(r =>
+    `<tr><td>${r.email}</td><td>${r.full_name}</td><td>${r.role}</td><td>${new Date(r.created_at).toLocaleDateString()}</td></tr>`
+  ).join("") || '<tr><td colspan="4" class="muted">Admins only</td></tr>';
+}
+
+loadKyc(); loadContent(); loadDocs(); loadTickets(); loadUsers();
+</script>
+</body>
+</html>
