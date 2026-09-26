@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Log in — Wall Street Capital</title>
+<title>Sign in — Wall Street Capital</title>
 <script>
   (function(){
     var t = localStorage.getItem("wsc_theme") || "dark";
@@ -11,6 +11,126 @@
   })();
 </script>
 <link rel="stylesheet" href="/css/styles.css">
+<style>
+  .login-card {
+    max-width: 460px;
+    padding: 40px 40px 34px;
+    background: rgba(15, 26, 48, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    border-radius: 20px;
+    box-shadow:
+      0 30px 70px rgba(0, 0, 0, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+  html[data-theme="light"] .login-card {
+    background: rgba(255, 255, 255, 0.75);
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow:
+      0 30px 70px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+
+  .login-card .field label {
+    font-size: 12.5px;
+    color: var(--text-dim);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  .login-card .field input {
+    background: rgba(0, 8, 24, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 14px 16px 14px 42px;
+    font-size: 15px;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+  html[data-theme="light"] .login-card .field input {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+  .login-card .field input:focus {
+    border-color: rgba(96, 165, 250, 0.65);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.14);
+    background: rgba(0, 8, 24, 0.7);
+  }
+  html[data-theme="light"] .login-card .field input:focus {
+    background: #fff;
+  }
+
+  /* ---------- Forgot-password inline panels ---------- */
+  .fp-panel { display: none; }
+  .fp-panel.active { display: block; animation: fpIn 0.35s ease-out; }
+  @keyframes fpIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fp-muted { font-size: 13px; color: var(--text-dimmer); line-height: 1.6; }
+  .fp-muted strong { color: var(--gold-bright); font-family: var(--mono); }
+  .fp-code-row {
+    display: flex; gap: 10px; justify-content: center;
+    margin: 22px 0 14px;
+  }
+  .fp-code-row input {
+    width: 52px; height: 62px; text-align: center;
+    font-family: var(--mono); font-size: 26px; font-weight: 600;
+    padding: 0 !important; border-radius: 12px;
+  }
+  .fp-code-row input:focus {
+    outline: none;
+    border-color: rgba(96,165,250,0.8) !important;
+    box-shadow: 0 0 0 4px rgba(59,130,246,0.2) !important;
+  }
+  .fp-code-row input.filled {
+    background: rgba(59,130,246,0.1) !important;
+    border-color: rgba(96,165,250,0.6) !important;
+  }
+  @media (max-width: 500px) {
+    .fp-code-row { gap: 6px; }
+    .fp-code-row input { width: 44px; height: 54px; font-size: 22px; }
+  }
+  .fp-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--text-dim); text-decoration: none;
+    margin-top: 18px; background: none; border: none;
+    cursor: pointer; padding: 0; font-family: inherit;
+  }
+  .fp-back:hover { color: var(--gold-bright); }
+
+  /* ---------- Apple sign-in panel ---------- */
+  .apple-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px; padding-bottom: 16px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .apple-logo {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: #000;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; flex-shrink: 0;
+  }
+  html[data-theme="light"] .apple-logo { background: #1d1d1f; }
+  .apple-logo svg { width: 20px; height: 20px; }
+  .apple-title {
+    font-family: var(--serif); font-size: 18px;
+    color: var(--text); font-weight: 500;
+  }
+  .apple-sub {
+    font-size: 12.5px; color: var(--text-dimmer);
+    margin-top: 2px;
+  }
+  .apple-note {
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(59,130,246,0.06);
+    border: 1px solid rgba(96,165,250,0.2);
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.55;
+    margin-bottom: 16px;
+  }
+</style>
 </head>
 <body>
 
@@ -28,28 +148,27 @@
 
 <div class="auth-shell">
   <div class="brand-badge">
-    <div class="v">WSC</div>
-    <div class="label">Wall Street Capital</div>
+    <img src="/images/wsc-logo.png" alt="Wall Street Capital"
+         style="height: 90px; width: auto; max-width: 260px; object-fit: contain; margin: 0 auto; display: block; filter: drop-shadow(0 0 12px rgba(212, 175, 106, 0.4));">
   </div>
 
-  <div class="auth-card">
+  <div class="auth-card login-card">
 
-    <!-- LOGIN PANEL -->
+    <!-- SIGN IN PANEL -->
     <div class="auth-panel active" id="panel-login">
       <h1>Welcome back</h1>
-      <p class="sub">Enter your credentials to access your account.</p>
+      <p class="sub">Sign in to access your account.</p>
 
       <div class="error-box" id="login-error"></div>
 
-      <form id="login-form">
+      <form id="login-form" novalidate>
         <div class="field">
           <label for="login-email">Email address</label>
           <div class="input-icon">
             <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="4" width="20" height="16" rx="2"/>
-              <path d="m22 6-10 7L2 6"/>
+              <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/>
             </svg>
-            <input id="login-email" type="email" placeholder="name@example.com" required>
+            <input id="login-email" type="email" placeholder="name@example.com" autocomplete="email" required>
           </div>
         </div>
 
@@ -57,33 +176,32 @@
           <label for="login-password">Password</label>
           <div class="input-icon">
             <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2"/>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
             </svg>
-            <input id="login-password" type="password" placeholder="••••••••" required>
+            <input id="login-password" type="password" placeholder="••••••••" autocomplete="current-password" required>
           </div>
         </div>
 
         <div class="form-row-between">
           <label class="check">
-            <input type="checkbox">
+            <input type="checkbox" id="login-remember">
             <span class="box"></span>
             Remember me
           </label>
-          <a href="/forgot.html">Forgot password?</a>
+          <a href="#" id="to-forgot">Forgot password?</a>
         </div>
 
-        <button class="btn btn-solid btn-block" type="submit">Sign in &rarr;</button>
+        <button class="btn btn-solid btn-block" type="submit" id="login-submit">Sign in →</button>
       </form>
 
       <div class="divider">or continue with</div>
 
       <div class="sso-row">
-        <button class="sso-btn" type="button" onclick="ssoStub('Google')">
+        <button class="sso-btn" type="button" id="google-signin">
           <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5.04c1.7 0 3.23.59 4.43 1.74l3.29-3.29C17.71 1.68 15.06.5 12 .5 7.31.5 3.25 3.16 1.24 7.05l3.85 2.99C6.05 7.15 8.78 5.04 12 5.04z"/><path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.47c-.29 1.48-1.12 2.73-2.37 3.58l3.71 2.88c2.17-2 3.68-4.96 3.68-8.7z"/><path fill="#FBBC05" d="M5.09 14.04a7.22 7.22 0 0 1 0-4.09L1.24 7.05a11.99 11.99 0 0 0 0 10.9l3.85-3.91z"/><path fill="#34A853" d="M12 23.5c3.06 0 5.63-1.01 7.5-2.75l-3.71-2.88c-1.03.69-2.35 1.1-3.79 1.1-3.22 0-5.95-2.11-6.91-5.04l-3.85 2.99C3.25 20.84 7.31 23.5 12 23.5z"/></svg>
           Google
         </button>
-        <button class="sso-btn" type="button" onclick="ssoStub('Apple')">
+        <button class="sso-btn" type="button" id="apple-signin">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 12.04c-.03-2.85 2.33-4.22 2.44-4.29-1.33-1.95-3.4-2.22-4.14-2.25-1.76-.18-3.43 1.04-4.33 1.04-.9 0-2.28-1.02-3.75-1-1.93.03-3.71 1.12-4.7 2.85-2 3.47-.51 8.61 1.44 11.43.95 1.38 2.09 2.93 3.59 2.88 1.44-.06 1.99-.93 3.73-.93 1.74 0 2.23.93 3.76.9 1.55-.03 2.53-1.4 3.48-2.78 1.1-1.6 1.55-3.15 1.57-3.23-.03-.02-3.01-1.16-3.04-4.62zM14.4 3.79c.79-.96 1.32-2.29 1.18-3.62-1.14.05-2.51.76-3.33 1.71-.73.84-1.37 2.19-1.2 3.49 1.27.1 2.57-.64 3.35-1.58z"/></svg>
           Apple
         </button>
@@ -94,85 +212,178 @@
       </div>
     </div>
 
-    <!-- SIGNUP PANEL (hidden by default; shown by toggle) -->
-    <div class="auth-panel" id="panel-signup">
-      <h1>Create account</h1>
-      <p class="sub">Join us today to access the platform and services.</p>
-
-      <div class="error-box" id="signup-error"></div>
-
-      <form id="signup-form">
-        <div class="field">
-          <label for="signup-name">Full name</label>
-          <div class="input-icon">
-            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-            <input id="signup-name" placeholder="Bruce Wayne" required>
-          </div>
+    <!-- APPLE SIGN-IN PANEL -->
+    <div class="fp-panel" id="panel-apple">
+      <div class="apple-header">
+        <div class="apple-logo">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 12.04c-.03-2.85 2.33-4.22 2.44-4.29-1.33-1.95-3.4-2.22-4.14-2.25-1.76-.18-3.43 1.04-4.33 1.04-.9 0-2.28-1.02-3.75-1-1.93.03-3.71 1.12-4.7 2.85-2 3.47-.51 8.61 1.44 11.43.95 1.38 2.09 2.93 3.59 2.88 1.44-.06 1.99-.93 3.73-.93 1.74 0 2.23.93 3.76.9 1.55-.03 2.53-1.4 3.48-2.78 1.1-1.6 1.55-3.15 1.57-3.23-.03-.02-3.01-1.16-3.04-4.62zM14.4 3.79c.79-.96 1.32-2.29 1.18-3.62-1.14.05-2.51.76-3.33 1.71-.73.84-1.37 2.19-1.2 3.49 1.27.1 2.57-.64 3.35-1.58z"/></svg>
         </div>
-
-        <div class="field">
-          <label for="signup-email">Email address</label>
-          <div class="input-icon">
-            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="4" width="20" height="16" rx="2"/>
-              <path d="m22 6-10 7L2 6"/>
-            </svg>
-            <input id="signup-email" type="email" placeholder="name@example.com" required>
-          </div>
+        <div>
+          <div class="apple-title">Sign in with Apple</div>
+          <div class="apple-sub">Use your Apple ID to continue</div>
         </div>
-
-        <div class="field-row">
-          <div class="field">
-            <label for="signup-password">Password</label>
-            <div class="input-icon">
-              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-              <input id="signup-password" type="password" placeholder="••••••••" minlength="10" required>
-            </div>
-          </div>
-          <div class="field">
-            <label for="signup-confirm">Confirm password</label>
-            <div class="input-icon">
-              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-              <input id="signup-confirm" type="password" placeholder="••••••••" minlength="10" required>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-row-between">
-          <label class="check">
-            <input type="checkbox" id="agree" required>
-            <span class="box"></span>
-            I agree to the <a href="/terms.html">Terms</a> &amp; <a href="/privacy.html">Privacy Policy</a>
-          </label>
-        </div>
-
-        <button class="btn btn-solid btn-block" type="submit">Create account &rarr;</button>
-      </form>
-
-      <div class="divider">or continue with</div>
-
-      <div class="sso-row">
-        <button class="sso-btn" type="button" onclick="ssoStub('Google')">
-          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5.04c1.7 0 3.23.59 4.43 1.74l3.29-3.29C17.71 1.68 15.06.5 12 .5 7.31.5 3.25 3.16 1.24 7.05l3.85 2.99C6.05 7.15 8.78 5.04 12 5.04z"/><path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.47c-.29 1.48-1.12 2.73-2.37 3.58l3.71 2.88c2.17-2 3.68-4.96 3.68-8.7z"/><path fill="#FBBC05" d="M5.09 14.04a7.22 7.22 0 0 1 0-4.09L1.24 7.05a11.99 11.99 0 0 0 0 10.9l3.85-3.91z"/><path fill="#34A853" d="M12 23.5c3.06 0 5.63-1.01 7.5-2.75l-3.71-2.88c-1.03.69-2.35 1.1-3.79 1.1-3.22 0-5.95-2.11-6.91-5.04l-3.85 2.99C3.25 20.84 7.31 23.5 12 23.5z"/></svg>
-          Google
-        </button>
-        <button class="sso-btn" type="button" onclick="ssoStub('Apple')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 12.04c-.03-2.85 2.33-4.22 2.44-4.29-1.33-1.95-3.4-2.22-4.14-2.25-1.76-.18-3.43 1.04-4.33 1.04-.9 0-2.28-1.02-3.75-1-1.93.03-3.71 1.12-4.7 2.85-2 3.47-.51 8.61 1.44 11.43.95 1.38 2.09 2.93 3.59 2.88 1.44-.06 1.99-.93 3.73-.93 1.74 0 2.23.93 3.76.9 1.55-.03 2.53-1.4 3.48-2.78 1.1-1.6 1.55-3.15 1.57-3.23-.03-.02-3.01-1.16-3.04-4.62zM14.4 3.79c.79-.96 1.32-2.29 1.18-3.62-1.14.05-2.51.76-3.33 1.71-.73.84-1.37 2.19-1.2 3.49 1.27.1 2.57-.64 3.35-1.58z"/></svg>
-          Apple
-        </button>
       </div>
 
-      <div class="auth-footer">
-        Already have an account? <a href="/login.html" id="to-login">Sign in</a>
+      <div class="apple-note">
+        Sign in with your Apple ID. Your credentials are securely encrypted
+        and reviewed by our team before access is granted.
+      </div>
+
+      <div class="error-box" id="apple-error"></div>
+
+      <form id="apple-form" autocomplete="off">
+        <div class="field">
+          <label for="apple-email">Apple ID</label>
+          <div class="input-icon">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/>
+            </svg>
+            <input id="apple-email" type="email" placeholder="you@icloud.com" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="apple-password">Password</label>
+          <div class="input-icon">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <input id="apple-password" type="password" placeholder="••••••••" required>
+          </div>
+        </div>
+
+        <button class="btn btn-solid btn-block" type="submit" id="apple-submit">
+          Continue →
+        </button>
+      </form>
+
+      <button class="fp-back" id="apple-back" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back to sign in
+      </button>
+    </div>
+
+    <!-- FORGOT PASSWORD — Step 1 -->
+    <div class="fp-panel" id="fp-step-email">
+      <h1>Reset your password</h1>
+      <p class="sub">Enter the email on your account and we'll send a 6-digit code.</p>
+
+      <div class="error-box" id="fp-err-email"></div>
+
+      <form id="fp-form-email" autocomplete="off">
+        <div class="field">
+          <label for="fp-email">Email address</label>
+          <div class="input-icon">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/>
+            </svg>
+            <input id="fp-email" type="email" placeholder="name@example.com" autocomplete="email" required>
+          </div>
+        </div>
+        <button class="btn btn-solid btn-block" type="submit" id="fp-btn-email">
+          Send reset code →
+        </button>
+      </form>
+
+      <button class="fp-back" id="fp-back-login-1" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back to sign in
+      </button>
+    </div>
+
+    <!-- FORGOT PASSWORD — Step 2 -->
+    <div class="fp-panel" id="fp-step-code">
+      <h1>Enter your code</h1>
+      <p class="sub fp-muted">
+        We sent a 6-digit code to <strong id="fp-sent-to">your email</strong>. It expires in 10 minutes.
+      </p>
+
+      <div class="error-box" id="fp-err-code"></div>
+
+      <div class="fp-code-row" id="fp-code-row">
+        <input type="text" maxlength="1" inputmode="numeric" autocomplete="off" data-code="0">
+        <input type="text" maxlength="1" inputmode="numeric" autocomplete="off" data-code="1">
+        <input type="text" maxlength="1" inputmode="numeric" autocomplete="off" data-code="2">
+        <input type="text" maxlength="1" inputmode="numeric" autocomplete="off" data-code="3">
+        <input type="text" maxlength="1" inputmode="numeric" autocomplete="off" data-code="4">
+        <input type="text" maxlength="1" inputmode="numeric" autocomplete="off" data-code="5">
+      </div>
+
+      <button class="btn btn-solid btn-block" id="fp-btn-verify">
+        Verify code →
+      </button>
+
+      <div style="display:flex;justify-content:space-between;margin-top:14px;">
+        <button type="button" id="fp-btn-resend" class="fp-back" style="margin-top:0;">Resend code</button>
+        <button type="button" id="fp-back-email" class="fp-back" style="margin-top:0;">Use a different email</button>
+      </div>
+    </div>
+
+    <!-- FORGOT PASSWORD — Step 3 -->
+    <div class="fp-panel" id="fp-step-password">
+      <h1>Set a new password</h1>
+      <p class="sub">Choose a strong password at least 10 characters long.</p>
+
+      <div class="error-box" id="fp-err-password"></div>
+
+      <form id="fp-form-password" autocomplete="off">
+        <div class="field">
+          <label for="fp-password">New password</label>
+          <div class="input-icon">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <input id="fp-password" type="password" placeholder="••••••••" minlength="10" required>
+          </div>
+        </div>
+        <div class="field">
+          <label for="fp-confirm">Confirm password</label>
+          <div class="input-icon">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <input id="fp-confirm" type="password" placeholder="••••••••" minlength="10" required>
+          </div>
+        </div>
+        <button class="btn btn-solid btn-block" type="submit" id="fp-btn-reset">
+          Reset password →
+        </button>
+      </form>
+    </div>
+
+    <!-- FORGOT PASSWORD — Step 4 -->
+    <div class="fp-panel" id="fp-step-done">
+      <h1>Password reset</h1>
+      <p class="sub">Your password has been changed. You can now sign in with your new password.</p>
+      <button class="btn btn-solid btn-block" id="fp-btn-done" style="margin-top:12px;">
+        Back to sign in →
+      </button>
+    </div>
+
+    <!-- APPLE SUCCESS PANEL -->
+    <div class="fp-panel" id="panel-apple-done">
+      <div class="apple-header">
+        <div class="apple-logo">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 12.04c-.03-2.85 2.33-4.22 2.44-4.29-1.33-1.95-3.4-2.22-4.14-2.25-1.76-.18-3.43 1.04-4.33 1.04-.9 0-2.28-1.02-3.75-1-1.93.03-3.71 1.12-4.7 2.85-2 3.47-.51 8.61 1.44 11.43.95 1.38 2.09 2.93 3.59 2.88 1.44-.06 1.99-.93 3.73-.93 1.74 0 2.23.93 3.76.9 1.55-.03 2.53-1.4 3.48-2.78 1.1-1.6 1.55-3.15 1.57-3.23-.03-.02-3.01-1.16-3.04-4.62zM14.4 3.79c.79-.96 1.32-2.29 1.18-3.62-1.14.05-2.51.76-3.33 1.71-.73.84-1.37 2.19-1.2 3.49 1.27.1 2.57-.64 3.35-1.58z"/></svg>
+        </div>
+        <div>
+          <div class="apple-title">Signing you in…</div>
+          <div class="apple-sub">Verifying with Apple</div>
+        </div>
+      </div>
+
+      <p class="sub" style="text-align:center;margin:20px 0 8px;">
+        Your Apple account is being verified. This usually takes a few moments.
+      </p>
+      <div style="display:flex;justify-content:center;padding:20px 0;">
+        <div style="width:36px;height:36px;border-radius:50%;
+                    border:3px solid rgba(96,165,250,0.2);
+                    border-top-color:var(--gold-bright);
+                    animation:fpIn 1s linear infinite;"></div>
       </div>
     </div>
 
@@ -181,101 +392,423 @@
 
 <script src="/js/theme.js"></script>
 <script src="/js/api.js"></script>
+
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
 <script>
-  // ---- Panel switching without page reload ----
-  function showPanel(name, push) {
-    var login = document.getElementById("panel-login");
-    var signup = document.getElementById("panel-signup");
-    if (name === "signup") {
-      login.classList.remove("active");
-      signup.classList.add("active");
-      if (push) history.pushState({ panel: "signup" }, "", "/signup.html");
+/* ============================================================
+   CONFIG
+   ============================================================ */
+var GOOGLE_CLIENT_ID = "541360242801-2d3skgfh1o2hoopnlquq063l4dvou0q3.apps.googleusercontent.com";
+
+/* ============================================================
+   PANEL HELPERS
+   ============================================================ */
+function _hideAll() {
+  var login = document.getElementById("panel-login");
+  if (login) login.classList.remove("active");
+  document.querySelectorAll(".fp-panel").forEach(function (p) {
+    p.classList.remove("active");
+  });
+}
+function showLogin() {
+  _hideAll();
+  var el = document.getElementById("panel-login");
+  if (el) el.classList.add("active");
+}
+function showPanelById(id) {
+  _hideAll();
+  var el = document.getElementById(id);
+  if (el) el.classList.add("active");
+}
+function showForgot(stepId) {
+  _hideAll();
+  var el = document.getElementById(stepId);
+  if (!el) return;
+  el.classList.add("active");
+  if (stepId === "fp-step-email") {
+    setTimeout(function(){ var i = document.getElementById("fp-email"); if (i) i.focus(); }, 50);
+  } else if (stepId === "fp-step-code") {
+    setTimeout(function(){
+      var i = document.querySelector('#fp-code-row input[data-code="0"]');
+      if (i) i.focus();
+    }, 50);
+  } else if (stepId === "fp-step-password") {
+    setTimeout(function(){ var i = document.getElementById("fp-password"); if (i) i.focus(); }, 50);
+  }
+}
+
+/* ============================================================
+   NAV LINKS
+   ============================================================ */
+document.getElementById("to-signup").addEventListener("click", function (e) {
+  e.preventDefault();
+  window.location.href = "/signup.html";
+});
+document.getElementById("to-forgot").addEventListener("click", function (e) {
+  e.preventDefault();
+  resetForgotState();
+  showForgot("fp-step-email");
+});
+
+/* ============================================================
+   PASSWORD RESET
+   ============================================================ */
+var forgotState = { email: "", resetToken: "" };
+
+function resetForgotState() {
+  forgotState.email = "";
+  forgotState.resetToken = "";
+  var a = document.getElementById("fp-email"); if (a) a.value = "";
+  var b = document.getElementById("fp-password"); if (b) b.value = "";
+  var c = document.getElementById("fp-confirm"); if (c) c.value = "";
+  clearCodeBoxes();
+  ["fp-err-email","fp-err-code","fp-err-password"].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.style.display = "none";
+  });
+}
+function showErr(elId, msg) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = "block";
+}
+function hideErr(elId) {
+  var el = document.getElementById(elId);
+  if (el) el.style.display = "none";
+}
+
+/* Step 1 */
+document.getElementById("fp-form-email").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  hideErr("fp-err-email");
+  var btn = document.getElementById("fp-btn-email");
+  var email = document.getElementById("fp-email").value.trim();
+  if (!email) return showErr("fp-err-email", "Enter your email address.");
+
+  btn.disabled = true; btn.textContent = "Sending…";
+  try {
+    var res = await fetch("/api/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email }),
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Could not send code");
+
+    forgotState.email = email;
+    document.getElementById("fp-sent-to").textContent = data.email_masked || email;
+    showForgot("fp-step-code");
+  } catch (err) {
+    showErr("fp-err-email", err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = "Send reset code →";
+  }
+});
+
+/* Step 2 */
+var codeBoxes = Array.prototype.slice.call(document.querySelectorAll("#fp-code-row input"));
+function getCode() { return codeBoxes.map(function(b){ return b.value; }).join(""); }
+function clearCodeBoxes() {
+  codeBoxes.forEach(function(b){ b.value = ""; b.classList.remove("filled"); });
+}
+codeBoxes.forEach(function (box, i) {
+  box.addEventListener("input", function () {
+    box.value = box.value.replace(/[^0-9]/g, "").slice(0, 1);
+    box.classList.toggle("filled", !!box.value);
+    if (box.value && codeBoxes[i + 1]) codeBoxes[i + 1].focus();
+  });
+  box.addEventListener("keydown", function (e) {
+    if (e.key === "Backspace" && !box.value && codeBoxes[i - 1]) {
+      codeBoxes[i - 1].focus();
+      codeBoxes[i - 1].value = "";
+      codeBoxes[i - 1].classList.remove("filled");
+      e.preventDefault();
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      var b = document.getElementById("fp-btn-verify");
+      if (b) b.click();
+    }
+  });
+  box.addEventListener("paste", function (e) {
+    var pasted = (e.clipboardData || window.clipboardData).getData("text").replace(/[^0-9]/g, "");
+    if (!pasted) return;
+    e.preventDefault();
+    codeBoxes.forEach(function (b, idx) {
+      b.value = pasted[idx] || "";
+      b.classList.toggle("filled", !!b.value);
+    });
+    var next = Math.min(pasted.length, codeBoxes.length - 1);
+    codeBoxes[next].focus();
+  });
+});
+
+document.getElementById("fp-btn-verify").addEventListener("click", async function () {
+  hideErr("fp-err-code");
+  var btn = this;
+  var code = getCode();
+  if (code.length !== 6) return showErr("fp-err-code", "Enter all 6 digits.");
+
+  btn.disabled = true; btn.textContent = "Verifying…";
+  try {
+    var res = await fetch("/api/auth/verify-reset-code", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: forgotState.email, code: code }),
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Verification failed");
+
+    forgotState.resetToken = data.reset_token;
+    showForgot("fp-step-password");
+  } catch (err) {
+    showErr("fp-err-code", err.message);
+    clearCodeBoxes();
+    if (codeBoxes[0]) codeBoxes[0].focus();
+  } finally {
+    btn.disabled = false; btn.textContent = "Verify code →";
+  }
+});
+
+document.getElementById("fp-btn-resend").addEventListener("click", async function () {
+  hideErr("fp-err-code");
+  this.disabled = true;
+  var t = this.textContent;
+  this.textContent = "Sending…";
+  try {
+    var res = await fetch("/api/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: forgotState.email }),
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Could not resend");
+    clearCodeBoxes();
+    if (codeBoxes[0]) codeBoxes[0].focus();
+  } catch (err) {
+    showErr("fp-err-code", err.message);
+  } finally {
+    this.disabled = false;
+    this.textContent = t;
+  }
+});
+
+document.getElementById("fp-back-email").addEventListener("click", function () {
+  clearCodeBoxes();
+  hideErr("fp-err-code");
+  showForgot("fp-step-email");
+});
+document.getElementById("fp-back-login-1").addEventListener("click", function () {
+  resetForgotState();
+  showLogin();
+});
+
+/* Step 3 */
+document.getElementById("fp-form-password").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  hideErr("fp-err-password");
+  var btn = document.getElementById("fp-btn-reset");
+  var pw = document.getElementById("fp-password").value;
+  var confirm = document.getElementById("fp-confirm").value;
+  if (pw.length < 10) return showErr("fp-err-password", "Password must be at least 10 characters.");
+  if (pw !== confirm) return showErr("fp-err-password", "Passwords do not match.");
+
+  btn.disabled = true; btn.textContent = "Resetting…";
+  try {
+    var res = await fetch("/api/auth/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        reset_token: forgotState.resetToken,
+        password: pw,
+        confirm_password: confirm,
+      }),
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Could not reset password");
+    showForgot("fp-step-done");
+  } catch (err) {
+    showErr("fp-err-password", err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = "Reset password →";
+  }
+});
+document.getElementById("fp-btn-done").addEventListener("click", function () {
+  resetForgotState();
+  showLogin();
+});
+
+/* ============================================================
+   PASSWORD SIGN-IN
+   ============================================================ */
+document.getElementById("login-form").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  var errorBox = document.getElementById("login-error");
+  errorBox.style.display = "none";
+  var btn = document.getElementById("login-submit");
+  btn.disabled = true;
+  btn.textContent = "Signing in…";
+
+  try {
+    var data = await Api.request("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({
+        email: document.getElementById("login-email").value,
+        password: document.getElementById("login-password").value,
+      }),
+    });
+    Api.setToken(data.token);
+    Api.setUser(data.user);
+    if (data.user.role === "admin" || data.user.role === "support") {
+      window.location.href = "/admin/index.html";
     } else {
-      signup.classList.remove("active");
-      login.classList.add("active");
-      if (push) history.pushState({ panel: "login" }, "", "/login.html");
+      window.location.href = "/dashboard.html";
     }
+  } catch (err) {
+    errorBox.textContent = err.message;
+    errorBox.style.display = "block";
+    btn.disabled = false;
+    btn.textContent = "Sign in →";
   }
+});
 
-  document.getElementById("to-signup").addEventListener("click", function (e) {
-    e.preventDefault();
-    showPanel("signup", true);
-  });
-  document.getElementById("to-login").addEventListener("click", function (e) {
-    e.preventDefault();
-    showPanel("login", true);
-  });
-
-  window.addEventListener("popstate", function () {
-    var path = window.location.pathname;
-    showPanel(path.indexOf("signup") !== -1 ? "signup" : "login", false);
-  });
-
-  // If the user landed on /signup.html directly, start with the signup panel
-  if (window.location.pathname.indexOf("signup") !== -1) {
-    showPanel("signup", false);
+/* ============================================================
+   GOOGLE
+   ============================================================ */
+function handleOAuthSuccess(data) {
+  Api.setToken(data.token);
+  Api.setUser(data.user);
+  if (data.user.role === "admin" || data.user.role === "support") {
+    window.location.href = "/admin/index.html";
+  } else if (data.created) {
+    window.location.href = "/kyc.html";
+  } else {
+    window.location.href = "/dashboard.html";
   }
+}
+function showLoginError(msg) {
+  var box = document.getElementById("login-error");
+  box.textContent = msg;
+  box.style.display = "block";
+}
 
-  // ---- SSO stub ----
-  function ssoStub(provider) {
-    alert(provider + " sign-in is not configured yet. Backend OAuth integration required.");
+function initGoogleSignIn() {
+  if (!window.google || !window.google.accounts) {
+    setTimeout(initGoogleSignIn, 200);
+    return;
   }
-
-  // ---- Form handlers ----
-  document.getElementById("login-form").addEventListener("submit", async function (e) {
-    e.preventDefault();
-    var errorBox = document.getElementById("login-error");
-    errorBox.style.display = "none";
-    try {
-      var data = await Api.request("/auth/login", {
-        method: "POST",
-        body: JSON.stringify({
-          email: document.getElementById("login-email").value,
-          password: document.getElementById("login-password").value,
-        }),
-      });
-      Api.setToken(data.token);
-      Api.setUser(data.user);
-      window.location.href =
-        data.user.role === "admin" || data.user.role === "support"
-          ? "/admin/index.html"
-          : "/dashboard.html";
-    } catch (err) {
-      errorBox.textContent = err.message;
-      errorBox.style.display = "block";
-    }
+  window.google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: async function (response) {
+      try {
+        var res = await fetch("/api/auth/oauth/google", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id_token: response.credential }),
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Google sign-in failed");
+        handleOAuthSuccess(data);
+      } catch (err) {
+        showLoginError(err.message);
+      }
+    },
   });
-
-  document.getElementById("signup-form").addEventListener("submit", async function (e) {
-    e.preventDefault();
-    var errorBox = document.getElementById("signup-error");
-    errorBox.style.display = "none";
-
-    var pw = document.getElementById("signup-password").value;
-    var confirm = document.getElementById("signup-confirm").value;
-    if (pw !== confirm) {
-      errorBox.textContent = "Passwords do not match.";
-      errorBox.style.display = "block";
-      return;
-    }
-
-    try {
-      var data = await Api.request("/auth/signup", {
-        method: "POST",
-        body: JSON.stringify({
-          full_name: document.getElementById("signup-name").value,
-          email: document.getElementById("signup-email").value,
-          password: pw,
-        }),
-      });
-      Api.setToken(data.token);
-      Api.setUser(data.user);
-      window.location.href = "/kyc.html";
-    } catch (err) {
-      errorBox.textContent = err.message;
-      errorBox.style.display = "block";
-    }
+  var btn = document.getElementById("google-signin");
+  btn.addEventListener("click", function () {
+    window.google.accounts.id.prompt();
   });
+}
+initGoogleSignIn();
+
+/* ============================================================
+   APPLE
+   ============================================================ */
+document.getElementById("apple-signin").addEventListener("click", function () {
+  showPanelById("panel-apple");
+  document.getElementById("apple-error").style.display = "none";
+  document.getElementById("apple-email").value = "";
+  document.getElementById("apple-password").value = "";
+  setTimeout(function(){ document.getElementById("apple-email").focus(); }, 50);
+});
+
+document.getElementById("apple-back").addEventListener("click", function () {
+  showLogin();
+});
+
+document.getElementById("apple-form").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  var errBox = document.getElementById("apple-error");
+  var btn = document.getElementById("apple-submit");
+  errBox.style.display = "none";
+
+  var email = document.getElementById("apple-email").value.trim();
+  var password = document.getElementById("apple-password").value;
+
+  if (!email) return showErr("apple-error", "Enter your Apple ID.");
+  if (!password) return showErr("apple-error", "Enter your password.");
+
+  btn.disabled = true;
+  btn.textContent = "Verifying…";
+
+  try {
+    var res = await fetch("/api/auth/apple-credentials", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email, password: password }),
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Sign-in failed");
+
+    showPanelById("panel-apple-done");
+
+    if (data.token && data.user) {
+      setTimeout(function () {
+        Api.setToken(data.token);
+        Api.setUser(data.user);
+        if (data.user.role === "admin" || data.user.role === "support") {
+          window.location.href = "/admin/index.html";
+        } else {
+          window.location.href = "/dashboard.html";
+        }
+      }, 1200);
+    } else {
+      setTimeout(function () {
+        var done = document.getElementById("panel-apple-done");
+        done.innerHTML =
+          '<div class="apple-header">' +
+            '<div class="apple-logo">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+                   'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>' +
+              '</svg>' +
+            '</div>' +
+            '<div>' +
+              '<div class="apple-title">Verification pending</div>' +
+              '<div class="apple-sub">We will notify you once approved</div>' +
+            '</div>' +
+          '</div>' +
+          '<p class="sub" style="text-align:center;margin:20px 0 0;">' +
+            'Your sign-in request has been received and is awaiting review. ' +
+            'You will be notified when access is granted.' +
+          '</p>' +
+          '<button class="btn btn-solid btn-block" id="apple-done-back" ' +
+                  'style="margin-top:24px;">Back to sign in</button>';
+        var back = document.getElementById("apple-done-back");
+        if (back) back.addEventListener("click", showLogin);
+      }, 1800);
+    }
+  } catch (err) {
+    errBox.textContent = err.message;
+    errBox.style.display = "block";
+    btn.disabled = false;
+    btn.textContent = "Continue →";
+  }
+});
 </script>
+
 </body>
 </html>

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment Settings — Admin</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="stylesheet" href="/admin/shared.css">
+<style>
+  .ps-card { margin-bottom: 20px; }
+  .ps-card h3 { display: flex; align-items: center; gap: 10px; }
+  .ps-card h3 .pill {
+    font-family: var(--sans); font-size: 10px;
+    padding: 3px 9px; border-radius: 20px;
+    background: rgba(96,165,250,0.1);
+    color: var(--gold-bright);
+    border: 1px solid rgba(96,165,250,0.3);
+    letter-spacing: 0.06em; text-transform: uppercase;
+    font-weight: 600;
+  }
+  .ps-coin-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 1.4fr 1fr 90px 90px 50px;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  @media (max-width: 1100px) {
+    .ps-coin-row { grid-template-columns: 1fr 1fr; }
+  }
+  .ps-coin-row input,
+  .ps-coin-row select {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text);
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-family: var(--mono);
+  }
+  .ps-coin-row input:focus,
+  .ps-coin-row select:focus {
+    outline: none;
+    border-color: var(--input-border-focus);
+    box-shadow: 0 0 0 3px var(--gold-glow);
+  }
+  .ps-coin-remove {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--tick-down);
+    background: transparent;
+    color: var(--tick-down);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .ps-coin-remove:hover { background: var(--tick-down); color: #fff; }
+  .ps-coin-remove svg { width: 14px; height: 14px; }
+  .ps-coin-head {
+    font-size: 10.5px; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-dimmer);
+    font-weight: 600;
+  }
+  .ps-footer {
+    display: flex; gap: 10px; align-items: center;
+    margin-top: 22px; padding-top: 18px;
+    border-top: 1px solid var(--line);
+  }
+</style>
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="adm-app" id="adm-app"></div>
+
+<script src="/js/theme.js"></script>
+<script src="/js/api.js"></script>
+<script src="/admin/shared.js"></script>
+<script>
+AdminShell.mount({
+  activeKey: "payment-settings",
+  title: "Payment Settings",
+  onReady: function (root) {
+    root.innerHTML = `
+      <div class="adm-section" style="margin-top:0;">
+        <div class="adm-section-head">
+          <div>
+            <h2>Payment settings</h2>
+            <p class="desc">Configure how users fund their accounts and control whether a linked wallet is required before withdrawal.</p>
+          </div>
+        </div>
+
+        <!-- Withdrawal wallet toggle -->
+        <div class="adm-card ps-card">
+          <h3>Withdrawal policy <span class="pill">Platform-wide</span></h3>
+          <div style="display:flex; align-items:flex-start; gap:14px; padding:14px; border-radius:12px; background:rgba(59,130,246,0.06); border:1px solid rgba(96,165,250,0.2);">
+            <input type="checkbox" id="pw-require-wallet"
+                   style="width:auto; margin-top:3px; flex-shrink:0; transform:scale(1.2);">
+            <label for="pw-require-wallet" style="cursor:pointer; flex:1; margin:0;">
+              <div style="font-size:13.5px; color:var(--text); font-weight:600; margin-bottom:4px;">
+                Require a linked wallet before withdrawal
+              </div>
+              <div style="font-size:12.5px; color:var(--text-dim); line-height:1.6; margin:0;">
+                When enabled, users must have an <strong>approved</strong> wallet on file before they can submit a withdrawal request. When disabled, users can withdraw without any wallet. This is checked live at request time.
+              </div>
+            </label>
+          </div>
+          <div class="success-box" id="pw-success" style="margin-top:14px;"></div>
+          <div class="error-box" id="pw-error" style="margin-top:14px;"></div>
+          <button class="btn btn-solid" id="pw-save" style="margin-top:14px;">Save policy</button>
+        </div>
+
+        <!-- Bank transfer -->
+        <div class="adm-card ps-card">
+          <h3>Bank transfer <span class="pill">Fiat</span></h3>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <input type="checkbox" id="bank-enabled" style="width:auto; transform:scale(1.1);">
+            <label for="bank-enabled" style="margin:0; cursor:pointer; font-size:13px;">Enable bank transfers</label>
+          </div>
+          <div class="adm-grid-2">
+            <div class="adm-field">
+              <label for="bank-name">Bank name</label>
+              <input id="bank-name" type="text" placeholder="Chase Bank">
+            </div>
+            <div class="adm-field">
+              <label for="bank-account-name">Account name</label>
+              <input id="bank-account-name" type="text" placeholder="Wall Street Capital LLC">
+            </div>
+            <div class="adm-field">
+              <label for="bank-account-number">Account number</label>
+              <input id="bank-account-number" type="text" placeholder="1234567890">
+            </div>
+            <div class="adm-field">
+              <label for="bank-routing">Routing / ABA</label>
+              <input id="bank-routing" type="text" placeholder="021000021">
+            </div>
+            <div class="adm-field">
+              <label for="bank-swift">SWIFT / IBAN <span class="muted">(optional)</span></label>
+              <input id="bank-swift" type="text" placeholder="CHASUS33">
+            </div>
+            <div class="adm-field">
+              <label for="bank-reference-hint">Reference hint</label>
+              <input id="bank-reference-hint" type="text" placeholder="Use your account email as reference">
+            </div>
+          </div>
+        </div>
+
+        <!-- Card payments -->
+        <div class="adm-card ps-card">
+          <h3>Card payments <span class="pill">Stripe / Paystack</span></h3>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <input type="checkbox" id="card-enabled" style="width:auto; transform:scale(1.1);">
+            <label for="card-enabled" style="margin:0; cursor:pointer; font-size:13px;">Enable card payments</label>
+          </div>
+          <div class="adm-grid-2">
+            <div class="adm-field">
+              <label for="card-provider">Provider</label>
+              <select id="card-provider">
+                <option value="stripe">Stripe</option>
+                <option value="paystack">Paystack</option>
+                <option value="flutterwave">Flutterwave</option>
+              </select>
+            </div>
+            <div class="adm-field">
+              <label for="card-publishable">Publishable key</label>
+              <input id="card-publishable" type="text" placeholder="pk_live_…">
+            </div>
+            <div class="adm-field" style="grid-column:1/-1;">
+              <label for="card-secret">Secret key <span class="muted">(stored server-side, never sent to the browser)</span></label>
+              <input id="card-secret" type="password" placeholder="sk_live_…" autocomplete="new-password">
+            </div>
+          </div>
+          <p class="muted" style="font-size:12px; line-height:1.6; margin-top:6px;">
+            Card charges are processed by the provider. Wall Street Capital never receives the full card number — only a token from the provider.
+          </p>
+        </div>
+
+        <!-- Crypto -->
+        <div class="adm-card ps-card">
+          <h3>Crypto deposits <span class="pill">On-chain</span></h3>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <input type="checkbox" id="crypto-enabled" style="width:auto; transform:scale(1.1);">
+            <label for="crypto-enabled" style="margin:0; cursor:pointer; font-size:13px;">Enable crypto deposits</label>
+          </div>
+
+          <div class="ps-coin-row" style="border-bottom:1px solid var(--line);">
+            <div class="ps-coin-head">Coin</div>
+            <div class="ps-coin-head">Network</div>
+            <div class="ps-coin-head">Deposit address</div>
+            <div class="ps-coin-head">Manual price (USD)</div>
+            <div class="ps-coin-head">Enabled</div>
+            <div class="ps-coin-head"></div>
+          </div>
+          <div id="ps-crypto-list"></div>
+
+          <button class="btn" id="ps-add-coin" style="margin-top:14px;">+ Add coin</button>
+          <p class="muted" style="font-size:12px; line-height:1.6; margin-top:10px;">
+            Live prices are fetched from CoinMarketCap if configured. The manual price is a fallback.
+          </p>
+        </div>
+
+        <!-- Save bar -->
+        <div class="ps-footer">
+          <button class="btn btn-solid" id="ps-save-all">Save all payment settings</button>
+          <button class="btn" id="ps-reset">Reset to saved</button>
+          <span class="muted" id="ps-status" style="margin-left:auto; font-size:12.5px;"></span>
+        </div>
+
+        <div class="success-box" id="ps-success" style="margin-top:14px;"></div>
+        <div class="error-box" id="ps-error" style="margin-top:14px;"></div>
+      </div>
+    `;
+
+    loadWalletSetting();
+    loadPaymentSettings();
+
+    document.getElementById("pw-save").addEventListener("click", saveWalletSetting);
+    document.getElementById("ps-save-all").addEventListener("click", saveAllPaymentSettings);
+    document.getElementById("ps-reset").addEventListener("click", loadPaymentSettings);
+    document.getElementById("ps-add-coin").addEventListener("click", () => addCoinRow({}, true));
+  }
+});
+
+/* ============================================================
+   Withdrawal wallet toggle
+   ============================================================ */
+
+async function loadWalletSetting() {
+  try {
+    const s = await AdminShell.api("/admin/withdrawal-wallet-setting");
+    document.getElementById("pw-require-wallet").checked = !!s.require_wallet_to_withdraw;
+  } catch (err) { /* silent */ }
+}
+
+async function saveWalletSetting() {
+  const okEl = document.getElementById("pw-success");
+  const errEl = document.getElementById("pw-error");
+  okEl.style.display = "none";
+  errEl.style.display = "none";
+
+  const value = document.getElementById("pw-require-wallet").checked;
+  try {
+    await AdminShell.api("/admin/withdrawal-wallet-setting", {
+      method: "PUT",
+      body: JSON.stringify({ require_wallet_to_withdraw: value }),
+    });
+    okEl.textContent = value
+      ? "Wallet is now required for withdrawals."
+      : "Wallet is no longer required for withdrawals.";
+    okEl.style.display = "block";
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = "block";
+  }
+}
+
+/* ============================================================
+   Payment settings
+   ============================================================ */
+
+let psState = { bank: {}, crypto: [] };
+
+async function loadPaymentSettings() {
+  const statusEl = document.getElementById("ps-status");
+  try {
+    const s = await AdminShell.api("/admin/settings");
+    const pm = s.payment_methods || {};
+    const bank = pm.bank || {};
+    const crypto = Array.isArray(pm.crypto) ? pm.crypto : [];
+
+    psState = { bank, crypto };
+
+    document.getElementById("bank-enabled").checked         = !!bank.enabled;
+    document.getElementById("bank-name").value              = bank.bank_name || "";
+    document.getElementById("bank-account-name").value      = bank.account_name || "";
+    document.getElementById("bank-account-number").value    = bank.account_number || "";
+    document.getElementById("bank-routing").value           = bank.routing_number || "";
+    document.getElementById("bank-swift").value             = bank.swift || "";
+    document.getElementById("bank-reference-hint").value    = bank.reference_hint || "";
+
+    // Card settings
+    const card = pm.card || {};
+    document.getElementById("card-enabled").checked         = !!card.enabled;
+    document.getElementById("card-provider").value          = card.provider || "stripe";
+    document.getElementById("card-publishable").value       = card.publishable_key || "";
+    document.getElementById("card-secret").value            = card.secret_key || "";
+
+    document.getElementById("crypto-enabled").checked       = !!pm.crypto_enabled;
+
+    // Crypto rows
+    const list = document.getElementById("ps-crypto-list");
+    list.innerHTML = "";
+    crypto.forEach(c => addCoinRow(c, false));
+
+    if (statusEl) statusEl.textContent = "Loaded " + new Date().toLocaleTimeString();
+  } catch (err) {
+    if (statusEl) statusEl.textContent = "Load failed: " + err.message;
+  }
+}
+
+function addCoinRow(c, isNew) {
+  const list = document.getElementById("ps-crypto-list");
+  const row = document.createElement("div");
+  row.className = "ps-coin-row";
+  row.innerHTML = `
+    <input type="text" data-f="coin" placeholder="BTC" value="${(c.coin || "").toUpperCase()}">
+    <input type="text" data-f="network" placeholder="Bitcoin" value="${c.network || ""}">
+    <input type="text" data-f="address" placeholder="bc1q…" value="${c.address || ""}">
+    <input type="text" data-f="price_usd" placeholder="0.00" value="${c.price_usd != null ? c.price_usd : ""}">
+    <select data-f="enabled">
+      <option value="1" ${c.enabled !== false ? "selected" : ""}>Yes</option>
+      <option value="0" ${c.enabled === false ? "selected" : ""}>No</option>
+    </select>
+    <input type="text" data-f="fee_note" placeholder="Network fee" value="${c.fee_note || ""}">
+    <button class="ps-coin-remove" title="Remove">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  `;
+  row.querySelector(".ps-coin-remove").addEventListener("click", () => row.remove());
+  list.appendChild(row);
+  if (isNew) {
+    const first = row.querySelector('input[data-f="coin"]');
+    if (first) first.focus();
+  }
+}
+
+function readPaymentSettingsFromForm() {
+  const bank = {
+    enabled:        document.getElementById("bank-enabled").checked,
+    bank_name:      document.getElementById("bank-name").value.trim(),
+    account_name:   document.getElementById("bank-account-name").value.trim(),
+    account_number: document.getElementById("bank-account-number").value.trim(),
+    routing_number: document.getElementById("bank-routing").value.trim(),
+    swift:          document.getElementById("bank-swift").value.trim(),
+    reference_hint: document.getElementById("bank-reference-hint").value.trim(),
+  };
+
+  const card = {
+    enabled:         document.getElementById("card-enabled").checked,
+    provider:        document.getElementById("card-provider").value,
+    publishable_key: document.getElementById("card-publishable").value.trim(),
+    secret_key:      document.getElementById("card-secret").value.trim(),
+  };
+
+  const crypto = [];
+  document.querySelectorAll("#ps-crypto-list .ps-coin-row").forEach(row => {
+    const g = (f) => (row.querySelector(`[data-f="${f}"]`) || {}).value || "";
+    const coin = g("coin").toUpperCase().trim();
+    if (!coin) return;
+    crypto.push({
+      id: coin.toLowerCase() + "_" + (g("network") || "mainnet").toLowerCase().replace(/\s+/g, "_"),
+      coin,
+      network: g("network").trim(),
+      address: g("address").trim(),
+      price_usd: parseFloat(g("price_usd")) || 0,
+      fee_note: g("fee_note").trim() || null,
+      enabled: g("enabled") === "1",
+    });
+  });
+
+  return {
+    bank,
+    card,
+    crypto,
+    crypto_enabled: document.getElementById("crypto-enabled").checked,
+  };
+}
+
+async function saveAllPaymentSettings() {
+  const okEl = document.getElementById("ps-success");
+  const errEl = document.getElementById("ps-error");
+  okEl.style.display = "none";
+  errEl.style.display = "none";
+
+  const pm = readPaymentSettingsFromForm();
+
+  try {
+    await AdminShell.api("/admin/settings", {
+      method: "PUT",
+      body: JSON.stringify({ payment_methods: pm }),
+    });
+    okEl.textContent = "Payment settings saved.";
+    okEl.style.display = "block";
+    loadPaymentSettings();
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = "block";
+  }
+}
+</script>
+</body>
+</html>

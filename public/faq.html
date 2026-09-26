@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAQ — Wall Street Capital</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<style>
+  .legal-shell {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 60px 24px 100px;
+    position: relative;
+    z-index: 1;
+  }
+  .legal-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+  .legal-brand img {
+    height: 70px;
+    width: auto;
+    filter: drop-shadow(0 0 12px rgba(212, 175, 106, 0.35));
+  }
+  .legal-card {
+    background: rgba(15, 26, 48, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    border-radius: 20px;
+    padding: 48px 44px;
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+  html[data-theme="light"] .legal-card {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+  .legal-card h1 {
+    font-family: var(--serif);
+    font-size: 34px;
+    font-weight: 500;
+    margin: 0 0 8px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .legal-updated {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.65;
+    margin-bottom: 36px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .legal-card a {
+    color: var(--gold-bright);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(96, 165, 250, 0.35);
+    transition: border-color 0.2s;
+  }
+  .legal-card a:hover { border-bottom-color: var(--gold-bright); }
+
+  /* FAQ accordion */
+  .faq-item {
+    border-bottom: 1px solid var(--line-soft);
+    padding: 4px 0;
+  }
+  .faq-item:last-of-type { border-bottom: none; }
+  .faq-item summary {
+    cursor: pointer;
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--text);
+    padding: 18px 0;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    transition: color 0.2s;
+  }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary::after {
+    content: "+";
+    font-family: var(--mono);
+    font-size: 22px;
+    color: var(--gold-bright);
+    flex-shrink: 0;
+    transition: transform 0.25s;
+    line-height: 1;
+  }
+  .faq-item[open] summary::after { transform: rotate(45deg); }
+  .faq-item summary:hover { color: var(--gold-bright); }
+  .faq-item p {
+    font-size: 14.5px;
+    line-height: 1.75;
+    color: var(--text-dim);
+    margin: 0 0 20px;
+    padding-right: 30px;
+  }
+  .faq-item p:last-child { margin-bottom: 20px; }
+  .faq-item strong { color: var(--text); font-weight: 600; }
+  .faq-item ul {
+    padding-left: 22px;
+    margin: 0 0 20px;
+  }
+  .faq-item li {
+    font-size: 14.5px;
+    line-height: 1.75;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .legal-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line-soft);
+    font-size: 13px;
+    color: var(--text-dim);
+    text-decoration: none;
+  }
+  .legal-back:hover { color: var(--gold-bright); }
+  @media (max-width: 600px) {
+    .legal-shell { padding: 40px 16px 80px; }
+    .legal-card { padding: 32px 24px; border-radius: 16px; }
+    .legal-card h1 { font-size: 26px; }
+    .faq-item summary { font-size: 15.5px; padding: 16px 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="legal-shell">
+  <div class="legal-brand">
+    <img src="/images/wsc-logo.png" alt="Wall Street Capital">
+  </div>
+
+  <div class="legal-card">
+    <h1>Frequently Asked Questions</h1>
+    <div class="legal-updated">
+      Everything you need to know about Wall Street Capital.
+      If your question isn't here, <a href="/dashboard.html">open a support ticket</a> from your dashboard.
+    </div>
+
+    <details class="faq-item">
+      <summary>Is Wall Street Capital a broker?</summary>
+      <p>No. Wall Street Capital is a technology company. Brokerage services — custody, execution, clearing — are provided by our SIPC-member partner, a registered broker-dealer. We build the interface; they hold the license.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Where is my money held?</summary>
+      <p>At the brokerage, in your name. We never take custody of customer funds. Every deposit and withdrawal is a call to the brokerage's Transfers API — we do not have a balance field in our database that could be incremented.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Are there any account minimums?</summary>
+      <p>No minimum to open an account. You can fund with as little as $1 using fractional shares. Higher account tiers exist for service reasons (see the Plans section on the home page) but they are based on funded balance, not required to trade.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>What does it cost?</summary>
+      <p>$0 commission on US equities and ETFs. Regulatory fees and any third-party charges (wire transfers, for example) are passed through at cost.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>How do you verify my identity?</summary>
+      <p>Through our brokerage partner. You submit name, address, date of birth, and tax ID. They run the actual CIP/KYC check. We store a status flag indicating whether you've been approved — we do not store your SSN or documents.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>How long does verification take?</summary>
+      <p>Most accounts are verified within a few hours. Complex cases can take 1–2 business days. You can track the status on your dashboard while it's in progress.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>How do I fund my account?</summary>
+      <p>Link a bank account through Plaid and transfer via ACH. ACH deposits typically settle in 3–5 business days. Wire transfers are available for higher tiers and settle same-day.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Can I withdraw my money at any time?</summary>
+      <p>Yes. There's no lock-up. Withdrawals go back to the same bank account you funded from, subject to standard ACH settlement timelines and any unsettled trades.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Do you offer crypto?</summary>
+      <p>Not currently. This platform is focused on US equities and ETFs. If we add crypto later, it will be through a licensed crypto custodian — not a token we invented.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Is my money insured?</summary>
+      <p>Brokerage accounts at our SIPC-member partner are covered by SIPC up to $500,000 (including $250,000 for cash claims), subject to SIPC rules. SIPC protects against broker failure, not market losses. There is no FDIC insurance because this is not a bank.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>What markets can I trade?</summary>
+      <p>US-listed equities and ETFs. Fractional shares are supported, so you can buy any stock from $1. We do not offer options, futures, forex, or crypto at this time.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Can I trade outside of market hours?</summary>
+      <p>Yes. Extended-hours trading is available for pre-market (4:00 AM – 9:30 AM ET) and post-market (4:00 PM – 8:00 PM ET) sessions, subject to liquidity and order-type restrictions.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>How do I contact support?</summary>
+      <p>Open a support ticket from your dashboard. Tickets are monitored during business hours. Urgent account issues are prioritised.</p>
+    </details>
+
+    <a class="legal-back" href="/">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Back to home
+    </a>
+  </div>
+</div>
+
+<script src="/js/theme.js"></script>
+</body>
+</html>

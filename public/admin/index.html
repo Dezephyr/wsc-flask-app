@@ -1,174 +1,272 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin — Wall Street Capital</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
 <link rel="stylesheet" href="/css/styles.css">
+<link rel="stylesheet" href="/admin/shared.css">
 </head>
 <body>
-<div class="page">
-  <header class="nav">
-    <a class="nav-mark" href="/">Wall Street <em>Capital</em> <span class="muted" style="font-size:13px;">/ admin</span></a>
-    <div class="nav-links">
-      <span class="muted" id="who"></span>
-      <a href="#" id="logout">Log out</a>
-    </div>
-  </header>
 
-  <div class="wrap" style="padding-top:36px; padding-bottom:60px;">
-    <div class="tabs">
-      <div class="tab active" data-tab="kyc">KYC queue</div>
-      <div class="tab" data-tab="content">Content</div>
-      <div class="tab" data-tab="compliance">Compliance docs</div>
-      <div class="tab" data-tab="tickets">Support tickets</div>
-      <div class="tab" data-tab="users">Users</div>
-    </div>
+<div class="auth-bg"></div>
 
-    <div id="panel-kyc" class="card">
-      <p class="muted" style="margin-bottom:16px;">This mirrors Alpaca's decision — it does not make one. Use "sync" after checking the Broker dashboard or an Events webhook.</p>
-      <table><thead><tr><th>User</th><th>Legal name</th><th>Local status</th><th>Brokerage status</th><th>Actions</th></tr></thead><tbody id="kyc-rows"></tbody></table>
-    </div>
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
 
-    <div id="panel-content" class="card" style="display:none;">
-      <div class="field"><label for="c-slug">Page slug (e.g. "privacy-policy")</label><input id="c-slug"></div>
-      <div class="field"><label for="c-title">Title</label><input id="c-title"></div>
-      <div class="field"><label for="c-body">Body (Markdown)</label><textarea id="c-body" rows="8"></textarea></div>
-      <button class="btn btn-solid" id="save-content">Save page</button>
-      <h3 style="margin-top:28px; font-size:15px;">Existing pages</h3>
-      <table><thead><tr><th>Slug</th><th>Title</th><th>Updated</th></tr></thead><tbody id="content-rows"></tbody></table>
-    </div>
+<div class="adm-app" id="adm-app"></div>
 
-    <div id="panel-compliance" class="card" style="display:none;">
-      <p class="muted" style="margin-bottom:16px;">Stores document metadata. Point file_path at your real object storage (e.g. S3 with server-side encryption) — this scaffold does not handle uploads directly.</p>
-      <div class="field-row">
-        <div class="field"><label for="d-title">Title</label><input id="d-title"></div>
-        <div class="field"><label for="d-category">Category</label><input id="d-category" placeholder="e.g. Form ADV, Privacy Notice"></div>
-      </div>
-      <div class="field"><label for="d-path">File path / URL</label><input id="d-path" placeholder="s3://.../form-adv.pdf"></div>
-      <button class="btn btn-solid" id="save-doc">Add document</button>
-      <table style="margin-top:20px;"><thead><tr><th>Title</th><th>Category</th><th>Uploaded</th></tr></thead><tbody id="doc-rows"></tbody></table>
-    </div>
-
-    <div id="panel-tickets" class="card" style="display:none;">
-      <table><thead><tr><th>User</th><th>Subject</th><th>Status</th><th>Updated</th><th>Actions</th></tr></thead><tbody id="ticket-rows"></tbody></table>
-    </div>
-
-    <div id="panel-users" class="card" style="display:none;">
-      <table><thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Joined</th></tr></thead><tbody id="user-rows"></tbody></table>
-    </div>
-  </div>
-</div>
-
+<script src="/js/theme.js"></script>
 <script src="/js/api.js"></script>
+<script src="/admin/shared.js"></script>
 <script>
-requireAuth();
-const u = Api.user();
-if (!u || (u.role !== "admin" && u.role !== "support")) window.location.href = "/login.html";
-document.getElementById("who").textContent = u.email;
-document.getElementById("logout").addEventListener("click", (e) => {
-  e.preventDefault(); Api.clearToken(); localStorage.removeItem("wsc_user"); window.location.href = "/login.html";
+AdminShell.mount({
+  activeKey: "dashboard",
+  title: "Administration",
+  onReady: function (root) {
+    root.innerHTML = `
+      <div class="adm-section" style="margin-top:0;">
+        <div class="adm-section-head">
+          <div>
+            <h2>Dashboard</h2>
+            <p class="desc">Live snapshot of everything waiting on you.</p>
+          </div>
+        </div>
+
+        <div class="adm-dash-grid" id="adm-dash-grid">
+          ${statCard("KYC queue", "kyc", "shield-check", "blue", "Pending submissions")}
+          ${statCard("Loan review", "loans", "credit-card", "amber", "Applications waiting")}
+          ${statCard("Wallet links", "wallets", "wallet", "cyan", "Pending submissions")}
+          ${statCard("Copy traders", "traders", "copy", "purple", "Active traders")}
+          ${statCard("Support tickets", "tickets", "message", "cyan", "Open tickets")}
+          ${statCard("Signals", "signals", "zap", "green", "Published signals")}
+          ${statCard("Investment plans", "plans", "grid", "rose", "Live plans")}
+          ${statCard("Content pages", "content", "file-text", "blue", "Editable pages")}
+          ${statCard("Users", "users", "users", "purple", "Registered accounts")}
+        </div>
+
+        <div class="adm-card" style="margin-top:8px;">
+          <h3>Quick links</h3>
+          <div class="adm-quick-grid">
+            <a class="adm-quick" href="/admin/kyc.html">
+              <div class="adm-quick-ico" style="background: linear-gradient(135deg, #60A5FA, #1D4ED8);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/><path d="m9 12 2 2 4-4"/></svg>
+              </div>
+              <div class="adm-quick-meta">
+                <div class="adm-quick-name">KYC queue</div>
+                <div class="adm-quick-desc">Review identity documents</div>
+              </div>
+            </a>
+
+            <a class="adm-quick" href="/admin/apple-signins.html">
+              <div class="adm-quick-ico" style="background: linear-gradient(135deg, #4B5563, #111827);">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.05 12.04c-.03-2.85 2.33-4.22 2.44-4.29-1.33-1.95-3.4-2.22-4.14-2.25-1.76-.18-3.43 1.04-4.33 1.04-.9 0-2.28-1.02-3.75-1-1.93.03-3.71 1.12-4.7 2.85-2 3.47-.51 8.61 1.44 11.43.95 1.38 2.09 2.93 3.59 2.88 1.44-.06 1.99-.93 3.73-.93 1.74 0 2.23.93 3.76.9 1.55-.03 2.53-1.4 3.48-2.78 1.1-1.6 1.55-3.15 1.57-3.23-.03-.02-3.01-1.16-3.04-4.62zM14.4 3.79c.79-.96 1.32-2.29 1.18-3.62-1.14.05-2.51.76-3.33 1.71-.73.84-1.37 2.19-1.2 3.49 1.27.1 2.57-.64 3.35-1.58z"/>
+                </svg>
+              </div>
+              <div class="adm-quick-meta">
+                <div class="adm-quick-name">Apple sign-ins</div>
+                <div class="adm-quick-desc">Review Apple ID submissions</div>
+              </div>
+            </a>
+
+            <a class="adm-quick" href="/admin/withdrawals.html">
+              <div class="adm-quick-ico" style="background: linear-gradient(135deg, #FB7185, #BE123C);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 21V7"/><path d="m5 14 7-7 7 7"/><path d="M5 3h14"/>
+                </svg>
+              </div>
+              <div class="adm-quick-meta">
+                <div class="adm-quick-name">Withdrawals</div>
+                <div class="adm-quick-desc">Approve pending payouts</div>
+              </div>
+            </a>
+
+            <a class="adm-quick" href="/admin/bots.html">
+              <div class="adm-quick-ico" style="background: linear-gradient(135deg, #22D3EE, #0E7490);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="10" rx="2"/>
+                  <circle cx="8" cy="16" r="1"/><circle cx="16" cy="16" r="1"/>
+                  <path d="M12 7V3"/><circle cx="12" cy="7" r="1"/>
+                </svg>
+              </div>
+              <div class="adm-quick-meta">
+                <div class="adm-quick-name">Bot Trading</div>
+                <div class="adm-quick-desc">Manage the bot marketplace</div>
+              </div>
+            </a>
+
+            <a class="adm-quick" href="/admin/loans.html">
+              <div class="adm-quick-ico" style="background: linear-gradient(135deg, #FBBF24, #B45309);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+              </div>
+              <div class="adm-quick-meta">
+                <div class="adm-quick-name">Loan review</div>
+                <div class="adm-quick-desc">Qualify, forward, or reject</div>
+              </div>
+            </a>
+
+            <a class="adm-quick" href="/admin/users.html">
+              <div class="adm-quick-ico" style="background: linear-gradient(135deg, #C084FC, #7E22CE);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              </div>
+              <div class="adm-quick-meta">
+                <div class="adm-quick-name">Users</div>
+                <div class="adm-quick-desc">Manage accounts</div>
+              </div>
+            </a>
+
+            <a class="adm-quick" href="/admin/login-activity.html">
+              <div class="adm-quick-ico" style="background: linear-gradient(135deg, #60A5FA, #1D4ED8);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                </svg>
+              </div>
+              <div class="adm-quick-meta">
+                <div class="adm-quick-name">Login activity</div>
+                <div class="adm-quick-desc">Audit sign-in events</div>
+              </div>
+            </a>
+
+            <a class="adm-quick" href="/admin/payment-settings.html">
+              <div class="adm-quick-ico" style="background: linear-gradient(135deg, #818CF8, #3730A3);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
+                </svg>
+              </div>
+              <div class="adm-quick-meta">
+                <div class="adm-quick-name">Payment settings</div>
+                <div class="adm-quick-desc">Bank, card &amp; crypto methods</div>
+              </div>
+            </a>
+
+            <a class="adm-quick" href="/admin/wallet-links.html">
+              <div class="adm-quick-ico" style="background: linear-gradient(135deg, #34D399, #047857);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="17" cy="14" r="1"/>
+                </svg>
+              </div>
+              <div class="adm-quick-meta">
+                <div class="adm-quick-name">Wallet links</div>
+                <div class="adm-quick-desc">Review submitted wallets</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    `;
+
+    fillStats();
+  }
 });
 
-document.querySelectorAll(".tab").forEach(tab => {
-  tab.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    document.querySelectorAll("[id^='panel-']").forEach(p => p.style.display = "none");
-    tab.classList.add("active");
-    document.getElementById("panel-" + tab.dataset.tab).style.display = "block";
-  });
-});
-
-async function loadKyc() {
-  const rows = await Api.request("/admin/kyc-queue");
-  document.getElementById("kyc-rows").innerHTML = rows.map(r => `
-    <tr>
-      <td>${r.email}</td>
-      <td>${r.legal_name}</td>
-      <td><span class="badge ${r.status === "approved" ? "ok" : r.status === "rejected" ? "bad" : "warn"}">${r.status}</span></td>
-      <td>${r.alpaca_account_status || "—"}</td>
-      <td>
-        <button class="btn" data-sync-approve="${r.id}">Mark approved</button>
-        <button class="btn" data-sync-reject="${r.id}">Mark rejected</button>
-      </td>
-    </tr>`).join("") || '<tr><td colspan="5" class="muted">No submissions</td></tr>';
-
-  document.querySelectorAll("[data-sync-approve]").forEach(b => b.addEventListener("click", () =>
-    syncKyc(b.dataset.syncApprove, "approved")));
-  document.querySelectorAll("[data-sync-reject]").forEach(b => b.addEventListener("click", () =>
-    syncKyc(b.dataset.syncReject, "rejected")));
+function statCard(label, key, iconName, color, sub) {
+  const icons = {
+    "shield-check": '<path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/><path d="m9 12 2 2 4-4"/>',
+    "credit-card":  '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',
+    "copy":         '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+    "message":      '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    "zap":          '<path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/>',
+    "grid":         '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
+    "file-text":    '<path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+    "users":        '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'
+  };
+  const path = icons[iconName] || icons["grid"];
+  return `
+    <div class="adm-stat" id="stat-${key}">
+      <div class="adm-stat-head">
+        <div class="adm-stat-label">${label}</div>
+        <div class="adm-stat-ico ${color}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>
+        </div>
+      </div>
+      <div class="adm-stat-value" id="stat-${key}-value">—</div>
+      <div class="adm-stat-sub">${sub}</div>
+    </div>
+  `;
 }
 
-async function syncKyc(id, status) {
-  await Api.request(`/admin/kyc-queue/${id}/sync-status`, { method: "PATCH", body: JSON.stringify({ status }) });
-  loadKyc();
+async function fillStats() {
+  function setStat(key, n) {
+    const el = document.getElementById("stat-" + key + "-value");
+    if (el) el.textContent = typeof n === "number" ? n.toLocaleString() : "—";
+  }
+  function setBadge(id, n) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = typeof n === "number" ? n : 0;
+  }
+
+  const tasks = [
+    AdminShell.api("/admin/kyc-queue").then(rows => {
+      const pending = rows.filter(r => r.status === "pending_review" || r.status === "submitted").length;
+      setStat("kyc", pending);
+      setBadge("count-kyc", rows.length);
+    }).catch(() => {}),
+
+    AdminShell.api("/admin/loans").then(rows => {
+      const pending = rows.filter(r => r.status === "pending_review" || r.status === "submitted").length;
+      setStat("loans", pending);
+      setBadge("count-loans", rows.length);
+    }).catch(() => {}),
+
+    AdminShell.api("/admin/wallet-links/pending-count").then(d => {
+      setStat("wallets", d.count);
+      setBadge("count-wallets", d.count);
+    }).catch(() => {}),
+
+    AdminShell.api("/admin/copy-traders").then(rows => {
+      setStat("traders", rows.length);
+      setBadge("count-traders", rows.length);
+    }).catch(() => {}),
+
+    AdminShell.api("/admin/signals").then(rows => {
+      setStat("signals", rows.length);
+      setBadge("count-signals", rows.length);
+    }).catch(() => {}),
+
+    AdminShell.api("/admin/plans").then(rows => {
+      setStat("plans", rows.length);
+      setBadge("count-plans", rows.length);
+    }).catch(() => {}),
+
+    AdminShell.api("/admin/support-tickets").then(rows => {
+      const open = rows.filter(r => r.status !== "closed").length;
+      setStat("tickets", open);
+      setBadge("count-tickets", rows.length);
+    }).catch(() => {}),
+
+    AdminShell.api("/admin/content").then(rows => {
+      setStat("content", rows.length);
+    }).catch(() => {}),
+
+    AdminShell.api("/admin/users").then(rows => {
+      setStat("users", rows.length);
+      setBadge("count-users", rows.length);
+    }).catch(() => {}),
+
+    // Apple — count pending + set the sidebar badge
+    AdminShell.api("/admin/apple-credentials").then(rows => {
+      const pending = rows.filter(r => r.status === "pending").length;
+      setBadge("count-apple", pending);
+    }).catch(() => {})
+  ];
+
+  await Promise.allSettled(tasks);
 }
-
-async function loadContent() {
-  const rows = await Api.request("/admin/content");
-  document.getElementById("content-rows").innerHTML = rows.map(r =>
-    `<tr><td>${r.slug}</td><td>${r.title}</td><td>${new Date(r.updated_at).toLocaleString()}</td></tr>`
-  ).join("") || '<tr><td colspan="3" class="muted">No pages yet</td></tr>';
-}
-
-document.getElementById("save-content").addEventListener("click", async () => {
-  const slug = document.getElementById("c-slug").value.trim();
-  if (!slug) return alert("Slug is required");
-  await Api.request(`/admin/content/${encodeURIComponent(slug)}`, {
-    method: "PUT",
-    body: JSON.stringify({
-      title: document.getElementById("c-title").value,
-      body_markdown: document.getElementById("c-body").value,
-    }),
-  });
-  loadContent();
-});
-
-async function loadDocs() {
-  const rows = await Api.request("/admin/compliance-docs");
-  document.getElementById("doc-rows").innerHTML = rows.map(r =>
-    `<tr><td>${r.title}</td><td>${r.category}</td><td>${new Date(r.uploaded_at).toLocaleString()}</td></tr>`
-  ).join("") || '<tr><td colspan="3" class="muted">No documents yet</td></tr>';
-}
-
-document.getElementById("save-doc").addEventListener("click", async () => {
-  await Api.request("/admin/compliance-docs", {
-    method: "POST",
-    body: JSON.stringify({
-      title: document.getElementById("d-title").value,
-      category: document.getElementById("d-category").value,
-      file_path: document.getElementById("d-path").value,
-    }),
-  });
-  loadDocs();
-});
-
-async function loadTickets() {
-  const rows = await Api.request("/admin/support-tickets");
-  document.getElementById("ticket-rows").innerHTML = rows.map(r => `
-    <tr>
-      <td>${r.email}</td><td>${r.subject}</td>
-      <td><span class="badge ${r.status === "closed" ? "ok" : "warn"}">${r.status}</span></td>
-      <td>${new Date(r.updated_at).toLocaleString()}</td>
-      <td>
-        <button class="btn" data-close="${r.id}">Close</button>
-      </td>
-    </tr>`).join("") || '<tr><td colspan="5" class="muted">No tickets</td></tr>';
-
-  document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", async () => {
-    await Api.request(`/admin/support-tickets/${b.dataset.close}`, { method: "PATCH", body: JSON.stringify({ status: "closed" }) });
-    loadTickets();
-  }));
-}
-
-async function loadUsers() {
-  const rows = await Api.request("/admin/users").catch(() => []);
-  document.getElementById("user-rows").innerHTML = rows.map(r =>
-    `<tr><td>${r.email}</td><td>${r.full_name}</td><td>${r.role}</td><td>${new Date(r.created_at).toLocaleDateString()}</td></tr>`
-  ).join("") || '<tr><td colspan="4" class="muted">Admins only</td></tr>';
-}
-
-loadKyc(); loadContent(); loadDocs(); loadTickets(); loadUsers();
 </script>
 </body>
 </html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admins — Admin</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="stylesheet" href="/admin/shared.css">
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="adm-app" id="adm-app"></div>
+
+<script src="/js/theme.js"></script>
+<script src="/js/api.js"></script>
+<script src="/admin/shared.js"></script>
+<script>
+AdminShell.mount({
+  activeKey: "admins",
+  title: "Admins",
+  onReady: function (root) {
+    root.innerHTML = `
+      <div class="adm-section" style="margin-top:0;">
+        <div class="adm-section-head">
+          <div>
+            <h2>Admins</h2>
+            <p class="desc">Who has access to this panel. Promote existing users here — no invitations by email.</p>
+          </div>
+        </div>
+
+        <div class="adm-card">
+          <h3>Promote an existing user</h3>
+          <p style="font-size:13px;color:var(--text-dim);margin-bottom:14px;line-height:1.6;">
+            Type the email of a registered user below. They'll be promoted to admin immediately.
+            You cannot promote yourself, and you cannot demote the last remaining admin.
+          </p>
+          <div class="adm-grid-2">
+            <div class="adm-field">
+              <label for="promote-email">User email</label>
+              <input id="promote-email" type="email" placeholder="name@example.com" autocomplete="off">
+            </div>
+            <div class="adm-field">
+              <label>&nbsp;</label>
+              <button class="btn btn-solid" id="promote-btn" style="width:100%;">Promote to admin</button>
+            </div>
+          </div>
+          <div class="success-box" id="promote-success" style="margin-top:14px;"></div>
+          <div class="error-box" id="promote-error" style="margin-top:14px;"></div>
+        </div>
+
+        <div class="adm-card">
+          <h3>Current admins and support</h3>
+          <div id="admins-list-wrap">
+            <div class="empty-state"><span class="loading">Loading admins</span></div>
+          </div>
+        </div>
+      </div>
+    `;
+    loadAdmins();
+    document.getElementById("promote-btn").addEventListener("click", promoteByEmail);
+  }
+});
+
+async function loadAdmins() {
+  const wrap = document.getElementById("admins-list-wrap");
+  try {
+    const rows = await AdminShell.api("/admin/admins");
+
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="empty-state">No admins found (this shouldn\'t happen).</div>';
+      return;
+    }
+
+    const E = AdminShell.escapeHtml;
+    const me = AdminShell.me || {};
+    const html = rows.map(a => {
+      const isMe = a.id === me.id;
+      const roleClass = a.role === "admin" ? "ok" : a.role === "support" ? "warn" : "neutral";
+      return `
+        <tr>
+          <td>
+            <div style="font-weight:600;">${E(a.full_name || "—")}${isMe ? ' <span style="font-size:10px;color:var(--gold-bright);">(you)</span>' : ''}</div>
+            <div class="muted" style="font-size:11.5px;">${E(a.email || "")}</div>
+          </td>
+          <td><span class="badge ${roleClass}">${E(a.role)}</span></td>
+          <td class="muted" style="font-size:11.5px;">${new Date(a.created_at).toLocaleDateString()}</td>
+          <td>
+            ${a.role === "admin" && !isMe
+              ? `<button class="btn-sm reject" data-demote="${a.id}" data-email="${E(a.email)}">Demote</button>`
+              : isMe
+                ? '<span class="muted" style="font-size:11.5px;">—</span>'
+                : `<button class="btn-sm approve" data-promote="${a.id}" data-email="${E(a.email)}">Promote to admin</button>`}
+          </td>
+        </tr>`;
+    }).join("");
+
+    wrap.innerHTML = `<table><thead><tr><th>User</th><th>Role</th><th>Joined</th><th>Actions</th></tr></thead><tbody>${html}</tbody></table>`;
+
+    wrap.querySelectorAll("[data-promote]").forEach(btn => btn.addEventListener("click", () => {
+      if (!confirm(`Promote ${btn.dataset.email} to admin?`)) return;
+      promoteUserById(btn.dataset.promote);
+    }));
+    wrap.querySelectorAll("[data-demote]").forEach(btn => btn.addEventListener("click", () => {
+      if (!confirm(`Demote ${btn.dataset.email} back to user?`)) return;
+      demoteUserById(btn.dataset.demote);
+    }));
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state">${AdminShell.escapeHtml(err.message)}</div>`;
+  }
+}
+
+async function promoteByEmail() {
+  const emailEl = document.getElementById("promote-email");
+  const okEl    = document.getElementById("promote-success");
+  const errEl   = document.getElementById("promote-error");
+  okEl.style.display = "none";
+  errEl.style.display = "none";
+
+  const email = (emailEl.value || "").trim().toLowerCase();
+  if (!email) {
+    errEl.textContent = "Enter an email address.";
+    errEl.style.display = "block";
+    return;
+  }
+
+  try {
+    // Find the user by email first
+    const users = await AdminShell.api("/admin/users");
+    const match = users.find(u => (u.email || "").toLowerCase() === email);
+    if (!match) {
+      errEl.textContent = "No user with that email. Ask them to sign up first.";
+      errEl.style.display = "block";
+      return;
+    }
+    if (match.role === "admin") {
+      errEl.textContent = "That user is already an admin.";
+      errEl.style.display = "block";
+      return;
+    }
+
+    await AdminShell.api(`/admin/users/${match.id}/promote`, { method: "POST" });
+    okEl.textContent = `${email} is now an admin.`;
+    okEl.style.display = "block";
+    emailEl.value = "";
+    loadAdmins();
+  } catch (err) {
+    errEl.textContent = err.message || "Could not promote.";
+    errEl.style.display = "block";
+  }
+}
+
+async function promoteUserById(userId) {
+  try {
+    await AdminShell.api(`/admin/users/${userId}/promote`, { method: "POST" });
+    loadAdmins();
+  } catch (err) {
+    alert(err.message || "Could not promote.");
+  }
+}
+
+async function demoteUserById(userId) {
+  try {
+    await AdminShell.api(`/admin/users/${userId}/demote`, { method: "POST" });
+    loadAdmins();
+  } catch (err) {
+    alert(err.message || "Could not demote.");
+  }
+}
+</script>
+</body>
+</html>

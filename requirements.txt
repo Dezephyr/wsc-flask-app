@@ -6,3 +6,4 @@ python-dotenv==1.0.1
 requests==2.32.3
 alpaca-py>=0.30.0
 Flask-SocketIO>=5.3.0
+requests==2.32.3

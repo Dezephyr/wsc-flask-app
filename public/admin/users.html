@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Users — Admin</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="stylesheet" href="/admin/shared.css">
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="adm-app" id="adm-app"></div>
+
+<!-- Manage user drawer -->
+<div class="adm-manage-backdrop" id="manage-backdrop" style="display:none;">
+  <div class="adm-manage-drawer" id="manage-drawer">
+    <div class="adm-manage-head">
+      <div>
+        <div class="adm-manage-title" id="manage-title">Manage user</div>
+        <div class="adm-manage-sub" id="manage-sub">—</div>
+      </div>
+      <button class="adm-manage-close" id="manage-close">✕</button>
+    </div>
+    <div class="adm-manage-body">
+      <div class="adm-manage-block">
+        <div class="adm-manage-block-title">Profile</div>
+        <div id="manage-profile" class="adm-manage-kv"></div>
+      </div>
+      <div class="adm-manage-block">
+        <div class="adm-manage-block-title">Actions</div>
+        <div class="adm-manage-actions">
+          <button class="btn-sm approve" data-mact="credit">Credit balance</button>
+          <button class="btn-sm warn"    data-mact="debit">Debit balance</button>
+          <button class="btn-sm neutral" data-mact="edit">Edit user</button>
+          <button class="btn-sm neutral" data-mact="reset-password">Reset password</button>
+          <button class="btn-sm neutral" data-mact="trade">Place trade</button>
+          <button class="btn-sm neutral" data-mact="signal-access">Signal access</button>
+          <button class="btn-sm neutral" data-mact="role">Change role</button>
+          <button class="btn-sm warn"    data-mact="block">Block / Unblock</button>
+          <button class="btn-sm approve" data-mact="impersonate">Login as user</button>
+          <button class="btn-sm reject"  data-mact="delete">Delete user</button>
+          <button class="btn-sm approve" data-mact="notify">Send notification</button>
+          <button class="btn-sm neutral" data-mact="withdrawal-policy">Wallet policy</button>
+        </div>
+      </div>
+      <div class="adm-manage-block" id="manage-form-block" style="display:none;">
+        <div class="adm-manage-block-title" id="manage-form-title">—</div>
+        <div id="manage-form-body"></div>
+        <div class="error-box" id="manage-form-error" style="margin-top:12px;display:none;"></div>
+        <div class="success-box" id="manage-form-success" style="margin-top:12px;display:none;"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button class="btn-sm neutral" id="manage-form-cancel">Cancel</button>
+          <button class="btn-sm approve" id="manage-form-submit">Confirm</button>
+        </div>
+      </div>
+      <div class="adm-manage-block">
+        <div class="adm-manage-block-title">Recent activity</div>
+        <div id="manage-activity">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Broadcast modal -->
+<div class="adm-manage-backdrop" id="broadcast-backdrop" style="display:none;">
+  <div class="adm-manage-drawer" style="width:520px;">
+    <div class="adm-manage-head">
+      <div>
+        <div class="adm-manage-title">Broadcast notification</div>
+        <div class="adm-manage-sub">Sent to every non-admin user</div>
+      </div>
+      <button class="adm-manage-close" id="broadcast-close">✕</button>
+    </div>
+    <div class="adm-manage-body">
+      <div class="adm-field">
+        <label for="bc-kind">Category</label>
+        <select id="bc-kind">
+          <option value="admin">Admin message</option>
+          <option value="transfer">Transfer</option>
+          <option value="kyc">KYC</option>
+          <option value="loan">Loan</option>
+          <option value="referral">Referral</option>
+        </select>
+      </div>
+      <div class="adm-field">
+        <label for="bc-title">Title</label>
+        <input id="bc-title" type="text" maxlength="200" placeholder="Scheduled maintenance">
+      </div>
+      <div class="adm-field">
+        <label for="bc-body">Body</label>
+        <textarea id="bc-body" rows="5" maxlength="4000" placeholder="Write your broadcast…"></textarea>
+        <div id="bc-count" style="font-size:11px;color:var(--text-dimmer);margin-top:4px;">0 / 4000</div>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-dim);margin-top:8px;">
+        <input type="checkbox" id="bc-include-admins" style="width:auto;margin:0;">
+        Also send to admins and support
+      </label>
+      <div class="error-box" id="bc-error" style="margin-top:12px;display:none;"></div>
+      <div class="success-box" id="bc-success" style="margin-top:12px;display:none;"></div>
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="btn-sm neutral" id="bc-cancel" style="flex:1;">Cancel</button>
+        <button class="btn-sm approve" id="bc-submit" style="flex:2;">Send to all</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/theme.js"></script>
+<script src="/js/api.js"></script>
+<script src="/admin/shared.js"></script>
+<script>
+AdminShell.mount({
+  activeKey: "users",
+  title: "Users",
+  onReady: function (root) {
+    root.innerHTML = `
+      <div class="adm-section" style="margin-top:0;">
+        <div class="adm-section-head">
+          <div>
+            <h2>Users</h2>
+            <p class="desc">Manage accounts — edit, credit, block, impersonate, grant signal access.</p>
+          </div>
+          <button class="btn btn-solid" id="broadcast-btn">Broadcast notification</button>
+        </div>
+        <div class="adm-card">
+          <div id="user-list-wrap"><div class="empty-state"><span class="loading">Loading users</span></div></div>
+        </div>
+      </div>
+    `;
+    loadUsers();
+  }
+});
+
+let MANAGE_USER_ID = null;
+
+async function loadUsers() {
+  const wrap = document.getElementById("user-list-wrap");
+  try {
+    const rows = await AdminShell.api("/admin/users");
+    AdminShell.setCount("count-users", rows.length || 0);
+
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="empty-state">No users.</div>';
+      return;
+    }
+
+    const E = AdminShell.escapeHtml;
+    const html = rows.map(r => `
+      <tr>
+        <td class="mono">${E(r.email || "")}</td>
+        <td>${E(r.full_name || "—")}</td>
+        <td><span class="badge ${r.role === "admin" ? "ok" : r.role === "support" ? "warn" : "neutral"}">${E(r.role)}</span></td>
+        <td class="mono">$${parseFloat(r.cash_balance || 0).toFixed(2)}</td>
+        <td><button class="btn-sm neutral" data-manage="${r.id}">Manage</button></td>
+      </tr>`).join("");
+
+    wrap.innerHTML = `<table><thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Balance</th><th></th></tr></thead><tbody>${html}</tbody></table>`;
+    wrap.querySelectorAll("[data-manage]").forEach(btn =>
+      btn.addEventListener("click", () => openManageDrawer(btn.dataset.manage))
+    );
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state">${AdminShell.escapeHtml(err.message)}</div>`;
+  }
+}
+
+async function openManageDrawer(userId) {
+  MANAGE_USER_ID = userId;
+  const backdrop   = document.getElementById("manage-backdrop");
+  const titleEl    = document.getElementById("manage-title");
+  const subEl      = document.getElementById("manage-sub");
+  const profileEl  = document.getElementById("manage-profile");
+  const activityEl = document.getElementById("manage-activity");
+  const formBlock  = document.getElementById("manage-form-block");
+
+  backdrop.style.display = "flex";
+  titleEl.textContent = "Manage user";
+  subEl.textContent   = "Loading…";
+  profileEl.innerHTML = "";
+  activityEl.innerHTML = "";
+  formBlock.style.display = "none";
+
+  try {
+    const data = await AdminShell.api(`/admin/users/${userId}`);
+    const usr = data.user || {};
+    const E = AdminShell.escapeHtml;
+
+    titleEl.textContent = usr.full_name || usr.email || "User";
+    subEl.textContent   = usr.email || "";
+
+    profileEl.innerHTML = `
+      <div><div class="k">Full name</div><div class="v">${E(usr.full_name || "—")}</div></div>
+      <div><div class="k">Username</div><div class="v">${E(usr.username || "—")}</div></div>
+      <div><div class="k">Phone</div><div class="v">${E(usr.phone || "—")}</div></div>
+      <div><div class="k">Country</div><div class="v">${E(usr.country || "—")}</div></div>
+      <div><div class="k">Role</div><div class="v">${E(usr.role || "user")}</div></div>
+      <div><div class="k">Balance</div><div class="v">$${parseFloat(usr.cash_balance || 0).toFixed(2)}</div></div>
+      <div><div class="k">Blocked</div><div class="v">${usr.blocked ? "Yes" : "No"}</div></div>
+      <div><div class="k">Plan</div><div class="v">${E(usr.plan || "starter")}</div></div>
+      <div><div class="k">Joined</div><div class="v">${new Date(usr.created_at).toLocaleDateString()}</div></div>
+      <div><div class="k">ID</div><div class="v" style="font-size:11px;">${E(usr.id)}</div></div>
+    `;
+
+    activityEl.innerHTML = `
+      <div style="font-size:12px;color:var(--text-dimmer);">
+        Transfers: ${(data.transfers || []).length} ·
+        Admin trades: ${(data.admin_trades || []).length} ·
+        Impersonations: ${(data.impersonations || []).length}
+      </div>`;
+
+    document.querySelectorAll("[data-mact]").forEach(btn => {
+      btn.onclick = () => showManageForm(btn.dataset.mact);
+    });
+  } catch (err) {
+    profileEl.innerHTML = `<div class="empty-state">${AdminShell.escapeHtml(err.message)}</div>`;
+  }
+}
+
+function closeManageDrawer() {
+  document.getElementById("manage-backdrop").style.display = "none";
+  document.getElementById("manage-form-block").style.display = "none";
+  MANAGE_USER_ID = null;
+}
+
+document.getElementById("manage-close").addEventListener("click", closeManageDrawer);
+document.getElementById("manage-backdrop").addEventListener("click", (e) => {
+  if (e.target.id === "manage-backdrop") closeManageDrawer();
+});
+document.getElementById("manage-form-cancel").addEventListener("click", () => {
+  document.getElementById("manage-form-block").style.display = "none";
+});
+
+function showManageForm(action) {
+  const block = document.getElementById("manage-form-block");
+  const title = document.getElementById("manage-form-title");
+  const body  = document.getElementById("manage-form-body");
+  const errEl = document.getElementById("manage-form-error");
+  const okEl  = document.getElementById("manage-form-success");
+  errEl.style.display = "none";
+  okEl.style.display  = "none";
+  block.style.display = "block";
+
+  let formHtml = "";
+  let submitHandler = null;
+
+  if (action === "credit" || action === "debit") {
+    title.textContent = action === "credit" ? "Credit balance" : "Debit balance";
+    formHtml = `
+      <div class="adm-field"><label>Amount (USD)</label><input id="mf-amount" type="number" min="0.01" step="0.01"></div>
+      <div class="adm-field"><label>Reason (optional)</label><input id="mf-reason" type="text"></div>`;
+    submitHandler = async () => {
+      const amount = parseFloat(document.getElementById("mf-amount").value);
+      const reason = document.getElementById("mf-reason").value.trim();
+      if (!amount || amount <= 0) throw new Error("Enter a positive amount.");
+      return AdminShell.api(`/admin/users/${MANAGE_USER_ID}/credit`, {
+        method: "POST",
+        body: JSON.stringify({ amount, direction: action, reason }),
+      });
+    };
+  }
+
+  if (action === "edit") {
+    title.textContent = "Edit user";
+    formHtml = `
+      <div class="adm-field"><label>Full name</label><input id="mf-full_name" type="text"></div>
+      <div class="adm-field"><label>Phone</label><input id="mf-phone" type="text"></div>
+      <div class="adm-field"><label>Country</label><input id="mf-country" type="text"></div>
+      <div class="adm-field"><label>Plan</label><select id="mf-plan"><option value="starter">Starter</option><option value="growth">Growth</option><option value="pro">Pro</option><option value="elite">Elite</option></select></div>`;
+    submitHandler = async () => {
+      const updates = {};
+      ["full_name","phone","country","plan"].forEach(f => {
+        const v = document.getElementById("mf-" + f).value.trim();
+        if (v) updates[f] = v;
+      });
+      if (!Object.keys(updates).length) throw new Error("Enter at least one field.");
+      return AdminShell.api(`/admin/users/${MANAGE_USER_ID}`, { method: "PATCH", body: JSON.stringify(updates) });
+    };
+  }
+
+  if (action === "reset-password") {
+    title.textContent = "Reset password";
+    formHtml = `<div class="adm-field"><label>New password (min 10 chars)</label><input id="mf-new_password" type="text"></div>`;
+    submitHandler = async () => {
+      const pw = document.getElementById("mf-new_password").value;
+      if (pw.length < 10) throw new Error("Password must be at least 10 characters.");
+      return AdminShell.api(`/admin/users/${MANAGE_USER_ID}/reset-password`, { method: "POST", body: JSON.stringify({ new_password: pw }) });
+    };
+  }
+
+  if (action === "trade") {
+    title.textContent = "Place trade";
+    formHtml = `
+      <div class="adm-field"><label>Symbol</label><input id="mf-symbol" type="text"></div>
+      <div class="adm-field"><label>Side</label><select id="mf-side"><option value="BUY">Buy</option><option value="SELL">Sell</option></select></div>
+      <div class="adm-field"><label>Quantity</label><input id="mf-qty" type="number" min="0.0001" step="0.0001"></div>
+      <div class="adm-field"><label>Notes (optional)</label><input id="mf-notes" type="text"></div>`;
+    submitHandler = async () => {
+      const symbol = document.getElementById("mf-symbol").value.trim().toUpperCase();
+      const side   = document.getElementById("mf-side").value;
+      const qty    = parseFloat(document.getElementById("mf-qty").value);
+      const notes  = document.getElementById("mf-notes").value.trim();
+      if (!symbol || !qty || qty <= 0) throw new Error("Symbol and quantity required.");
+      return AdminShell.api(`/admin/users/${MANAGE_USER_ID}/trade`, { method: "POST", body: JSON.stringify({ symbol, side, qty, notes }) });
+    };
+  }
+
+  if (action === "signal-access") {
+    title.textContent = "Signal access";
+    formHtml = `
+      <div class="adm-field"><label>Action</label><select id="mf-sa-action"><option value="grant">Grant / extend</option><option value="revoke">Revoke</option></select></div>
+      <div class="adm-field"><label>Tier</label><select id="mf-sa-tier"><option value="premium">Premium</option><option value="vip">VIP</option></select></div>
+      <div class="adm-field"><label>Days (for grant)</label><input id="mf-sa-days" type="number" value="30"></div>
+      <div class="adm-field"><label>Price paid (optional)</label><input id="mf-sa-price" type="text"></div>`;
+    submitHandler = async () => {
+      const payload = {
+        action: document.getElementById("mf-sa-action").value,
+        tier: document.getElementById("mf-sa-tier").value,
+        days: parseInt(document.getElementById("mf-sa-days").value) || 30,
+        price_paid: document.getElementById("mf-sa-price").value.trim() || null,
+      };
+      return AdminShell.api(`/admin/users/${MANAGE_USER_ID}/signal-access`, { method: "POST", body: JSON.stringify(payload) });
+    };
+  }
+
+  if (action === "block") {
+    title.textContent = "Block / Unblock";
+    formHtml = `<div class="adm-field"><label>State</label><select id="mf-blocked"><option value="1">Block</option><option value="0">Unblock</option></select></div>`;
+    submitHandler = async () => {
+      const blocked = document.getElementById("mf-blocked").value === "1";
+      return AdminShell.api(`/admin/users/${MANAGE_USER_ID}/block`, { method: "POST", body: JSON.stringify({ blocked }) });
+    };
+  }
+
+  if (action === "delete") {
+    title.textContent = "Delete user";
+    formHtml = `<p style="font-size:13px;color:var(--tick-down);">Permanently deletes the user and all data. Cannot be undone.</p>`;
+    submitHandler = () => AdminShell.api(`/admin/users/${MANAGE_USER_ID}`, { method: "DELETE" });
+  }
+
+  if (action === "impersonate") {
+    title.textContent = "Login as user";
+    formHtml = `<p style="font-size:13px;color:var(--text-dim);">You'll get a 30-minute token acting as this user.</p>`;
+    submitHandler = async () => {
+      const res = await AdminShell.api(`/admin/users/${MANAGE_USER_ID}/impersonate`, { method: "POST" });
+      localStorage.setItem("wsc_admin_token", Api.token());
+      Api.setToken(res.token);
+      window.location.href = "/dashboard.html";
+      return res;
+    };
+  }
+    if (action === "role") {
+    // We need to know the user's current role. Fetch fresh.
+    title.textContent = "Change role";
+    formHtml = `
+      <div class="adm-field">
+        <label>New role</label>
+        <select id="mf-role">
+          <option value="user">User (regular)</option>
+          <option value="support">Support</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <p style="font-size:12.5px;color:var(--text-dimmer);line-height:1.6;margin-top:6px;">
+        Admins have full access to every part of this panel.
+        Support can view everything but cannot change roles, credit balances, or delete users.
+      </p>`;
+
+    // We need the user's current role to pre-select the dropdown.
+    // Fetch it now, then set the value.
+    AdminShell.api(`/admin/users/${MANAGE_USER_ID}`)
+      .then(data => {
+        const cur = (data && data.user && data.user.role) || "user";
+        const sel = document.getElementById("mf-role");
+        if (sel) sel.value = cur;
+      })
+      .catch(() => { /* leave default */ });
+
+    submitHandler = async () => {
+      const newRole = document.getElementById("mf-role").value;
+      const current = await AdminShell.api(`/admin/users/${MANAGE_USER_ID}`)
+        .then(d => (d && d.user && d.user.role) || "user")
+        .catch(() => null);
+
+      if (!current) throw new Error("Could not read current role.");
+      if (newRole === current) throw new Error(`User is already '${current}'.`);
+
+      // Admin <-> user transitions go through promote/demote (with guards).
+      // Anything else (user -> support, support -> user) is a plain PATCH.
+      if (newRole === "admin") {
+        return AdminShell.api(`/admin/users/${MANAGE_USER_ID}/promote`, { method: "POST" });
+      }
+      if (current === "admin" && newRole !== "admin") {
+        // Demote first, then set the target role with a plain PATCH
+        await AdminShell.api(`/admin/users/${MANAGE_USER_ID}/demote`, { method: "POST" });
+        if (newRole !== "user") {
+          return AdminShell.api(`/admin/users/${MANAGE_USER_ID}`, {
+            method: "PATCH",
+            body: JSON.stringify({ role: newRole }),
+          });
+        }
+        return { ok: true };
+      }
+      // Regular PATCH for support<->user transitions
+      return AdminShell.api(`/admin/users/${MANAGE_USER_ID}`, {
+        method: "PATCH",
+        body: JSON.stringify({ role: newRole }),
+      });
+    };
+  }
+  if (action === "notify") {
+    title.textContent = "Send notification";
+    formHtml = `
+      <div class="adm-field">
+        <label for="mf-notif-kind">Category</label>
+        <select id="mf-notif-kind">
+          <option value="admin">Admin message</option>
+          <option value="transfer">Transfer</option>
+          <option value="kyc">KYC</option>
+          <option value="loan">Loan</option>
+          <option value="referral">Referral</option>
+          <option value="welcome">Welcome</option>
+        </select>
+      </div>
+      <div class="adm-field">
+        <label for="mf-notif-title">Title</label>
+        <input id="mf-notif-title" type="text" maxlength="200" placeholder="Important update">
+      </div>
+      <div class="adm-field">
+        <label for="mf-notif-body">Body</label>
+        <textarea id="mf-notif-body" rows="5" maxlength="4000" placeholder="Write your message…"></textarea>
+        <div class="cm-hint" id="mf-notif-count" style="font-size:11px;color:var(--text-dimmer);margin-top:4px;">0 / 4000</div>
+      </div>
+      <p style="font-size:12.5px;color:var(--text-dimmer);line-height:1.6;">
+        The user will see a red dot on their dashboard bell the next time they load a page.
+      </p>`;
+
+    // Live character counter
+    setTimeout(() => {
+      const bodyEl  = document.getElementById("mf-notif-body");
+      const countEl = document.getElementById("mf-notif-count");
+      if (bodyEl && countEl) {
+        const update = () => { countEl.textContent = bodyEl.value.length + " / 4000"; };
+        update();
+        bodyEl.addEventListener("input", update);
+      }
+      const titleEl = document.getElementById("mf-notif-title");
+      if (titleEl) titleEl.focus();
+    }, 30);
+
+    submitHandler = async () => {
+      const kind  = document.getElementById("mf-notif-kind").value;
+      const title = document.getElementById("mf-notif-title").value.trim();
+      const body  = document.getElementById("mf-notif-body").value.trim();
+
+      if (!title) throw new Error("Title is required.");
+
+      return AdminShell.api(`/admin/users/${MANAGE_USER_ID}/notify`, {
+        method: "POST",
+        body: JSON.stringify({ kind, title, body }),
+      });
+    };
+  }
+    if (action === "withdrawal-policy") {
+    title.textContent = "Withdrawal wallet policy";
+    formHtml = `
+      <div class="adm-field">
+        <label for="mf-wd-policy">Mode</label>
+        <select id="mf-wd-policy">
+          <option value="1">Require a linked wallet</option>
+          <option value="0">Let the user provide destination details</option>
+        </select>
+      </div>
+      <p style="font-size:12.5px;color:var(--text-dimmer);line-height:1.6;margin-top:6px;">
+        <strong>Require a linked wallet</strong> — this user must have an approved
+        wallet on file before they can submit a withdrawal request.<br><br>
+        <strong>Provide destination details</strong> — this user types in bank
+        or crypto destination details with each withdrawal. Those details are
+        stored against the request for you to review before approving.
+      </p>`;
+
+    // Pre-select the user's current setting
+    AdminShell.api(`/admin/users/${MANAGE_USER_ID}/withdrawal-policy`)
+      .then(d => {
+        const sel = document.getElementById("mf-wd-policy");
+        if (sel) sel.value = d.require_wallet_to_withdraw ? "1" : "0";
+      })
+      .catch(() => { /* leave default */ });
+
+    submitHandler = async () => {
+      const on = document.getElementById("mf-wd-policy").value === "1";
+      return AdminShell.api(
+        `/admin/users/${MANAGE_USER_ID}/withdrawal-policy`,
+        {
+          method: "PUT",
+          body: JSON.stringify({ require_wallet_to_withdraw: on }),
+        }
+      );
+    };
+  }
+  body.innerHTML = formHtml;
+
+  document.getElementById("manage-form-submit").onclick = async () => {
+    errEl.style.display = "none";
+    okEl.style.display  = "none";
+    try {
+      await submitHandler();
+      okEl.textContent = "Done.";
+      okEl.style.display = "block";
+      setTimeout(() => {
+        if (MANAGE_USER_ID) openManageDrawer(MANAGE_USER_ID);
+        loadUsers();
+      }, 800);
+    } catch (err) {
+      errEl.textContent = err.message || "Action failed.";
+      errEl.style.display = "block";
+    }
+  };
+}
+/* ---------- Broadcast modal ---------- */
+(function wireBroadcast() {
+  const backdrop = document.getElementById("broadcast-backdrop");
+  const closeBtn = document.getElementById("broadcast-close");
+  const cancelBtn = document.getElementById("bc-cancel");
+  const submitBtn = document.getElementById("bc-submit");
+  const openBtn  = document.getElementById("broadcast-btn");
+  if (!backdrop || !openBtn) return;
+
+  function open() {
+    backdrop.style.display = "flex";
+    document.getElementById("bc-error").style.display = "none";
+    document.getElementById("bc-success").style.display = "none";
+    setTimeout(() => {
+      const t = document.getElementById("bc-title");
+      if (t) t.focus();
+    }, 40);
+  }
+  function close() {
+    backdrop.style.display = "none";
+  }
+
+  openBtn.addEventListener("click", open);
+  closeBtn.addEventListener("click", close);
+  cancelBtn.addEventListener("click", close);
+  backdrop.addEventListener("click", (e) => {
+    if (e.target === backdrop) close();
+  });
+
+  const bodyEl  = document.getElementById("bc-body");
+  const countEl = document.getElementById("bc-count");
+  if (bodyEl && countEl) {
+    const update = () => { countEl.textContent = bodyEl.value.length + " / 4000"; };
+    update();
+    bodyEl.addEventListener("input", update);
+  }
+
+  submitBtn.addEventListener("click", async () => {
+    const errEl = document.getElementById("bc-error");
+    const okEl  = document.getElementById("bc-success");
+    errEl.style.display = "none";
+    okEl.style.display  = "none";
+
+    const kind = document.getElementById("bc-kind").value;
+    const title = document.getElementById("bc-title").value.trim();
+    const body = document.getElementById("bc-body").value.trim();
+    const includeAdmins = document.getElementById("bc-include-admins").checked;
+
+    if (!title) {
+      errEl.textContent = "Title is required.";
+      errEl.style.display = "block";
+      return;
+    }
+
+    const confirmed = confirm(
+      "Send this broadcast to " +
+      (includeAdmins ? "every user (including admins)" : "every non-admin user") +
+      "?\n\nThis cannot be undone."
+    );
+    if (!confirmed) return;
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Sending…";
+
+    try {
+      const res = await AdminShell.api("/admin/users/notify-all", {
+        method: "POST",
+        body: JSON.stringify({ kind, title, body, include_admins: includeAdmins }),
+      });
+      okEl.textContent = `Sent to ${res.sent} user${res.sent === 1 ? "" : "s"}.`;
+      okEl.style.display = "block";
+
+      // Clear the form
+      document.gedetElementById("bc-title").value = "";
+      document.getElementById("bc-body").value  = "";
+      countEl.textContent = "0 / 4000";
+
+      setTimeout(close, 2000);
+    } catch (err) {
+      errEl.textContent = err.message || "Could not send broadcast.";
+      srrEl.style.display = "block";
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Send to all";
+    }
+  });
+})();
+</script>
+</body>
+</html>

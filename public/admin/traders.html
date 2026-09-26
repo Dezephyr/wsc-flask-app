@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Copy Traders — Admin</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="stylesheet" href="/admin/shared.css">
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="adm-app" id="adm-app"></div>
+
+<script src="/js/theme.js"></script>
+<script src="/js/api.js"></script>
+<script src="/admin/shared.js"></script>
+<script>
+AdminShell.mount({
+  activeKey: "traders",
+  title: "Copy Traders",
+  onReady: function (root) {
+    root.innerHTML = `
+      <div class="adm-section" style="margin-top:0;">
+        <div class="adm-section-head">
+          <div>
+            <h2>Copy trading leaders</h2>
+            <p class="desc">Manage the traders users can copy.</p>
+          </div>
+        </div>
+        <div class="adm-grid-2">
+          <div class="adm-card">
+            <h3 id="ct-form-title">Add a trader</h3>
+            <input type="hidden" id="ct-id">
+            <div class="adm-field"><label for="ct-name">Display name</label><input id="ct-name" type="text"></div>
+            <div class="adm-field"><label for="ct-bio">Short bio (optional)</label><input id="ct-bio" type="text"></div>
+            <div class="adm-field"><label for="ct-avatar">Avatar URL (optional)</label><input id="ct-avatar" type="text"></div>
+            <div class="adm-field"><label for="ct-external">Provider trader ID</label><input id="ct-external" type="text"></div>
+            <div class="adm-field"><label for="ct-provider">Provider</label><input id="ct-provider" type="text"></div>
+            <div class="adm-grid-2">
+              <div class="adm-field"><label for="ct-roi">ROI %</label><input id="ct-roi" type="text"></div>
+              <div class="adm-field"><label for="ct-winrate">Win rate %</label><input id="ct-winrate" type="text"></div>
+            </div>
+            <div class="adm-grid-2">
+              <div class="adm-field"><label for="ct-trades">Total trades</label><input id="ct-trades" type="text"></div>
+              <div class="adm-field"><label for="ct-slots">Max followers</label><input id="ct-slots" type="text"></div>
+            </div>
+            <div class="adm-grid-2">
+              <div class="adm-field">
+                <label for="ct-risk">Risk level</label>
+                <select id="ct-risk"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select>
+              </div>
+              <div class="adm-field"><label for="ct-tier">Tier</label><input id="ct-tier" type="text" value="PRO"></div>
+            </div>
+            <div class="adm-grid-2">
+              <div class="adm-field"><label for="ct-rating">Rating (0–5)</label><input id="ct-rating" type="text" value="5.0"></div>
+              <div class="adm-field"><label for="ct-reviews">Reviews</label><input id="ct-reviews" type="text" value="5"></div>
+            </div>
+            <div class="adm-field"><label for="ct-equity">Equity %</label><input id="ct-equity" type="text"></div>
+            <div class="adm-field"><label for="ct-min">Minimum investment (USD)</label><input id="ct-min" type="text"></div>
+            <div class="adm-grid-2">
+              <div class="adm-field">
+                <label for="ct-elite">Elite badge</label>
+                <select id="ct-elite"><option value="0">No</option><option value="1">Yes</option></select>
+              </div>
+              <div class="adm-field">
+                <label for="ct-active">Status</label>
+                <select id="ct-active"><option value="1">Active</option><option value="0">Hidden</option></select>
+              </div>
+            </div>
+            <button class="btn btn-solid" id="ct-save">Save trader</button>
+            <button class="btn" id="ct-reset" style="margin-left:8px;">Reset</button>
+            <div class="success-box" id="ct-success" style="margin-top:14px;"></div>
+            <div class="error-box" id="ct-error" style="margin-top:14px;"></div>
+          </div>
+          <div class="adm-card">
+            <h3>Current traders</h3>
+            <div id="ct-list-wrap"><div class="empty-state"><span class="loading">Loading traders</span></div></div>
+          </div>
+        </div>
+      </div>
+    `;
+    loadCopyTraders();
+    document.getElementById("ct-save").addEventListener("click", saveTrader);
+    document.getElementById("ct-reset").addEventListener("click", resetTraderForm);
+  }
+});
+
+let ctCache = [];
+
+async function loadCopyTraders() {
+  const wrap = document.getElementById("ct-list-wrap");
+  try {
+    const rows = await AdminShell.api("/admin/copy-traders").catch(() => null);
+    ctCache = rows || [];
+    AdminShell.setCount("count-traders", ctCache.length);
+
+    if (!rows) { wrap.innerHTML = '<div class="empty-state">Endpoint not implemented yet.</div>'; return; }
+    if (!rows.length) { wrap.innerHTML = '<div class="empty-state">No traders yet.</div>'; return; }
+
+    const E = AdminShell.escapeHtml;
+    const html = rows.map(t => {
+      const statusBadge = t.active ? '<span class="badge ok">Active</span>' : '<span class="badge neutral">Hidden</span>';
+      return `
+        <tr>
+          <td><div style="font-weight:600;">${E(t.display_name || "")}</div></td>
+          <td class="mono">${t.roi != null ? parseFloat(t.roi).toFixed(1) + "%" : "—"}</td>
+          <td class="mono">${t.win_rate != null ? t.win_rate + "%" : "—"}</td>
+          <td>${statusBadge}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <button class="btn-sm neutral" data-ct-edit="${t.id}">Edit</button>
+              <button class="btn-sm reject" data-ct-delete="${t.id}">Delete</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join("");
+
+    wrap.innerHTML = `<table><thead><tr><th>Trader</th><th>ROI</th><th>Win</th><th>Status</th><th>Actions</th></tr></thead><tbody>${html}</tbody></table>`;
+    bindTraderActions();
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state">Could not load traders: ${AdminShell.escapeHtml(err.message)}</div>`;
+  }
+}
+
+function bindTraderActions() {
+  document.querySelectorAll("[data-ct-edit]").forEach(btn => btn.addEventListener("click", () => {
+    const t = ctCache.find(x => x.id === btn.dataset.ctEdit);
+    if (!t) return;
+    document.getElementById("ct-form-title").textContent = "Edit trader";
+    document.getElementById("ct-id").value = t.id;
+    const map = {name:"display_name", bio:"bio", avatar:"avatar_url", external:"external_id",
+                 provider:"provider", roi:"roi", winrate:"win_rate", trades:"total_trades",
+                 slots:"max_followers", tier:"tier", rating:"rating", reviews:"reviews",
+                 equity:"equity", min:"minimum_investment"};
+    Object.keys(map).forEach(k => {
+      document.getElementById("ct-"+k).value = t[map[k]] != null ? t[map[k]] : "";
+    });
+    document.getElementById("ct-risk").value = t.risk_level || "low";
+    document.getElementById("ct-elite").value = t.elite ? "1" : "0";
+    document.getElementById("ct-active").value = t.active ? "1" : "0";
+    document.getElementById("ct-form-title").scrollIntoView({ behavior: "smooth" });
+  }));
+
+  document.querySelectorAll("[data-ct-delete]").forEach(btn => btn.addEventListener("click", async () => {
+    if (!confirm("Delete?")) return;
+    btn.disabled = true; btn.textContent = "…";
+    try {
+      await AdminShell.api(`/admin/copy-traders/${btn.dataset.ctDelete}`, { method: "DELETE" });
+      loadCopyTraders();
+    } catch (e) {
+      alert(e.message);
+      btn.disabled = false; btn.textContent = "Delete";
+    }
+  }));
+}
+
+async function saveTrader() {
+  const okBox = document.getElementById("ct-success");
+  const errBox = document.getElementById("ct-error");
+  okBox.style.display = "none"; errBox.style.display = "none";
+
+  const id = document.getElementById("ct-id").value;
+  const g = (x) => document.getElementById("ct-" + x).value;
+
+  const payload = {
+    display_name: g("name").trim(),
+    bio: g("bio").trim() || null,
+    avatar_url: g("avatar").trim() || null,
+    external_id: g("external").trim(),
+    provider: g("provider").trim() || null,
+    roi: g("roi") ? parseFloat(g("roi")) : null,
+    win_rate: g("winrate") ? parseFloat(g("winrate")) : null,
+    total_trades: parseInt(g("trades")) || 0,
+    max_followers: parseInt(g("slots")) || null,
+    risk_level: document.getElementById("ct-risk").value,
+    elite: document.getElementById("ct-elite").value === "1",
+    active: document.getElementById("ct-active").value === "1",
+    tier: g("tier").trim() || "PRO",
+    rating: parseFloat(g("rating")) || 5.0,
+    reviews: parseInt(g("reviews")) || 0,
+    equity: parseFloat(g("equity")) || 0,
+    minimum_investment: parseFloat(g("min")) || 0,
+  };
+
+  if (!payload.display_name) {
+    errBox.textContent = "Display name is required.";
+    errBox.style.display = "block";
+    return;
+  }
+
+  try {
+    if (id) {
+      await AdminShell.api(`/admin/copy-traders/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+      okBox.textContent = "Trader updated.";
+    } else {
+      await AdminShell.api("/admin/copy-traders", { method: "POST", body: JSON.stringify(payload) });
+      okBox.textContent = "Trader added.";
+    }
+    okBox.style.display = "block";
+    resetTraderForm();
+    loadCopyTraders();
+  } catch (err) {
+    errBox.textContent = err.message;
+    errBox.style.display = "block";
+  }
+}
+
+function resetTraderForm() {
+  document.getElementById("ct-form-title").textContent = "Add a trader";
+  document.getElementById("ct-id").value = "";
+  ["ct-name","ct-bio","ct-avatar","ct-external","ct-provider","ct-roi",
+   "ct-winrate","ct-trades","ct-slots","ct-tier","ct-rating","ct-reviews",
+   "ct-equity","ct-min"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("ct-risk").value = "low";
+  document.getElementById("ct-elite").value = "0";
+  document.getElementById("ct-active").value = "1";
+  document.getElementById("ct-tier").value = "PRO";
+  document.getElementById("ct-rating").value = "5.0";
+  document.getElementById("ct-reviews").value = "5";
+}
+</script>
+</body>
+</html>

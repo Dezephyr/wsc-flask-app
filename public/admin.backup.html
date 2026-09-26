@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Wall Street Capital</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<style>
+  /* ============================================================
+     ADMIN PANEL — single-page layout with sticky sidebar
+     ============================================================ */
+
+  .adm-app {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+  @media (max-width: 900px) {
+    .adm-app { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- SIDEBAR ---------- */
+  .adm-sidebar {
+    background: rgba(8, 15, 32, 0.85);
+    border-right: 1px solid var(--line-soft);
+    backdrop-filter: blur(24px);
+    padding: 22px 14px 40px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  html[data-theme="light"] .adm-sidebar { background: rgba(240, 244, 251, 0.85); }
+  .adm-sidebar::-webkit-scrollbar { width: 5px; }
+  .adm-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1); border-radius: 3px;
+  }
+
+  @media (max-width: 900px) {
+    .adm-sidebar {
+      position: fixed; left: 0; top: 0; bottom: 0;
+      width: 260px;
+      transform: translateX(-100%);
+      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 60;
+      height: 100dvh;
+    }
+    .adm-sidebar.open { transform: translateX(0); }
+  }
+
+  .adm-brand {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px 20px;
+    border-bottom: 1px solid var(--line-soft);
+    margin-bottom: 18px;
+    text-decoration: none;
+  }
+  .adm-brand .logo {
+    width: 26px; height: 26px; border-radius: 8px;
+    background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+    display: flex; align-items: center; justify-content: center;
+    color: #FFFFFF; font-weight: 700; font-size: 13px;
+    flex-shrink: 0;
+  }
+  .adm-brand .mark {
+    font-family: var(--serif); font-size: 17px;
+    color: var(--text);
+  }
+  .adm-brand .mark em { font-style: normal; color: var(--gold-bright); }
+
+  .adm-admin-pill {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: rgba(96, 165, 250, 0.1);
+    border: 1px solid rgba(96, 165, 250, 0.3);
+    color: var(--gold-bright);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .adm-admin-pill svg { width: 12px; height: 12px; }
+
+  .adm-sb-user {
+    display: flex; flex-direction: column;
+    padding: 14px 12px;
+    background: rgba(0, 8, 24, 0.4);
+    border: 1px solid var(--line-soft);
+    border-radius: 12px;
+    margin-bottom: 20px;
+  }
+  html[data-theme="light"] .adm-sb-user { background: rgba(255,255,255,0.6); }
+  .adm-sb-user .label {
+    font-size: 10px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-dimmer);
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .adm-sb-user .email {
+    font-family: var(--mono); font-size: 12px;
+    color: var(--text);
+    word-break: break-all;
+    margin-bottom: 10px;
+    line-height: 1.4;
+  }
+  .adm-sb-user a {
+    font-size: 12px; color: var(--gold-bright);
+    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .adm-sb-user a:hover { text-decoration: underline; }
+
+  .adm-nav-group { margin-bottom: 14px; }
+  .adm-nav-title {
+    font-size: 10px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text-dimmer);
+    padding: 6px 12px; margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .adm-nav-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    border-radius: 9px;
+    font-size: 13px;
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+    margin-bottom: 1px;
+    cursor: pointer;
+  }
+  .adm-nav-link:hover {
+    background: rgba(59, 130, 246, 0.08);
+    color: var(--text);
+  }
+  .adm-nav-link.active {
+    background: rgba(59, 130, 246, 0.14);
+    color: var(--text);
+    box-shadow: inset 3px 0 0 var(--gold);
+  }
+  .adm-nav-link svg {
+    width: 14px; height: 14px;
+    flex-shrink: 0;
+    color: var(--text-dimmer);
+  }
+  .adm-nav-link:hover svg, .adm-nav-link.active svg { color: var(--gold-bright); }
+  .adm-nav-link .badge-count {
+    margin-left: auto;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 10px;
+    background: rgba(96, 165, 250, 0.15);
+    color: var(--gold-bright);
+    min-width: 20px;
+    text-align: center;
+  }
+
+  /* ---------- MAIN ---------- */
+  .adm-main {
+    display: flex; flex-direction: column;
+    min-width: 0;
+  }
+
+  .adm-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 32px;
+    border-bottom: 1px solid var(--line-soft);
+    background: rgba(5, 11, 24, 0.85);
+    backdrop-filter: blur(20px);
+    position: sticky; top: 0; z-index: 20;
+  }
+  html[data-theme="light"] .adm-topbar { background: rgba(240, 244, 251, 0.9); }
+
+  .adm-tb-left { display: flex; align-items: center; gap: 14px; }
+  .adm-burger {
+    display: none; width: 36px; height: 36px;
+    border-radius: 10px; border: 1px solid var(--line);
+    background: var(--panel); color: var(--text-dim);
+    cursor: pointer; align-items: center; justify-content: center;
+  }
+  @media (max-width: 900px) { .adm-burger { display: flex; } }
+  .adm-burger svg { width: 18px; height: 18px; }
+
+  .adm-tb-title {
+    font-family: var(--serif); font-size: 17px;
+    color: var(--text); font-weight: 500;
+  }
+
+  .adm-tb-right { display: flex; align-items: center; gap: 16px; }
+  .adm-tb-right .who {
+    color: var(--text-dim); font-size: 13px;
+    padding: 5px 11px; border-radius: 20px;
+    border: 1px solid var(--line); background: var(--panel);
+    max-width: 220px; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap;
+  }
+  .adm-tb-right a {
+    color: var(--text-dim); text-decoration: none; font-size: 13.5px;
+    transition: color 0.2s;
+  }
+  .adm-tb-right a:hover { color: var(--text); }
+
+  .adm-content {
+    padding: 32px;
+    max-width: 1320px;
+    width: 100%;
+  }
+  @media (max-width: 600px) { .adm-content { padding: 20px; } }
+
+  /* ---------- SECTIONS ---------- */
+  .adm-section {
+    scroll-margin-top: 80px;
+    margin-bottom: 40px;
+  }
+  .adm-section:last-child { margin-bottom: 0; }
+
+  .adm-section-head {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 22px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+    flex-wrap: wrap;
+  }
+  .adm-section-head h2 {
+    font-family: var(--serif); font-weight: 500;
+    font-size: 22px; margin: 0 0 4px;
+    color: var(--text);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .adm-section-head .num {
+    font-family: var(--mono); font-size: 12px;
+    color: var(--text-dimmer);
+    padding: 3px 9px;
+    border-radius: 8px;
+    background: rgba(96, 165, 250, 0.08);
+    border: 1px solid rgba(96, 165, 250, 0.2);
+    font-weight: 600;
+  }
+  .adm-section-head .desc {
+    font-size: 13.5px; color: var(--text-dim);
+    line-height: 1.55; margin: 0;
+    max-width: 72ch;
+  }
+
+  /* ---------- CARDS ---------- */
+  .adm-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 24px;
+    backdrop-filter: blur(20px);
+    margin-bottom: 20px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .adm-card:hover {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.2),
+                0 18px 40px rgba(59, 130, 246, 0.16);
+  }
+  .adm-card h3 {
+    font-family: var(--serif); font-size: 16px;
+    font-weight: 500; margin: 0 0 12px;
+    color: var(--text);
+  }
+
+  /* ---------- TABLES ---------- */
+  .adm-card table { width: 100%; border-collapse: collapse; }
+  .adm-card th, .adm-card td {
+    text-align: left;
+    padding: 13px 12px;
+    border-bottom: 1px solid var(--line-soft);
+    font-size: 13px;
+    vertical-align: middle;
+  }
+  .adm-card th {
+    font-size: 10.5px; letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-dimmer); font-weight: 600;
+  }
+  .adm-card td.mono { font-family: var(--mono); font-size: 12.5px; }
+  .adm-card tr:hover td { background: rgba(59, 130, 246, 0.05); }
+
+  /* ---------- BADGES ---------- */
+  .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border: 1px solid;
+    text-transform: capitalize;
+  }
+  .badge.ok      { color: var(--tick-up); border-color: var(--tick-up); background: rgba(74, 222, 128, 0.08); }
+  .badge.warn    { color: var(--gold-bright); border-color: var(--gold); background: rgba(96, 165, 250, 0.08); }
+  .badge.bad     { color: var(--tick-down); border-color: var(--tick-down); background: rgba(248, 113, 113, 0.08); }
+  .badge.neutral { color: var(--text-dim); border-color: var(--line); background: transparent; }
+
+  /* ---------- SMALL BUTTONS ---------- */
+  .btn-sm {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 13px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--sans);
+    cursor: pointer;
+    border: 1px solid;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .btn-sm.approve {
+    border-color: var(--tick-up); color: var(--tick-up); background: transparent;
+  }
+  .btn-sm.approve:hover {
+    background: var(--tick-up); color: #0A0908;
+    box-shadow: 0 0 20px rgba(74, 222, 128, 0.3);
+  }
+  .btn-sm.reject {
+    border-color: var(--tick-down); color: var(--tick-down); background: transparent;
+  }
+  .btn-sm.reject:hover {
+    background: var(--tick-down); color: #0A0908;
+    box-shadow: 0 0 20px rgba(248, 113, 113, 0.3);
+  }
+  .btn-sm.neutral {
+    border-color: var(--line); color: var(--text-dim); background: transparent;
+  }
+  .btn-sm.neutral:hover { border-color: var(--gold); color: var(--gold-bright); }
+  .btn-sm + .btn-sm { margin-left: 6px; }
+
+  /* ---------- REASON ROW ---------- */
+  .reason-row {
+    display: none;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(248, 113, 113, 0.06);
+    border: 1px solid rgba(248, 113, 113, 0.25);
+    margin-top: 10px;
+    gap: 8px;
+    align-items: center;
+  }
+  .reason-row.show { display: flex; }
+  .reason-row input {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text);
+    font-size: 12.5px;
+    font-family: var(--sans);
+  }
+  .reason-row input:focus { outline: none; border-color: var(--tick-down); }
+
+  /* ---------- SSN ---------- */
+  .ssn-cell {
+    font-family: var(--mono); font-size: 12.5px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ssn-reveal {
+    background: none; border: none;
+    color: var(--gold-bright);
+    cursor: pointer;
+    font-size: 10.5px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+  .ssn-reveal:hover { background: rgba(96, 165, 250, 0.1); }
+
+  /* ---------- FORMS ---------- */
+  .adm-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+  }
+  @media (max-width: 900px) { .adm-grid-2 { grid-template-columns: 1fr; } }
+
+  .adm-card label {
+    display: block;
+    font-size: 12px; color: var(--text-dim);
+    font-weight: 500; margin-bottom: 7px;
+  }
+  .adm-card input[type="text"],
+  .adm-card input[type="email"],
+  .adm-card input[type="password"],
+  .adm-card input[type="number"],
+  .adm-card select,
+  .adm-card textarea {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text);
+    padding: 11px 13px;
+    font-family: var(--sans);
+    font-size: 13.5px;
+    border-radius: 8px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .adm-card textarea {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    resize: vertical;
+  }
+  .adm-card input:focus,
+  .adm-card select:focus,
+  .adm-card textarea:focus {
+    outline: none;
+    border-color: var(--input-border-focus);
+    box-shadow: 0 0 0 3px var(--gold-glow);
+  }
+  .adm-field { margin-bottom: 14px; }
+
+  /* ---------- LOAN SUMMARY ---------- */
+  .loan-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  @media (max-width: 700px) { .loan-summary { grid-template-columns: 1fr 1fr; } }
+  .loan-tile {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .loan-tile .label {
+    font-size: 10px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-dimmer);
+    font-weight: 600; margin-bottom: 6px;
+  }
+  .loan-tile .value {
+    font-family: var(--mono); font-size: 20px;
+    color: var(--text);
+  }
+  .loan-tile .value.accent { color: var(--gold-bright); }
+  .loan-tile .value.up { color: var(--tick-up); }
+  .loan-tile .value.down { color: var(--tick-down); }
+
+  /* ---------- EMPTY STATE ---------- */
+  .empty-state {
+    padding: 30px 20px;
+    text-align: center;
+    color: var(--text-dimmer);
+    font-size: 13.5px;
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    line-height: 1.6;
+  }
+
+  .loading::after {
+    content: "…";
+    animation: dots 1.2s steps(4) infinite;
+  }
+  @keyframes dots {
+    0% { content: ""; } 25% { content: "."; }
+    50% { content: ".."; } 75% { content: "..."; }
+  }
+
+  /* ---------- MOBILE BACKDROP ---------- */
+  .adm-backdrop {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(3px);
+    z-index: 55;
+  }
+  .adm-backdrop.show { display: block; }
+  @media (min-width: 901px) { .adm-backdrop { display: none !important; } }
+
+  /* ---------- SECTION DIVIDER ---------- */
+  .adm-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--line), transparent);
+    margin: 40px 0 32px;
+  }
+</style>
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="adm-app">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="adm-sidebar" id="adm-sidebar">
+    <a class="adm-brand" href="/">
+      <span class="logo">W</span>
+      <span class="mark">Wall Street <em>Capital</em></span>
+    </a>
+
+    <div class="adm-admin-pill">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/>
+      </svg>
+      Admin panel
+    </div>
+
+    <div class="adm-sb-user">
+      <div class="label">Signed in as</div>
+      <div class="email" id="sb-email">—</div>
+      <a href="#" id="sb-logout">
+        <svg style="width:12px;height:12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>
+        </svg>
+        Log out
+      </a>
+    </div>
+
+    <div class="adm-nav-group">
+      <div class="adm-nav-title">Operations</div>
+      <a class="adm-nav-link active" data-target="sec-kyc">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/>
+          <path d="m9 12 2 2 4-4"/>
+        </svg>
+        KYC queue
+        <span class="badge-count" id="count-kyc">0</span>
+      </a>
+      <a class="adm-nav-link" data-target="sec-loans">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="5" width="20" height="14" rx="2"/>
+          <path d="M2 10h20"/>
+        </svg>
+        Loan pre-qual
+        <span class="badge-count" id="count-loans">0</span>
+      </a>
+      <a class="adm-nav-link" data-target="sec-traders">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="12" height="12" rx="2"/>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+        Copy traders
+        <span class="badge-count" id="count-traders">0</span>
+      </a>
+      <a class="adm-nav-link" data-target="sec-tickets">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        Support tickets
+        <span class="badge-count" id="count-tickets">0</span>
+      </a>
+    </div>
+
+    <div class="adm-nav-group">
+      <div class="adm-nav-title">Configuration</div>
+      <a class="adm-nav-link" data-target="sec-content">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/>
+        </svg>
+        Content pages
+      </a>
+      <a class="adm-nav-link" data-target="sec-docs">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <path d="M14 2v6h6"/>
+        </svg>
+        Compliance docs
+      </a>
+      <a class="adm-nav-link" data-target="sec-users">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Users
+        <span class="badge-count" id="count-users">0</span>
+      </a>
+    </div>
+  </aside>
+
+  <div class="adm-backdrop" id="adm-backdrop"></div>
+
+  <!-- ===== MAIN ===== -->
+  <main class="adm-main">
+
+    <div class="adm-topbar">
+      <div class="adm-tb-left">
+        <button class="adm-burger" id="adm-burger" aria-label="Menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+          </svg>
+        </button>
+        <div class="adm-tb-title">Administration</div>
+      </div>
+      <div class="adm-tb-right">
+        <span class="who" id="tb-who">—</span>
+        <a href="#" id="tb-logout">Log out</a>
+      </div>
+    </div>
+
+    <div class="adm-content">
+
+      <!-- ============================================
+           SECTION 1 — KYC QUEUE
+           ============================================ -->
+      <section class="adm-section" id="sec-kyc">
+        <div class="adm-section-head">
+          <div>
+            <h2><span class="num">01</span> KYC queue</h2>
+            <p class="desc">Review submitted identity documents. Approve or reject each submission. The brokerage partner runs an independent KYC check — this queue is your local decision record.</p>
+          </div>
+        </div>
+        <div class="adm-card">
+          <div id="kyc-table-wrap">
+            <div class="empty-state"><span class="loading">Loading submissions</span></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="adm-divider"></div>
+
+      <!-- ============================================
+           SECTION 2 — LOAN PRE-QUALIFICATION
+           ============================================ -->
+      <section class="adm-section" id="sec-loans">
+        <div class="adm-section-head">
+          <div>
+            <h2><span class="num">02</span> Loan pre-qualification</h2>
+            <p class="desc">Review loan applications before they go to our lending partner. Your role is information collection and referral — you flag obvious fraud or incomplete applications, the bank makes the actual credit decision.</p>
+          </div>
+        </div>
+        <div class="loan-summary" id="loans-summary"></div>
+        <div class="adm-card">
+          <div id="loans-table-wrap">
+            <div class="empty-state"><span class="loading">Loading applications</span></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="adm-divider"></div>
+
+      <!-- ============================================
+           SECTION 3 — COPY TRADERS
+           ============================================ -->
+      <section class="adm-section" id="sec-traders">
+        <div class="adm-section-head">
+          <div>
+            <h2><span class="num">03</span> Copy trading leaders</h2>
+            <p class="desc">Manage the traders users can copy. Each entry has a provider reference that connects this record to the actual trading account at your partner. Users see name, ROI, win rate, risk level — the provider executes the mirroring.</p>
+          </div>
+        </div>
+
+        <div class="adm-grid-2">
+
+          <!-- Form -->
+          <div class="adm-card">
+            <h3 id="ct-form-title">Add a trader</h3>
+            <input type="hidden" id="ct-id">
+
+            <div class="adm-field">
+              <label for="ct-name">Display name</label>
+              <input id="ct-name" type="text" placeholder="James A.">
+            </div>
+
+            <div class="adm-field">
+              <label for="ct-bio">Short bio (optional)</label>
+              <input id="ct-bio" type="text" placeholder="8 years trading US equities">
+            </div>
+
+            <div class="adm-field">
+              <label for="ct-avatar">Avatar URL (optional)</label>
+              <input id="ct-avatar" type="text" placeholder="https://cdn.example.com/james.jpg">
+            </div>
+
+            <div class="adm-field">
+              <label for="ct-external">Provider trader ID</label>
+              <input id="ct-external" type="text" placeholder="partner_trader_id_12345">
+            </div>
+
+            <div class="adm-field">
+              <label for="ct-provider">Provider</label>
+              <input id="ct-provider" type="text" placeholder="Partner name">
+            </div>
+
+            <div class="adm-grid-2">
+              <div class="adm-field">
+                <label for="ct-roi">ROI %</label>
+                <input id="ct-roi" type="text" placeholder="70.0">
+              </div>
+              <div class="adm-field">
+                <label for="ct-winrate">Win rate %</label>
+                <input id="ct-winrate" type="text" placeholder="82">
+              </div>
+            </div>
+
+            <div class="adm-grid-2">
+              <div class="adm-field">
+                <label for="ct-trades">Total trades</label>
+                <input id="ct-trades" type="text" placeholder="35">
+              </div>
+              <div class="adm-field">
+                <label for="ct-slots">Max followers</label>
+                <input id="ct-slots" type="text" placeholder="200">
+              </div>
+            </div>
+
+            <div class="adm-grid-2">
+              <div class="adm-field">
+                <label for="ct-risk">Risk level</label>
+                <select id="ct-risk">
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+                          <div class="field" style="margin-bottom:12px;">
+              <label for="ct-tier">Tier label <span class="muted">(shown on card)</span></label>
+              <input id="ct-tier" type="text" placeholder="PRO" value="PRO">
+            </div>
+
+            <div class="field-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+              <div>
+                <label for="ct-rating">Star rating <span class="muted">(0–5)</span></label>
+                <input id="ct-rating" type="text" placeholder="5.0" value="5.0">
+              </div>
+              <div>
+                <label for="ct-reviews">Reviews</label>
+                <input id="ct-reviews" type="text" placeholder="5" value="5">
+              </div>
+            </div>
+
+            <div class="field" style="margin-bottom:12px;">
+              <label for="ct-equity">Equity % <span class="muted">(shown on card)</span></label>
+              <input id="ct-equity" type="text" placeholder="90">
+            </div>
+
+            <div class="field" style="margin-bottom:12px;">
+              <label for="ct-min">Minimum investment (USD)</label>
+              <input id="ct-min" type="text" placeholder="1000">
+            </div>
+              <div class="adm-field">
+                <label for="ct-elite">Elite badge</label>
+                <select id="ct-elite">
+                  <option value="0">No</option>
+                  <option value="1">Yes</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="adm-field">
+              <label for="ct-active">Status</label>
+              <select id="ct-active">
+                <option value="1">Active (visible to users)</option>
+                <option value="0">Hidden</option>
+              </select>
+            </div>
+
+            <button class="btn btn-solid" id="ct-save">Save trader</button>
+            <button class="btn" id="ct-reset" style="margin-left:8px;">Reset</button>
+            <div class="success-box" id="ct-success" style="margin-top:14px;"></div>
+            <div class="error-box" id="ct-error" style="margin-top:14px;"></div>
+          </div>
+
+          <!-- List -->
+          <div class="adm-card">
+            <h3>Current traders</h3>
+            <div id="ct-list-wrap">
+              <div class="empty-state"><span class="loading">Loading traders</span></div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <div class="adm-divider"></div>
+
+      <!-- ============================================
+           SECTION 4 — SUPPORT TICKETS
+           ============================================ -->
+      <section class="adm-section" id="sec-tickets">
+        <div class="adm-section-head">
+          <div>
+            <h2><span class="num">04</span> Support tickets</h2>
+            <p class="desc">Every ticket opened by a user. Reply in-thread or close the ticket when resolved.</p>
+          </div>
+        </div>
+        <div class="adm-card">
+          <div id="ticket-list-wrap">
+            <div class="empty-state"><span class="loading">Loading tickets</span></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="adm-divider"></div>
+
+      <!-- ============================================
+           SECTION 5 — CONTENT
+           ============================================ -->
+      <section class="adm-section" id="sec-content">
+        <div class="adm-section-head">
+          <div>
+            <h2><span class="num">05</span> Content pages</h2>
+            <p class="desc">Edit marketing copy, disclosures, and legal pages. Written in Markdown.</p>
+          </div>
+        </div>
+
+        <div class="adm-grid-2">
+          <div class="adm-card">
+            <h3>Create or update page</h3>
+            <div class="adm-field">
+              <label for="c-slug">Page slug</label>
+              <input id="c-slug" type="text" placeholder="privacy-policy">
+            </div>
+            <div class="adm-field">
+              <label for="c-title">Title</label>
+              <input id="c-title" type="text" placeholder="Privacy Policy">
+            </div>
+            <div class="adm-field">
+              <label for="c-body">Body (Markdown)</label>
+              <textarea id="c-body" rows="10" placeholder="# Privacy Policy&#10;&#10;Your content here…"></textarea>
+            </div>
+            <button class="btn btn-solid" id="save-content">Save page</button>
+            <div class="success-box" id="content-success" style="margin-top:14px;"></div>
+            <div class="error-box" id="content-error" style="margin-top:14px;"></div>
+          </div>
+
+          <div class="adm-card">
+            <h3>Existing pages</h3>
+            <div id="content-list-wrap">
+              <div class="empty-state"><span class="loading">Loading pages</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="adm-divider"></div>
+
+      <!-- ============================================
+           SECTION 6 — COMPLIANCE DOCS
+           ============================================ -->
+      <section class="adm-section" id="sec-docs">
+        <div class="adm-section-head">
+          <div>
+            <h2><span class="num">06</span> Compliance documents</h2>
+            <p class="desc">Register metadata for regulatory documents. File storage is external (S3 or similar) — this records the pointer.</p>
+          </div>
+        </div>
+
+        <div class="adm-grid-2">
+          <div class="adm-card">
+            <h3>Add document</h3>
+            <div class="adm-field">
+              <label for="d-title">Title</label>
+              <input id="d-title" type="text" placeholder="Form ADV Part 2A">
+            </div>
+            <div class="adm-field">
+              <label for="d-category">Category</label>
+              <input id="d-category" type="text" placeholder="Regulatory filing">
+            </div>
+            <div class="adm-field">
+              <label for="d-path">File path / URL</label>
+              <input id="d-path" type="text" placeholder="s3://bucket/form-adv-2026.pdf">
+            </div>
+            <button class="btn btn-solid" id="save-doc">Add document</button>
+            <div class="success-box" id="doc-success" style="margin-top:14px;"></div>
+            <div class="error-box" id="doc-error" style="margin-top:14px;"></div>
+          </div>
+
+          <div class="adm-card">
+            <h3>Existing documents</h3>
+            <div id="doc-list-wrap">
+              <div class="empty-state"><span class="loading">Loading documents</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="adm-divider"></div>
+
+      <!-- ============================================
+           SECTION 7 — USERS
+           ============================================ -->
+      <section class="adm-section" id="sec-users">
+        <div class="adm-section-head">
+          <div>
+            <h2><span class="num">07</span> Users</h2>
+            <p class="desc">All registered accounts. Admin-only view.</p>
+          </div>
+        </div>
+        <div class="adm-card">
+          <div id="user-list-wrap">
+            <div class="empty-state"><span class="loading">Loading users</span></div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script src="/js/theme.js"></script>
+<script src="/js/api.js"></script>
+<script>
+requireAuth();
+const u = Api.user();
+if (!u || (u.role !== "admin" && u.role !== "support")) {
+  window.location.href = "/login.html";
+}
+
+/* ---------- Header ---------- */
+document.getElementById("sb-email").textContent = (u && u.email) || "—";
+document.getElementById("tb-who").textContent = (u && u.email) || "—";
+
+function logout(e) {
+  e.preventDefault();
+  Api.clearToken();
+  localStorage.removeItem("wsc_user");
+  window.location.href = "/login.html";
+}
+document.getElementById("sb-logout").addEventListener("click", logout);
+document.getElementById("tb-logout").addEventListener("click", logout);
+
+/* ---------- Sidebar navigation (smooth scroll) ---------- */
+document.querySelectorAll(".adm-nav-link").forEach(link => {
+  link.addEventListener("click", (e) => {
+    e.preventDefault();
+    const targetId = link.dataset.target;
+    const target = document.getElementById(targetId);
+    if (!target) return;
+
+    // Active state
+    document.querySelectorAll(".adm-nav-link").forEach(l => l.classList.remove("active"));
+    link.classList.add("active");
+
+    // Smooth scroll
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    // Close mobile sidebar
+    const sb = document.getElementById("adm-sidebar");
+    const bd = document.getElementById("adm-backdrop");
+    if (sb) sb.classList.remove("open");
+    if (bd) bd.classList.remove("show");
+  });
+});
+
+/* ---------- Mobile burger ---------- */
+const burger = document.getElementById("adm-burger");
+const sb = document.getElementById("adm-sidebar");
+const bd = document.getElementById("adm-backdrop");
+if (burger && sb && bd) {
+  burger.addEventListener("click", () => {
+    sb.classList.add("open");
+    bd.classList.add("show");
+  });
+  bd.addEventListener("click", () => {
+    sb.classList.remove("open");
+    bd.classList.remove("show");
+  });
+}
+
+/* ---------- Scroll spy — highlight sidebar link as you scroll ---------- */
+(function () {
+  const sections = document.querySelectorAll(".adm-section");
+  const links = document.querySelectorAll(".adm-nav-link");
+  if (!sections.length || !links.length) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        links.forEach(l => l.classList.toggle("active", l.dataset.target === id));
+      }
+    });
+  }, { rootMargin: "-30% 0px -60% 0px", threshold: 0 });
+
+  sections.forEach(s => observer.observe(s));
+})();
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function escapeHtml(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+function setCount(id, n) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = n;
+}
+
+/* ============================================================
+   SECTION 1 — KYC QUEUE
+   ============================================================ */
+async function loadKyc() {
+  const wrap = document.getElementById("kyc-table-wrap");
+  try {
+    const rows = await Api.request("/admin/kyc-queue");
+    setCount("count-kyc", rows.length || 0);
+
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="empty-state">No submissions yet.</div>';
+      return;
+    }
+
+    const html = rows.map(r => {
+      const statusClass =
+        r.status === "approved" ? "ok" :
+        r.status === "rejected" ? "bad" :
+        r.status === "pending_review" || r.status === "submitted" ? "warn" : "neutral";
+
+      const ssnMasked = r.ssn_last4 ? "•••-••-" + r.ssn_last4 : "—";
+
+      return `
+        <tr data-id="${r.id}">
+          <td>
+            <div style="font-weight:600;">${escapeHtml(r.full_name || "")}</div>
+            <div class="muted" style="font-size:11.5px;">${escapeHtml(r.email || "")}</div>
+          </td>
+          <td class="mono">${escapeHtml(r.legal_name || "—")}</td>
+          <td>${escapeHtml(r.country || "—")}</td>
+          <td class="ssn-cell">
+            <span data-ssn="${r.id}">${ssnMasked}</span>
+            ${r.ssn_last4 ? `<button class="ssn-reveal" data-reveal="${r.id}">reveal</button>` : ""}
+          </td>
+          <td><span class="badge ${statusClass}">${(r.status || "—").replace("_", " ")}</span></td>
+          <td>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="btn-sm approve" data-approve="${r.id}">Approve</button>
+              <button class="btn-sm reject" data-reject="${r.id}">Reject</button>
+            </div>
+            <div class="reason-row" data-reason-row="${r.id}">
+              <input type="text" placeholder="Reason for rejection (optional)" data-reason-input="${r.id}">
+              <button class="btn-sm reject" data-confirm-reject="${r.id}">Confirm</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+    wrap.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Applicant</th>
+            <th>Legal name</th>
+            <th>Country</th>
+            <th>Tax ID</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>${html}</tbody>
+      </table>`;
+
+    bindKycActions();
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state">Could not load queue: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+function bindKycActions() {
+  document.querySelectorAll("[data-approve]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.approve;
+      btn.disabled = true; btn.textContent = "…";
+      try {
+        await Api.request(`/admin/kyc-queue/${id}/sync-status`, {
+          method: "PATCH",
+          body: JSON.stringify({ status: "approved" }),
+        });
+        loadKyc();
+      } catch (err) {
+        alert("Could not approve: " + err.message);
+        btn.disabled = false; btn.textContent = "Approve";
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-reject]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.reject;
+      const row = document.querySelector(`[data-reason-row="${id}"]`);
+      row.classList.toggle("show");
+      if (row.classList.contains("show")) row.querySelector("input").focus();
+    });
+  });
+
+  document.querySelectorAll("[data-confirm-reject]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.confirmReject;
+      const reason = document.querySelector(`[data-reason-input="${id}"]`).value.trim();
+      btn.disabled = true; btn.textContent = "…";
+      try {
+        await Api.request(`/admin/kyc-queue/${id}/sync-status`, {
+          method: "PATCH",
+          body: JSON.stringify({ status: "rejected", reason: reason || null }),
+        });
+        loadKyc();
+      } catch (err) {
+        alert("Could not reject: " + err.message);
+        btn.disabled = false; btn.textContent = "Confirm";
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-reveal]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.reveal;
+      const cell = document.querySelector(`[data-ssn="${id}"]`);
+      btn.textContent = "…";
+      try {
+        const data = await Api.request(`/admin/kyc-queue/${id}/reveal-ssn`, { method: "POST" });
+        cell.textContent = data.ssn || "—";
+        btn.remove();
+      } catch (err) {
+        alert("SSN reveal endpoint not yet available. It will work once /api/admin/kyc-queue/:id/reveal-ssn is implemented.");
+        btn.textContent = "reveal";
+      }
+    });
+  });
+}
+
+/* ============================================================
+   SECTION 2 — LOAN PRE-QUALIFICATION
+   ============================================================ */
+async function loadLoans() {
+  const wrap = document.getElementById("loans-table-wrap");
+  const summary = document.getElementById("loans-summary");
+  try {
+    const rows = await Api.request("/admin/loans").catch(() => []);
+    setCount("count-loans", rows.length || 0);
+
+    const counts = { pending_review: 0, pre_qualified: 0, forwarded: 0, rejected: 0 };
+    rows.forEach(r => { if (counts[r.status] !== undefined) counts[r.status]++; });
+
+    summary.innerHTML = `
+      <div class="loan-tile">
+        <div class="label">Pending review</div>
+        <div class="value accent">${counts.pending_review}</div>
+      </div>
+      <div class="loan-tile">
+        <div class="label">Pre-qualified</div>
+        <div class="value up">${counts.pre_qualified}</div>
+      </div>
+      <div class="loan-tile">
+        <div class="label">Forwarded to bank</div>
+        <div class="value">${counts.forwarded}</div>
+      </div>
+      <div class="loan-tile">
+        <div class="label">Rejected</div>
+        <div class="value down">${counts.rejected}</div>
+      </div>`;
+
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="empty-state">No loan applications yet.<br><span style="font-size:12.5px;">Applications appear here once users submit them from their dashboard.</span></div>';
+      return;
+    }
+
+    const html = rows.map(r => {
+      const statusClass =
+        r.status === "forwarded" || r.status === "approved" ? "ok" :
+        r.status === "rejected" ? "bad" :
+        r.status === "pre_qualified" ? "warn" : "neutral";
+
+      return `
+        <tr data-loan-id="${r.id}">
+          <td>
+            <div style="font-weight:600;">${escapeHtml(r.full_name || r.email || "")}</div>
+            <div class="muted" style="font-size:11.5px;">${escapeHtml(r.email || "")}</div>
+          </td>
+          <td class="mono">$${parseFloat(r.amount_usd || 0).toFixed(2)}</td>
+          <td class="mono">${escapeHtml(r.term_months || "—")} mo</td>
+          <td>${escapeHtml(r.purpose || "—")}</td>
+          <td><span class="badge ${statusClass}">${(r.status || "—").replace(/_/g, " ")}</span></td>
+          <td class="muted" style="font-size:11.5px;">${r.created_at ? new Date(r.created_at).toLocaleDateString() : "—"}</td>
+          <td>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="btn-sm approve" data-loan-prequal="${r.id}">Pre-qualify</button>
+              <button class="btn-sm neutral" data-loan-forward="${r.id}">Forward</button>
+              <button class="btn-sm reject" data-loan-reject="${r.id}">Reject</button>
+            </div>
+            <div class="reason-row" data-loan-reason-row="${r.id}">
+              <input type="text" placeholder="Reason for rejection" data-loan-reason-input="${r.id}">
+              <button class="btn-sm reject" data-loan-confirm-reject="${r.id}">Confirm</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join("");
+
+    wrap.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Applicant</th>
+            <th>Amount</th>
+            <th>Term</th>
+            <th>Purpose</th>
+            <th>Status</th>
+            <th>Submitted</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>${html}</tbody>
+      </table>`;
+
+    bindLoanActions();
+  } catch (err) {
+    summary.innerHTML = "";
+    wrap.innerHTML = `<div class="empty-state">Could not load loans: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+function bindLoanActions() {
+  document.querySelectorAll("[data-loan-prequal]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.loanPrequal;
+      btn.disabled = true; btn.textContent = "…";
+      try {
+        await Api.request(`/admin/loans/${id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ status: "pre_qualified" }),
+        });
+        loadLoans();
+      } catch (err) {
+        alert("Could not update: " + err.message);
+        btn.disabled = false; btn.textContent = "Pre-qualify";
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-loan-forward]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.loanForward;
+      if (!confirm("Forward this application to the lending partner? The bank will make the actual credit decision.")) return;
+      btn.disabled = true; btn.textContent = "…";
+      try {
+        await Api.request(`/admin/loans/${id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ status: "forwarded" }),
+        });
+        loadLoans();
+      } catch (err) {
+        alert("Could not forward: " + err.message);
+        btn.disabled = false; btn.textContent = "Forward";
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-loan-reject]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.loanReject;
+      const row = document.querySelector(`[data-loan-reason-row="${id}"]`);
+      row.classList.toggle("show");
+      if (row.classList.contains("show")) row.querySelector("input").focus();
+    });
+  });
+
+  document.querySelectorAll("[data-loan-confirm-reject]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.loanConfirmReject;
+      const reason = document.querySelector(`[data-loan-reason-input="${id}"]`).value.trim();
+      btn.disabled = true; btn.textContent = "…";
+      try {
+        await Api.request(`/admin/loans/${id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ status: "rejected", reason: reason || null }),
+        });
+        loadLoans();
+      } catch (err) {
+        alert("Could not reject: " + err.message);
+        btn.disabled = false; btn.textContent = "Confirm";
+      }
+    });
+  });
+}
+
+/* ============================================================
+   SECTION 3 — COPY TRADERS
+   ============================================================ */
+let ctCache = [];
+
+async function loadCopyTraders() {
+  const wrap = document.getElementById("ct-list-wrap");
+  try {
+    const rows = await Api.request("/admin/copy-traders").catch(() => null);
+    ctCache = rows || [];
+    setCount("count-traders", ctCache.length);
+
+    if (!rows) {
+      wrap.innerHTML = `<div class="empty-state">
+        The <span style="font-family:var(--mono);">/admin/copy-traders</span> endpoint isn't implemented yet.
+        <br>Traders you add here will appear in the user dashboard once the backend is live.
+      </div>`;
+      return;
+    }
+
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="empty-state">No traders yet. Add one using the form.</div>';
+      return;
+    }
+
+    const html = rows.map(t => {
+      const statusBadge = t.active
+        ? '<span class="badge ok">Active</span>'
+        : '<span class="badge neutral">Hidden</span>';
+      const eliteBadge = t.elite ? '<span class="badge warn">Elite</span>' : '';
+      return `
+        <tr data-ct-id="${t.id}">
+          <td>
+            <div style="font-weight:600;">${escapeHtml(t.display_name || "")}</div>
+            <div class="muted" style="font-size:11.5px;">${escapeHtml(t.provider || "No provider")} · ${escapeHtml(t.external_id || "no ID")}</div>
+          </td>
+          <td class="mono">${t.roi != null ? parseFloat(t.roi).toFixed(1) + "%" : "—"}</td>
+          <td class="mono">${t.win_rate != null ? t.win_rate + "%" : "—"}</td>
+          <td class="mono">${t.total_trades || 0}</td>
+          <td><span class="badge ${t.risk_level === "low" ? "ok" : t.risk_level === "medium" ? "warn" : "bad"}">${escapeHtml(t.risk_level || "—")}</span></td>
+          <td>${statusBadge} ${eliteBadge}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <button class="btn-sm neutral" data-ct-edit="${t.id}">Edit</button>
+              <button class="btn-sm reject" data-ct-delete="${t.id}">Delete</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join("");
+
+    wrap.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Trader</th>
+            <th>ROI</th>
+            <th>Win</th>
+            <th>Trades</th>
+            <th>Risk</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>${html}</tbody>
+      </table>`;
+
+    bindCopyTraderActions();
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state">Could not load traders: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+function bindCopyTraderActions() {
+  document.querySelectorAll("[data-ct-edit]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.ctEdit;
+      const t = ctCache.find(x => x.id === id);
+      if (!t) return;
+
+      document.getElementById("ct-form-title").textContent = "Edit trader";
+      document.getElementById("ct-id").value = t.id;
+      document.getElementById("ct-name").value = t.display_name || "";
+      document.getElementById("ct-bio").value = t.bio || "";
+      document.getElementById("ct-avatar").value = t.avatar_url || "";
+      document.getElementById("ct-external").value = t.external_id || "";
+      document.getElementById("ct-provider").value = t.provider || "";
+      document.getElementById("ct-roi").value = t.roi || "";
+      document.getElementById("ct-winrate").value = t.win_rate || "";
+      document.getElementById("ct-trades").value = t.total_trades || "";
+      document.getElementById("ct-slots").value = t.max_followers || "";
+      document.getElementById("ct-risk").value = t.risk_level || "low";
+      document.getElementById("ct-elite").value = t.elite ? "1" : "0";
+      document.getElementById("ct-active").value = t.active ? "1" : "0";
+            document.getElementById("ct-tier").value = t.tier || "PRO";
+      document.getElementById("ct-rating").value = t.rating != null ? t.rating : 5.0;
+      document.getElementById("ct-reviews").value = t.reviews != null ? t.reviews : 0;
+      document.getElementById("ct-equity").value = t.equity != null ? t.equity : 0;
+      document.getElementById("ct-min").value = t.minimum_investment != null ? t.minimum_investment : $3000;
+
+      document.getElementById("ct-form-title").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+
+  document.querySelectorAll("[data-ct-delete]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.ctDelete;
+      if (!confirm("Delete this trader?")) return;
+      btn.disabled = true; btn.textContent = "…";
+      try {
+        await Api.request(`/admin/copy-traders/${id}`, { method: "DELETE" });
+        loadCopyTraders();
+      } catch (err) {
+        alert("Could not delete: " + err.message);
+        btn.disabled = false; btn.textContent = "Delete";
+      }
+    });
+  });
+}
+
+document.getElementById("ct-save").addEventListener("click", async () => {
+  const okBox = document.getElementById("ct-success");
+  const errBox = document.getElementById("ct-error");
+  okBox.style.display = "none"; errBox.style.display = "none";
+
+  const id = document.getElementById("ct-id").value;
+   const payload = {
+    display_name: document.getElementById("ct-name").value.trim(),
+    bio: document.getElementById("ct-bio").value.trim() || null,
+    avatar_url: document.getElementById("ct-avatar").value.trim() || null,
+    external_id: document.getElementById("ct-external").value.trim(),
+    provider: document.getElementById("ct-provider").value.trim() || null,
+    roi: document.getElementById("ct-roi").value ? parseFloat(document.getElementById("ct-roi").value) : null,
+    win_rate: document.getElementById("ct-winrate").value ? parseFloat(document.getElementById("ct-winrate").value) : null,
+    total_trades: document.getElementById("ct-trades").value ? parseInt(document.getElementById("ct-trades").value) : 0,
+    max_followers: document.getElementById("ct-slots").value ? parseInt(document.getElementById("ct-slots").value) : null,
+    risk_level: document.getElementById("ct-risk").value,
+    elite: document.getElementById("ct-elite").value === "1",
+    active: document.getElementById("ct-active").value === "1",
+    tier: document.getElementById("ct-tier").value.trim() || "PRO",
+    rating: document.getElementById("ct-rating").value ? parseFloat(document.getElementById("ct-rating").value) : 5.0,
+    reviews: document.getElementById("ct-reviews").value ? parseInt(document.getElementById("ct-reviews").value) : 0,
+    equity: document.getElementById("ct-equity").value ? parseFloat(document.getElementById("ct-equity").value) : 0,
+    minimum_investment: document.getElementById("ct-min").value ? parseFloat(document.getElementById("ct-min").value) : 0,
+  };
+  if (!payload.display_name) {
+    errBox.textContent = "Display name is required.";
+    errBox.style.display = "block";
+    return;
+  }
+
+  try {
+    if (id) {
+      await Api.request(`/admin/copy-traders/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      });
+      okBox.textContent = "Trader updated.";
+    } else {
+      await Api.request("/admin/copy-traders", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      okBox.textContent = "Trader added.";
+    }
+    okBox.style.display = "block";
+    resetCopyTraderForm();
+    loadCopyTraders();
+  } catch (err) {
+    errBox.textContent = err.message;
+    errBox.style.display = "block";
+  }
+});
+
+document.getElementById("ct-reset").addEventListener("click", resetCopyTraderForm);
+
+function resetCopyTraderForm() {
+  document.getElementById("ct-form-title").textContent = "Add a trader";
+  document.getElementById("ct-id").value = "";
+   ["ct-name", "ct-bio", "ct-avatar", "ct-external", "ct-provider",
+   "ct-roi", "ct-winrate", "ct-trades", "ct-slots",
+   "ct-tier", "ct-rating", "ct-reviews", "ct-equity", "ct-min"]
+    .forEach(id => document.getElementById(id).value = ""); document.getElementById("ct-risk").value = "low";
+    document.getElementById("ct-risk").value = "low";
+  document.getElementById("ct-elite").value = "0";
+  document.getElementById("ct-active").value = "1";
+  document.getElementById("ct-tier").value = "PRO";
+  document.getElementById("ct-rating").value = "5.0";
+  document.getElementById("ct-reviews").value = "5";
+  document.getElementById("ct-equity").value = "";
+  document.getElementById("ct-min").value = "";
+}
+
+/* ============================================================
+   SECTION 4 — SUPPORT TICKETS
+   ============================================================ */
+async function loadTickets() {
+  const wrap = document.getElementById("ticket-list-wrap");
+  try {
+    const rows = await Api.request("/admin/support-tickets");
+    setCount("count-tickets", rows.length || 0);
+
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="empty-state">No tickets.</div>';
+      return;
+    }
+    const html = rows.map(r => {
+      const statusClass = r.status === "closed" ? "ok" : r.status === "in_progress" ? "warn" : "neutral";
+      return `
+        <tr>
+          <td class="muted" style="font-size:12px;">${escapeHtml(r.email || "")}</td>
+          <td>${escapeHtml(r.subject || "")}</td>
+          <td><span class="badge ${statusClass}">${escapeHtml(r.status || "")}</span></td>
+          <td class="muted" style="font-size:11.5px;">${new Date(r.updated_at).toLocaleString()}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <button class="btn-sm neutral" data-ticket-reply="${r.id}">Reply</button>
+              <button class="btn-sm approve" data-ticket-close="${r.id}">Close</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join("");
+    wrap.innerHTML = `
+      <table>
+        <thead><tr><th>User</th><th>Subject</th><th>Status</th><th>Updated</th><th>Actions</th></tr></thead>
+        <tbody>${html}</tbody>
+      </table>`;
+
+    bindTicketActions();
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state">Could not load tickets: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+function bindTicketActions() {
+  document.querySelectorAll("[data-ticket-close]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.ticketClose;
+      btn.disabled = true; btn.textContent = "…";
+      try {
+        await Api.request(`/admin/support-tickets/${id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ status: "closed" }),
+        });
+        loadTickets();
+      } catch (err) {
+        alert("Could not close ticket: " + err.message);
+        btn.disabled = false; btn.textContent = "Close";
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-ticket-reply]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.ticketReply;
+      const message = prompt("Reply to this ticket:");
+      if (!message) return;
+      Api.request(`/admin/support-tickets/${id}/replies`, {
+        method: "POST",
+        body: JSON.stringify({ message }),
+      }).then(loadTickets).catch(err => alert("Could not reply: " + err.message));
+    });
+  });
+}
+
+/* ============================================================
+   SECTION 5 — CONTENT
+   ============================================================ */
+async function loadContent() {
+  const wrap = document.getElementById("content-list-wrap");
+  try {
+    const rows = await Api.request("/admin/content");
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="empty-state">No pages yet.</div>';
+      return;
+    }
+    const html = rows.map(r => `
+      <tr>
+        <td class="mono">${escapeHtml(r.slug)}</td>
+        <td>${escapeHtml(r.title)}</td>
+        <td class="muted" style="font-size:11.5px;">${new Date(r.updated_at).toLocaleString()}</td>
+      </tr>`).join("");
+    wrap.innerHTML = `
+      <table>
+        <thead><tr><th>Slug</th><th>Title</th><th>Updated</th></tr></thead>
+        <tbody>${html}</tbody>
+      </table>`;
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state">Could not load pages: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+document.getElementById("save-content").addEventListener("click", async () => {
+  const slug = document.getElementById("c-slug").value.trim();
+  const title = document.getElementById("c-title").value.trim();
+  const body = document.getElementById("c-body").value;
+  const okBox = document.getElementById("content-success");
+  const errBox = document.getElementById("content-error");
+  okBox.style.display = "none"; errBox.style.display = "none";
+
+  if (!slug || !title || !body) {
+    errBox.textContent = "Slug, title, and body are all required.";
+    errBox.style.display = "block";
+    return;
+  }
+  try {
+    await Api.request(`/admin/content/${encodeURIComponent(slug)}`, {
+      method: "PUT",
+      body: JSON.stringify({ title, body_markdown: body }),
+    });
+    okBox.textContent = "Saved.";
+    okBox.style.display = "block";
+    loadContent();
+  } catch (err) {
+    errBox.textContent = err.message;
+    errBox.style.display = "block";
+  }
+});
+
+/* ============================================================
+   SECTION 6 — COMPLIANCE DOCS
+   ============================================================ */
+async function loadDocs() {
+  const wrap = document.getElementById("doc-list-wrap");
+  try {
+    const rows = await Api.request("/admin/compliance-docs");
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="empty-state">No documents yet.</div>';
+      return;
+    }
+    const html = rows.map(r => `
+      <tr>
+        <td>${escapeHtml(r.title)}</td>
+        <td>${escapeHtml(r.category)}</td>
+        <td class="muted" style="font-size:11.5px;">${new Date(r.uploaded_at).toLocaleString()}</td>
+      </tr>`).join("");
+    wrap.innerHTML = `
+      <table>
+        <thead><tr><th>Title</th><th>Category</th><th>Uploaded</th></tr></thead>
+        <tbody>${html}</tbody>
+      </table>`;
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state">Could not load documents: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+document.getElementById("save-doc").addEventListener("click", async () => {
+  const title = document.getElementById("d-title").value.trim();
+  const category = document.getElementById("d-category").value.trim();
+  const path = document.getElementById("d-path").value.trim();
+  const okBox = document.getElementById("doc-success");
+  const errBox = document.getElementById("doc-error");
+  okBox.style.display = "none"; errBox.style.display = "none";
+
+  if (!title || !category || !path) {
+    errBox.textContent = "All fields are required.";
+    errBox.style.display = "block";
+    return;
+  }
+  try {
+    await Api.request("/admin/compliance-docs", {
+      method: "POST",
+      body: JSON.stringify({ title, category, file_path: path }),
+    });
+    okBox.textContent = "Document added.";
+    okBox.style.display = "block";
+    document.getElementById("d-title").value = "";
+    document.getElementById("d-category").value = "";
+    document.getElementById("d-path").value = "";
+    loadDocs();
+  } catch (err) {
+    errBox.textContent = err.message;
+    errBox.style.display = "block";
+  }
+});
+
+/* ============================================================
+   SECTION 7 — USERS
+   ============================================================ */
+async function loadUsers() {
+  const wrap = document.getElementById("user-list-wrap");
+  try {
+    const rows = await Api.request("/admin/users");
+    setCount("count-users", rows.length || 0);
+
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="empty-state">No users.</div>';
+      return;
+    }
+    const html = rows.map(r => `
+      <tr>
+        <td class="mono">${escapeHtml(r.email || "")}</td>
+        <td>${escapeHtml(r.full_name || "—")}</td>
+        <td><span class="badge ${r.role === "admin" ? "ok" : r.role === "support" ? "warn" : "neutral"}">${escapeHtml(r.role)}</span></td>
+        <td class="muted" style="font-size:11.5px;">${new Date(r.created_at).toLocaleDateString()}</td>
+      </tr>`).join("");
+    wrap.innerHTML = `
+      <table>
+        <thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Joined</th></tr></thead>
+        <tbody>${html}</tbody>
+      </table>`;
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state">Could not load users: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+/* ============================================================
+   INITIAL LOAD
+   ============================================================ */
+loadKyc();
+loadLoans();
+loadCopyTraders();
+loadTickets();
+loadContent();
+loadDocs();
+loadUsers();
+</script>
+</body>
+</html>

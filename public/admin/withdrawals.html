@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Withdrawals — Wall Street Capital Admin</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<style>
+  .aw-wrap { max-width: 1180px; margin: 0 auto; padding: 32px 24px 80px; }
+  .aw-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; flex-wrap: wrap; margin-bottom: 24px; }
+  .aw-head h1 { font-family: var(--serif); font-size: 26px; font-weight: 500; margin: 0 0 6px; color: var(--text); }
+  .aw-head .sub { color: var(--text-dim); font-size: 13.5px; line-height: 1.55; max-width: 70ch; }
+  .aw-head .links a { color: var(--gold-bright); text-decoration: none; font-size: 13px; margin-left: 14px; }
+  .aw-head .links a:hover { text-decoration: underline; }
+
+  .aw-filters {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .aw-filter {
+    padding: 8px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--text-dim);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--sans);
+  }
+  .aw-filter:hover { border-color: var(--gold); color: var(--text); }
+  .aw-filter.active {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: var(--gold);
+    color: var(--gold-bright);
+    font-weight: 600;
+  }
+  .aw-filter .count {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.08);
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .aw-filter.active .count { background: rgba(96,165,250,0.25); }
+
+  .aw-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px;
+    backdrop-filter: blur(20px);
+  }
+
+  table.aw-table { width: 100%; border-collapse: collapse; }
+  .aw-table th, .aw-table td {
+    text-align: left; padding: 14px 12px;
+    border-bottom: 1px solid var(--line-soft);
+    font-size: 13px; vertical-align: middle;
+  }
+  .aw-table th {
+    font-size: 10.5px; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-dimmer);
+    font-weight: 600;
+  }
+  .aw-table td.mono { font-family: var(--mono); font-size: 12.5px; color: var(--text); }
+  .aw-table tr:hover td { background: rgba(59,130,246,0.05); }
+
+  .badge {
+    display: inline-block; padding: 4px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+    border: 1px solid; text-transform: capitalize;
+  }
+  .badge.pending  { color: var(--gold-bright); border-color: var(--gold); background: rgba(96,165,250,0.08); }
+  .badge.sent     { color: #FDE68A; border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.08); }
+  .badge.ok       { color: var(--tick-up); border-color: var(--tick-up); background: rgba(74,222,128,0.08); }
+  .badge.bad      { color: var(--tick-down); border-color: var(--tick-down); background: rgba(248,113,113,0.08); }
+  .badge.neutral  { color: var(--text-dim); border-color: var(--line); background: transparent; }
+
+  .btn-sm {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 13px; border-radius: 8px;
+    font-size: 12px; font-weight: 600; font-family: var(--sans);
+    cursor: pointer; border: 1px solid; transition: all 0.2s;
+  }
+  .btn-sm.approve { border-color: var(--tick-up); color: var(--tick-up); background: transparent; }
+  .btn-sm.approve:hover { background: var(--tick-up); color: #0A0908; }
+  .btn-sm.reject { border-color: var(--tick-down); color: var(--tick-down); background: transparent; }
+  .btn-sm.reject:hover { background: var(--tick-down); color: #0A0908; }
+  .btn-sm + .btn-sm { margin-left: 6px; }
+
+  .reason-row {
+    display: none;
+    padding: 10px 12px; border-radius: 8px;
+    background: rgba(248,113,113,0.06);
+    border: 1px solid rgba(248,113,113,0.25);
+    margin-top: 10px; gap: 8px; align-items: center;
+  }
+  .reason-row.show { display: flex; }
+  .reason-row input {
+    flex: 1; padding: 8px 12px;
+    border-radius: 6px; background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text); font-size: 12.5px; font-family: var(--sans);
+  }
+  .reason-row input:focus { outline: none; border-color: var(--tick-down); }
+
+  .aw-code-toast {
+    display: none;
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: rgba(74,222,128,0.08);
+    border: 1px solid rgba(74,222,128,0.35);
+    color: var(--tick-up);
+    font-size: 13px; line-height: 1.55;
+  }
+  .aw-code-toast.show { display: block; }
+  .aw-code-toast code {
+    font-family: var(--mono);
+    font-size: 18px;
+    letter-spacing: 0.1em;
+    color: #FFFFFF;
+    background: rgba(0,0,0,0.3);
+    padding: 4px 10px;
+    border-radius: 6px;
+    margin-left: 6px;
+  }
+
+  .empty-state {
+    padding: 40px 20px; text-align: center;
+    color: var(--text-dimmer); font-size: 13.5px;
+  }
+</style>
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="aw-wrap">
+
+  <div class="aw-head">
+    <div>
+      <h1>Withdrawals</h1>
+      <div class="sub">
+        Review and approve user withdrawal requests. Approving sends a single-use 6-digit code to the user's notifications.
+        <strong>The code is generated at request time and re-minted at approval; the plaintext is returned below so you can read it back if needed.</strong>
+      </div>
+    </div>
+    <div class="links">
+      <a href="/admin/index.html">← Back to admin</a>
+    </div>
+  </div>
+
+  <div class="aw-filters" id="aw-filters">
+    <button class="aw-filter active" data-status="">All <span class="count" id="cnt-all">0</span></button>
+    <button class="aw-filter" data-status="pending_admin">Pending <span class="count" id="cnt-pending">0</span></button>
+    <button class="aw-filter" data-status="code_sent">Code sent <span class="count" id="cnt-sent">0</span></button>
+    <button class="aw-filter" data-status="completed">Completed <span class="count" id="cnt-completed">0</span></button>
+    <button class="aw-filter" data-status="rejected">Rejected <span class="count" id="cnt-rejected">0</span></button>
+    <button class="aw-filter" data-status="expired">Expired <span class="count" id="cnt-expired">0</span></button>
+  </div>
+
+  <div class="aw-card">
+    <div id="aw-table-wrap">
+      <div class="empty-state">Loading…</div>
+    </div>
+    <div class="aw-code-toast" id="aw-code-toast"></div>
+  </div>
+
+</div>
+
+<script src="/js/theme.js"></script>
+<script src="/js/api.js"></script>
+<script>
+requireAuth();
+const me = Api.user();
+if (!me || (me.role !== "admin" && me.role !== "support")) {
+  window.location.href = "/login.html";
+}
+
+let currentStatus = "";
+let allRows = [];
+
+function escapeHtml(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function fmtMoney(n) {
+  return "$" + parseFloat(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+async function loadAll() {
+  const wrap = document.getElementById("aw-table-wrap");
+  try {
+    allRows = await Api.request("/admin/withdrawals");
+    renderCounts();
+    renderTable();
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state">Could not load withdrawals: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+function renderCounts() {
+  const counts = {
+    all: allRows.length,
+    pending_admin: 0,
+    code_sent: 0,
+    completed: 0,
+    rejected: 0,
+    expired: 0,
+  };
+  allRows.forEach(r => {
+    if (counts[r.status] !== undefined) counts[r.status]++;
+  });
+  document.getElementById("cnt-all").textContent = counts.all;
+  document.getElementById("cnt-pending").textContent = counts.pending_admin;
+  document.getElementById("cnt-sent").textContent = counts.code_sent;
+  document.getElementById("cnt-completed").textContent = counts.completed;
+  document.getElementById("cnt-rejected").textContent = counts.rejected;
+  document.getElementById("cnt-expired").textContent = counts.expired;
+}
+
+function statusBadge(status) {
+  if (status === "pending_admin") return '<span class="badge pending">Pending</span>';
+  if (status === "code_sent")     return '<span class="badge sent">Code sent</span>';
+  if (status === "completed")     return '<span class="badge ok">Completed</span>';
+  if (status === "rejected")      return '<span class="badge bad">Rejected</span>';
+  if (status === "expired")       return '<span class="badge neutral">Expired</span>';
+  return `<span class="badge neutral">${escapeHtml(status)}</span>`;
+}
+
+function renderTable() {
+  const wrap = document.getElementById("aw-table-wrap");
+  const rows = currentStatus
+    ? allRows.filter(r => r.status === currentStatus)
+    : allRows;
+
+  if (!rows.length) {
+    wrap.innerHTML = '<div class="empty-state">No requests in this view.</div>';
+    return;
+  }
+
+  const html = rows.map(r => {
+    const canAct = r.status === "pending_admin";
+    return `
+      <tr data-id="${escapeHtml(r.id)}">
+        <td>
+          <div style="font-weight:600;color:var(--text);">${escapeHtml(r.user_name || r.user_email || "—")}</div>
+          <div class="muted" style="font-size:11.5px;">${escapeHtml(r.user_email || "")}</div>
+        </td>
+        <td class="mono">${fmtMoney(r.amount_usd)}</td>
+        <td class="mono">${fmtMoney(r.user_cash_balance)}</td>
+        <td>${statusBadge(r.status)}</td>
+        <td class="mono" style="font-size:11.5px;">${r.requested_at ? new Date(r.requested_at).toLocaleString() : "—"}</td>
+        <td class="mono" style="font-size:11.5px;">${
+          r.completed_at ? new Date(r.completed_at).toLocaleString()
+          : r.code_sent_at ? "Code sent " + new Date(r.code_sent_at).toLocaleTimeString()
+          : "—"
+        }</td>
+        <td>
+          ${canAct ? `
+            <button class="btn-sm approve" data-approve="${escapeHtml(r.id)}">Approve</button>
+            <button class="btn-sm reject" data-reject="${escapeHtml(r.id)}">Reject</button>
+          ` : '<span class="muted" style="font-size:11.5px;">—</span>'}
+          <div class="reason-row" data-reason-row="${escapeHtml(r.id)}">
+            <input type="text" placeholder="Reason for rejection (optional)" data-reason-input="${escapeHtml(r.id)}">
+            <button class="btn-sm reject" data-confirm-reject="${escapeHtml(r.id)}">Confirm</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  wrap.innerHTML = `
+    <table class="aw-table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Amount</th>
+          <th>Balance</th>
+          <th>Status</th>
+          <th>Requested</th>
+          <th>Updated</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>${html}</tbody>
+    </table>
+  `;
+
+  bindActions();
+}
+
+function bindActions() {
+  document.querySelectorAll("[data-approve]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.approve;
+      btn.disabled = true; btn.textContent = "…";
+      try {
+        const res = await Api.request(`/admin/withdrawals/${id}/approve`, { method: "POST" });
+        showCodeToast(res.code_for_admin_reference, res.expires_in_minutes);
+        await loadAll();
+      } catch (err) {
+        alert("Could not approve: " + err.message);
+        btn.disabled = false; btn.textContent = "Approve";
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-reject]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.reject;
+      const row = document.querySelector(`[data-reason-row="${id}"]`);
+      row.classList.toggle("show");
+      if (row.classList.contains("show")) row.querySelector("input").focus();
+    });
+  });
+
+  document.querySelectorAll("[data-confirm-reject]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.confirmReject;
+      const reason = document.querySelector(`[data-reason-input="${id}"]`).value.trim();
+      btn.disabled = true; btn.textContent = "…";
+      try {
+        await Api.request(`/admin/withdrawals/${id}/reject`, {
+          method: "POST",
+          body: JSON.stringify({ reason: reason || null }),
+        });
+        await loadAll();
+      } catch (err) {
+        alert("Could not reject: " + err.message);
+        btn.disabled = false; btn.textContent = "Confirm";
+      }
+    });
+  });
+}
+
+function showCodeToast(code, minutes) {
+  const el = document.getElementById("aw-code-toast");
+  if (!el) return;
+  el.innerHTML = `Approval sent. Code (for your reference): <code>${escapeHtml(code)}</code> · expires in ${minutes} min`;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 20000);
+}
+
+document.querySelectorAll(".aw-filter").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".aw-filter").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentStatus = btn.dataset.status || "";
+    renderTable();
+  });
+});
+
+loadAll();
+</script>
+</body>
+</html>

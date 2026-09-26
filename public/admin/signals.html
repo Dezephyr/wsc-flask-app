@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Premium Signals — Admin</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="stylesheet" href="/admin/shared.css">
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="adm-app" id="adm-app"></div>
+
+<script src="/js/theme.js"></script>
+<script src="/js/api.js"></script>
+<script src="/admin/shared.js"></script>
+<script>
+AdminShell.mount({
+  activeKey: "signals",
+  title: "Premium Signals",
+  onReady: function (root) {
+    root.innerHTML = `
+      <div class="adm-section" style="margin-top:0;">
+        <div class="adm-section-head">
+          <div>
+            <h2>Premium signals</h2>
+            <p class="desc">Publish trade ideas for subscribed users. Tiers: <strong>premium</strong> and <strong>vip</strong>.</p>
+          </div>
+        </div>
+        <div class="adm-grid-2">
+          <div class="adm-card">
+            <h3 id="sg-form-title">Add a signal</h3>
+            <input type="hidden" id="sg-id">
+            <div class="adm-field"><label for="sg-title">Title</label><input id="sg-title" type="text" placeholder="BTC breakout above 70k"></div>
+            <div class="adm-field"><label for="sg-body">Body / analysis</label><textarea id="sg-body" rows="5"></textarea></div>
+            <div class="adm-grid-2">
+              <div class="adm-field"><label for="sg-symbol">Symbol</label><input id="sg-symbol" type="text" placeholder="BTCUSDT"></div>
+              <div class="adm-field">
+                <label for="sg-side">Side</label>
+                <select id="sg-side"><option value="">—</option><option value="BUY">BUY</option><option value="SELL">SELL</option></select>
+              </div>
+            </div>
+            <div class="adm-grid-2">
+              <div class="adm-field"><label for="sg-entry">Entry price</label><input id="sg-entry" type="text"></div>
+              <div class="adm-field"><label for="sg-target">Target price</label><input id="sg-target" type="text"></div>
+            </div>
+            <div class="adm-grid-2">
+              <div class="adm-field"><label for="sg-stop">Stop price</label><input id="sg-stop" type="text"></div>
+              <div class="adm-field">
+                <label for="sg-confidence">Confidence (1–5)</label>
+                <select id="sg-confidence"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
+              </div>
+            </div>
+            <div class="adm-grid-2">
+              <div class="adm-field">
+                <label for="sg-tier">Tier</label>
+                <select id="sg-tier"><option value="premium">Premium</option><option value="vip">VIP</option></select>
+              </div>
+              <div class="adm-field">
+                <label for="sg-status">Status</label>
+                <select id="sg-status"><option value="published">Published</option><option value="draft">Draft</option><option value="closed">Closed</option></select>
+              </div>
+            </div>
+            <button class="btn btn-solid" id="sg-save">Save signal</button>
+            <button class="btn" id="sg-reset" style="margin-left:8px;">Reset</button>
+            <div class="success-box" id="sg-success" style="margin-top:14px;"></div>
+            <div class="error-box" id="sg-error" style="margin-top:14px;"></div>
+          </div>
+          <div class="adm-card">
+            <h3>Published signals</h3>
+            <div id="sg-list-wrap"><div class="empty-state"><span class="loading">Loading signals</span></div></div>
+          </div>
+        </div>
+      </div>
+    `;
+    loadSignals();
+    document.getElementById("sg-save").addEventListener("click", saveSignal);
+    document.getElementById("sg-reset").addEventListener("click", resetSignalForm);
+  }
+});
+
+let sgCache = [];
+
+async function loadSignals() {
+  const wrap = document.getElementById("sg-list-wrap");
+  try {
+    const rows = await AdminShell.api("/admin/signals");
+    sgCache = rows || [];
+    AdminShell.setCount("count-signals", sgCache.length);
+
+    if (!rows.length) { wrap.innerHTML = '<div class="empty-state">No signals yet.</div>'; return; }
+
+    const E = AdminShell.escapeHtml;
+    const html = rows.map(s => {
+      const statusClass = s.status === "published" ? "ok" : s.status === "draft" ? "warn" : "neutral";
+      return `
+        <tr>
+          <td>
+            <div style="font-weight:600;">${E(s.title)}</div>
+            <div class="muted" style="font-size:11.5px;">${E(s.symbol || "—")} ${s.side ? "· " + E(s.side) : ""}</div>
+          </td>
+          <td><span class="badge ${s.tier === "vip" ? "warn" : "neutral"}">${E(s.tier)}</span></td>
+          <td><span class="badge ${statusClass}">${E(s.status)}</span></td>
+          <td class="muted" style="font-size:11.5px;">${new Date(s.created_at).toLocaleDateString()}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <button class="btn-sm neutral" data-sg-edit="${s.id}">Edit</button>
+              <button class="btn-sm reject" data-sg-delete="${s.id}">Delete</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join("");
+
+    wrap.innerHTML = `<table><thead><tr><th>Signal</th><th>Tier</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead><tbody>${html}</tbody></table>`;
+    bindSignalActions();
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state">Could not load signals: ${AdminShell.escapeHtml(err.message)}</div>`;
+  }
+}
+
+function bindSignalActions() {
+  document.querySelectorAll("[data-sg-edit]").forEach(btn => btn.addEventListener("click", () => {
+    const s = sgCache.find(x => x.id === btn.dataset.sgEdit);
+    if (!s) return;
+    document.getElementById("sg-form-title").textContent = "Edit signal";
+    document.getElementById("sg-id").value = s.id;
+    document.getElementById("sg-title").value = s.title || "";
+    document.getElementById("sg-body").value = s.body || "";
+    document.getElementById("sg-symbol").value = s.symbol || "";
+    document.getElementById("sg-side").value = s.side || "";
+    document.getElementById("sg-entry").value = s.entry_price || "";
+    document.getElementById("sg-target").value = s.target_price || "";
+    document.getElementById("sg-stop").value = s.stop_price || "";
+    document.getElementById("sg-confidence").value = s.confidence || 3;
+    document.getElementById("sg-tier").value = s.tier || "premium";
+    document.getElementById("sg-status").value = s.status || "published";
+    document.getElementById("sg-form-title").scrollIntoView({ behavior: "smooth" });
+  }));
+
+  document.querySelectorAll("[data-sg-delete]").forEach(btn => btn.addEventListener("click", async () => {
+    if (!confirm("Delete this signal?")) return;
+    btn.disabled = true; btn.textContent = "…";
+    try {
+      await AdminShell.api(`/admin/signals/${btn.dataset.sgDelete}`, { method: "DELETE" });
+      loadSignals();
+    } catch (e) {
+      alert(e.message);
+      btn.disabled = false; btn.textContent = "Delete";
+    }
+  }));
+}
+
+async function saveSignal() {
+  const okBox = document.getElementById("sg-success");
+  const errBox = document.getElementById("sg-error");
+  okBox.style.display = "none"; errBox.style.display = "none";
+
+  const id = document.getElementById("sg-id").value;
+  const g = (x) => document.getElementById("sg-" + x).value;
+
+  const payload = {
+    title: g("title").trim(),
+    body: g("body").trim(),
+    symbol: g("symbol").trim() || null,
+    side: g("side") || null,
+    entry_price: g("entry").trim() || null,
+    target_price: g("target").trim() || null,
+    stop_price: g("stop").trim() || null,
+    confidence: parseInt(g("confidence")) || 3,
+    tier: g("tier"),
+    status: g("status"),
+  };
+
+  if (!payload.title || !payload.body) {
+    errBox.textContent = "Title and body required.";
+    errBox.style.display = "block";
+    return;
+  }
+
+  try {
+    if (id) {
+      await AdminShell.api(`/admin/signals/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+      okBox.textContent = "Signal updated.";
+    } else {
+      await AdminShell.api("/admin/signals", { method: "POST", body: JSON.stringify(payload) });
+      okBox.textContent = "Signal published.";
+    }
+    okBox.style.display = "block";
+    resetSignalForm();
+    loadSignals();
+  } catch (err) {
+    errBox.textContent = err.message;
+    errBox.style.display = "block";
+  }
+}
+
+function resetSignalForm() {
+  document.getElementById("sg-form-title").textContent = "Add a signal";
+  document.getElementById("sg-id").value = "";
+  ["sg-title","sg-body","sg-symbol","sg-entry","sg-target","sg-stop"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("sg-side").value = "";
+  document.getElementById("sg-confidence").value = "3";
+  document.getElementById("sg-tier").value = "premium";
+  document.getElementById("sg-status").value = "published";
+}
+</script>
+</body>
+</html>

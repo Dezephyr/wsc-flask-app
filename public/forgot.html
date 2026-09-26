@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reset password — Wall Street Capital</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<style>
+  .forgot-card {
+    max-width: 460px;
+    padding: 40px 40px 34px;
+    background: rgba(15, 26, 48, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    border-radius: 20px;
+    box-shadow: 0 30px 70px rgba(0,0,0,0.55),
+                inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  html[data-theme="light"] .forgot-card {
+    background: rgba(255,255,255,0.75);
+    border-color: rgba(0,0,0,0.08);
+    box-shadow: 0 30px 70px rgba(0,0,0,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.9);
+  }
+  .forgot-card .field label { font-size:12.5px; color:var(--text-dim); font-weight:500; }
+  .forgot-card .field input {
+    background: rgba(0,8,24,0.55);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 15px;
+    width: 100%;
+  }
+  html[data-theme="light"] .forgot-card .field input {
+    background: rgba(255,255,255,0.8);
+    border-color: rgba(0,0,0,0.08);
+  }
+  .forgot-card .field input:focus {
+    outline: none;
+    border-color: rgba(96,165,250,0.65);
+    box-shadow: 0 0 0 4px rgba(59,130,246,0.14);
+  }
+  .step-panel { display: none; }
+  .step-panel.active { display: block; animation: panelIn 0.35s ease-out; }
+  @keyframes panelIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .code-row {
+    display: flex; gap: 10px; justify-content: center;
+    margin: 22px 0 14px;
+  }
+  .code-row input {
+    width: 52px; height: 62px; text-align: center;
+    font-family: var(--mono); font-size: 26px; font-weight: 600;
+    padding: 0; border-radius: 12px;
+  }
+  .code-row input:focus {
+    outline: none;
+    border-color: rgba(96,165,250,0.8);
+    box-shadow: 0 0 0 4px rgba(59,130,246,0.2);
+  }
+  .code-row input.filled {
+    background: rgba(59,130,246,0.1);
+    border-color: rgba(96,165,250,0.6);
+  }
+  @media (max-width: 500px) {
+    .code-row { gap: 6px; }
+    .code-row input { width: 44px; height: 54px; font-size: 22px; }
+  }
+  .forgot-muted { font-size: 13.5px; color: var(--text-dimmer); line-height: 1.6; }
+  .forgot-muted strong { color: var(--gold-bright); font-family: var(--mono); }
+  .back-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--text-dim); text-decoration: none;
+    margin-top: 18px;
+  }
+  .back-link:hover { color: var(--gold-bright); }
+</style>
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+</button>
+
+<div class="auth-shell">
+  <div class="brand-badge">
+    <img src="/images/wsc-logo.png" alt="Wall Street Capital"
+         style="height:90px;width:auto;max-width:260px;object-fit:contain;margin:0 auto;display:block;
+                filter:drop-shadow(0 0 12px rgba(212,175,106,0.4));">
+  </div>
+
+  <div class="auth-card forgot-card">
+
+    <!-- STEP 1 — enter email -->
+    <div class="step-panel active" id="step-email">
+      <h1>Reset your password</h1>
+      <p class="sub">Enter the email on your account and we'll send you a 6-digit code.</p>
+
+      <div class="error-box" id="err-email" style="display:none;"></div>
+
+      <form id="form-email" autocomplete="off">
+        <div class="field">
+          <label for="fp-email">Email address</label>
+          <input id="fp-email" type="email" placeholder="name@example.com" required>
+        </div>
+        <button class="btn btn-solid btn-block" type="submit" id="btn-email">
+          Send reset code →
+        </button>
+      </form>
+
+      <a class="back-link" href="/login.html">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back to sign in
+      </a>
+    </div>
+
+    <!-- STEP 2 — enter code -->
+    <div class="step-panel" id="step-code">
+      <h1>Enter your code</h1>
+      <p class="sub forgot-muted">
+        We sent a 6-digit code to <strong id="sent-to">your email</strong>. It expires in 10 minutes.
+      </p>
+
+      <div class="error-box" id="err-code" style="display:none;"></div>
+
+      <div class="code-row" id="code-row">
+        <input type="text" maxlength="1" inputmode="numeric" autocomplete="off" data-code="0">
+        <input type="text" maxlength="1" inputmode="numeric" autocomplete="off" data-code="1">
+        <input type="text" maxlength="1" inputmode="numeric" autocomplete="off" data-code="2">
+        <input type="text" maxlength="1" inputmode="numeric" autocomplete="off" data-code="3">
+        <input type="text" maxlength="1" inputmode="numeric" autocomplete="off" data-code="4">
+        <input type="text" maxlength="1" inputmode="numeric" autocomplete="off" data-code="5">
+      </div>
+
+      <button class="btn btn-solid btn-block" id="btn-verify">
+        Verify code →
+      </button>
+
+      <div style="display:flex;justify-content:space-between;margin-top:14px;">
+        <button type="button" id="btn-resend" class="back-link" style="background:none;border:none;cursor:pointer;padding:0;">
+          Resend code
+        </button>
+        <button type="button" id="btn-back-email" class="back-link" style="background:none;border:none;cursor:pointer;padding:0;">
+          Use a different email
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 3 — new password -->
+    <div class="step-panel" id="step-password">
+      <h1>Set a new password</h1>
+      <p class="sub">Choose a strong password at least 10 characters long.</p>
+
+      <div class="error-box" id="err-password" style="display:none;"></div>
+
+      <form id="form-password" autocomplete="off">
+        <div class="field">
+          <label for="fp-password">New password</label>
+          <input id="fp-password" type="password" placeholder="••••••••" minlength="10" required>
+        </div>
+        <div class="field">
+          <label for="fp-confirm">Confirm password</label>
+          <input id="fp-confirm" type="password" placeholder="••••••••" minlength="10" required>
+        </div>
+        <button class="btn btn-solid btn-block" type="submit" id="btn-reset">
+          Reset password →
+        </button>
+      </form>
+    </div>
+
+    <!-- STEP 4 — success -->
+    <div class="step-panel" id="step-done">
+      <h1>Password reset</h1>
+      <p class="sub">Your password has been changed. You can now sign in with your new password.</p>
+      <a class="btn btn-solid btn-block" href="/login.html" style="margin-top:12px;">
+        Go to sign in →
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<script src="/js/theme.js"></script>
+<script src="/js/api.js"></script>
+<script>
+(function () {
+  var state = { email: "", resetToken: "" };
+
+  function show(id) {
+    document.querySelectorAll(".step-panel").forEach(function (p) {
+      p.classList.toggle("active", p.id === id);
+    });
+  }
+  function showErr(elId, msg) {
+    var el = document.getElementById(elId);
+    el.textContent = msg;
+    el.style.display = "block";
+  }
+  function hideErr(elId) {
+    document.getElementById(elId).style.display = "none";
+  }
+
+  /* ---------- Step 1: request code ---------- */
+  document.getElementById("form-email").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    hideErr("err-email");
+    var btn = document.getElementById("btn-email");
+    var email = document.getElementById("fp-email").value.trim();
+
+    if (!email) return showErr("err-email", "Enter your email address.");
+
+    btn.disabled = true; btn.textContent = "Sending…";
+    try {
+      var res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email }),
+      });
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not send code");
+
+      state.email = email;
+      document.getElementById("sent-to").textContent = data.email_masked || email;
+      show("step-code");
+      setTimeout(function () {
+        var first = document.querySelector('#code-row input[data-code="0"]');
+        if (first) first.focus();
+      }, 50);
+    } catch (err) {
+      showErr("err-email", err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = "Send reset code →";
+    }
+  });
+
+  /* ---------- Step 2: code entry ---------- */
+  var boxes = Array.prototype.slice.call(document.querySelectorAll("#code-row input"));
+  function getCode() { return boxes.map(function (b) { return b.value; }).join(""); }
+  function clearCode() {
+    boxes.forEach(function (b) { b.value = ""; b.classList.remove("filled"); });
+    boxes[0].focus();
+  }
+
+  boxes.forEach(function (box, i) {
+    box.addEventListener("input", function () {
+      box.value = box.value.replace(/[^0-9]/g, "").slice(0, 1);
+      box.classList.toggle("filled", !!box.value);
+      if (box.value && boxes[i + 1]) boxes[i + 1].focus();
+    });
+    box.addEventListener("keydown", function (e) {
+      if (e.key === "Backspace" && !box.value && boxes[i - 1]) {
+        boxes[i - 1].focus(); boxes[i - 1].value = ""; boxes[i - 1].classList.remove("filled");
+        e.preventDefault();
+      }
+      if (e.key === "Enter") document.getElementById("btn-verify").click();
+    });
+    box.addEventListener("paste", function (e) {
+      var pasted = (e.clipboardData || window.clipboardData).getData("text").replace(/[^0-9]/g, "");
+      if (!pasted) return;
+      e.preventDefault();
+      boxes.forEach(function (b, idx) { b.value = pasted[idx] || ""; b.classList.toggle("filled", !!b.value); });
+      var next = Math.min(pasted.length, boxes.length - 1);
+      boxes[next].focus();
+    });
+  });
+
+  document.getElementById("btn-verify").addEventListener("click", async function () {
+    hideErr("err-code");
+    var btn = this;
+    var code = getCode();
+    if (code.length !== 6) return showErr("err-code", "Enter all 6 digits.");
+
+    btn.disabled = true; btn.textContent = "Verifying…";
+    try {
+      var res = await fetch("/api/auth/verify-reset-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: state.email, code: code }),
+      });
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Verification failed");
+
+      state.resetToken = data.reset_token;
+      show("step-password");
+      setTimeout(function () { document.getElementById("fp-password").focus(); }, 50);
+    } catch (err) {
+      showErr("err-code", err.message);
+      clearCode();
+    } finally {
+      btn.disabled = false; btn.textContent = "Verify code →";
+    }
+  });
+
+  document.getElementById("btn-resend").addEventListener("click", async function () {
+    hideErr("err-code");
+    this.disabled = true; this.textContent = "Sending…";
+    try {
+      await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: state.email }),
+      });
+      document.getElementById("err-code").style.display = "none";
+      alert("A new code has been sent.");
+      clearCode();
+    } catch (err) {
+      showErr("err-code", "Could not resend. Try again.");
+    } finally {
+      this.disabled = false; this.textContent = "Resend code";
+    }
+  });
+
+  document.getElementById("btn-back-email").addEventListener("click", function () {
+    clearCode();
+    show("step-email");
+  });
+
+  /* ---------- Step 3: set new password ---------- */
+  document.getElementById("form-password").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    hideErr("err-password");
+    var btn = document.getElementById("btn-reset");
+    var pw = document.getElementById("fp-password").value;
+    var confirm = document.getElementById("fp-confirm").value;
+
+    if (pw.length < 10) return showErr("err-password", "Password must be at least 10 characters.");
+    if (pw !== confirm) return showErr("err-password", "Passwords do not match.");
+
+    btn.disabled = true; btn.textContent = "Resetting…";
+    try {
+      var res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reset_token: state.resetToken,
+          password: pw,
+          confirm_password: confirm,
+        }),
+      });
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not reset password");
+      show("step-done");
+    } catch (err) {
+      showErr("err-password", err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = "Reset password →";
+    }
+  });
+})();
+</script>
+</body>
+</html>

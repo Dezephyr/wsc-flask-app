@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,97 +11,883 @@
   })();
 </script>
 <link rel="stylesheet" href="/css/styles.css">
+<style>
+  /* ============================================================
+     KYC — 5-step wizard, Apple-style glass
+     ============================================================ */
+
+  .kyc-shell {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 24px 80px;
+  }
+
+  .kyc-brand {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .kyc-brand .v {
+    font-family: var(--serif);
+    font-size: 38px;
+    color: var(--gold-bright);
+    letter-spacing: 1px;
+    line-height: 1;
+    text-shadow: 0 0 30px var(--gold-glow);
+  }
+  .kyc-brand .label {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 6px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  /* Main card */
+  .kyc-card {
+    position: relative;
+    width: 100%;
+    max-width: 620px;
+    padding: 40px 40px 36px;
+    background: rgba(15, 26, 48, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    border-radius: 20px;
+    box-shadow:
+      0 30px 70px rgba(0, 0, 0, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+  }
+  html[data-theme="light"] .kyc-card {
+    background: rgba(255, 255, 255, 0.75);
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow:
+      0 30px 70px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+  .kyc-card::before {
+    content: "";
+    position: absolute;
+    top: -1px; right: -1px;
+    width: 72px; height: 72px;
+    background: var(--bg);
+    border-bottom-left-radius: 16px;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    clip-path: polygon(100% 0, 100% 100%, 0 0);
+  }
+
+  /* Progress bar */
+  .kyc-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 32px;
+  }
+  .kyc-progress .dot {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.08);
+    position: relative;
+    overflow: hidden;
+  }
+  .kyc-progress .dot::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, var(--gold-bright), var(--gold));
+    transform-origin: left;
+    transform: scaleX(0);
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .kyc-progress .dot.done::after,
+  .kyc-progress .dot.active::after { transform: scaleX(1); }
+  .kyc-progress .dot.active::after {
+    background: linear-gradient(90deg, var(--gold-bright), var(--gold));
+    box-shadow: 0 0 14px var(--gold-glow);
+  }
+
+  .kyc-steps-count {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-dimmer);
+    margin-bottom: 26px;
+    letter-spacing: 0.06em;
+  }
+  .kyc-steps-count strong {
+    color: var(--gold-bright);
+    font-weight: 600;
+  }
+
+  /* Step header */
+  .kyc-step-title {
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 500;
+    margin: 0 0 8px;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .kyc-step-sub {
+    font-size: 14px;
+    color: var(--text-dim);
+    margin: 0 0 28px;
+    line-height: 1.55;
+  }
+
+  /* Panels */
+  .kyc-panel { display: none; }
+  .kyc-panel.active {
+    display: block;
+    animation: panelIn 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes panelIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Fields — reuses styles.css .field but with apple-style tweaks */
+  .kyc-card .field label {
+    font-size: 12.5px;
+    color: var(--text-dim);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  .kyc-card .field input,
+  .kyc-card .field select,
+  .kyc-card .field textarea {
+    background: rgba(0, 8, 24, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 15px;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+  html[data-theme="light"] .kyc-card .field input,
+  html[data-theme="light"] .kyc-card .field select,
+  html[data-theme="light"] .kyc-card .field textarea {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+  .kyc-card .field input:focus,
+  .kyc-card .field select:focus,
+  .kyc-card .field textarea:focus {
+    border-color: rgba(96, 165, 250, 0.65);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.14);
+    background: rgba(0, 8, 24, 0.7);
+  }
+  html[data-theme="light"] .kyc-card .field input:focus,
+  html[data-theme="light"] .kyc-card .field select:focus,
+  html[data-theme="light"] .kyc-card .field textarea:focus {
+    background: #fff;
+  }
+
+  /* Country display (read-only, from signup) */
+  .country-readout {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: rgba(0, 8, 24, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text);
+    font-size: 15px;
+  }
+  html[data-theme="light"] .country-readout {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+  .country-readout .flag { font-size: 18px; }
+  .country-readout .name { flex: 1; }
+  .country-readout a {
+    font-size: 12.5px;
+    color: var(--gold-bright);
+    text-decoration: none;
+  }
+  .country-readout a:hover { text-decoration: underline; }
+
+  /* Footer buttons */
+  .kyc-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+    justify-content: space-between;
+  }
+  .kyc-actions .spacer { flex: 1; }
+  .kyc-actions .btn { min-width: 120px; }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--text-dim);
+  }
+  .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    border-color: var(--line);
+    box-shadow: none;
+    transform: none;
+  }
+
+  /* Review step */
+  .review-block {
+    padding: 18px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .review-block:last-of-type { border-bottom: none; }
+  .review-block .review-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .review-block h4 {
+    font-family: var(--serif);
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0;
+    color: var(--gold-bright);
+  }
+  .review-block .edit-link {
+    font-size: 12.5px;
+    color: var(--text-dim);
+    text-decoration: none;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+  }
+  .review-block .edit-link:hover { color: var(--gold-bright); }
+  .review-block .review-rows {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 20px;
+  }
+  @media (max-width: 560px) { .review-block .review-rows { grid-template-columns: 1fr; } }
+  .review-block .row .k {
+    font-size: 11px;
+    color: var(--text-dimmer);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 3px;
+  }
+  .review-block .row .v {
+    font-size: 14px;
+    color: var(--text);
+    font-family: var(--mono);
+    word-break: break-word;
+  }
+
+  /* Consent checkbox */
+  .consent-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 20px;
+    padding: 16px 18px;
+    border-radius: 12px;
+    background: rgba(59, 130, 246, 0.06);
+    border: 1px solid rgba(96, 165, 250, 0.2);
+  }
+  .consent-row input { margin-top: 3px; }
+  .consent-row label {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    cursor: pointer;
+  }
+  .consent-row label a { color: var(--gold-bright); }
+
+  /* Processing screen */
+  .kyc-processing {
+    display: none;
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .kyc-processing.active { display: block; animation: panelIn 0.5s ease-out; }
+  .kyc-processing .spinner {
+    width: 72px; height: 72px;
+    margin: 0 auto 28px;
+    position: relative;
+  }
+  .kyc-processing .spinner::before,
+  .kyc-processing .spinner::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 3px solid transparent;
+  }
+  .kyc-processing .spinner::before {
+    border-top-color: var(--gold-bright);
+    border-right-color: var(--gold);
+    animation: spin 1.1s linear infinite;
+  }
+  .kyc-processing .spinner::after {
+    inset: 10px;
+    border-bottom-color: rgba(96, 165, 250, 0.6);
+    animation: spin 1.6s linear infinite reverse;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .kyc-processing h2 {
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 500;
+    margin: 0 0 12px;
+    color: var(--text);
+  }
+  .kyc-processing p {
+    color: var(--text-dim);
+    font-size: 15px;
+    line-height: 1.65;
+    max-width: 46ch;
+    margin: 0 auto 12px;
+  }
+  .kyc-processing .submitted-at {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-dimmer);
+    margin: 20px 0 32px;
+  }
+
+    /* Skip-for-now link */
+  .kyc-skip-row {
+    text-align: center;
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .kyc-skip-row a {
+    font-size: 13px;
+    color: var(--text-dimmer);
+    text-decoration: none;
+    transition: color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .kyc-skip-row a:hover {
+    color: var(--gold-bright);
+    text-decoration: underline;
+  }
+  .kyc-skip-row a::after {
+    content: "→";
+    font-family: var(--mono);
+    font-size: 12px;
+    opacity: 0.6;
+  }
+  /* Utility */
+  .hidden { display: none !important; }
+</style>
 </head>
 <body>
-<canvas id="scene-canvas"></canvas>
-<div class="page">
-  <header class="nav">
-    <a class="nav-mark" href="/">Wall Street <em>Capital</em></a>
-    <div class="nav-links"><a href="/dashboard.html">Skip to dashboard</a></div>
-  </header>
 
-  <div class="wrap" style="max-width:720px; padding-top:70px; padding-bottom:60px;">
-    <div class="card">
-      <h1 style="font-size:26px;">Verify your identity</h1>
-      <p style="margin-bottom:26px;">This information is submitted to our brokerage partner for identity verification (KYC/CIP) and account approval — it is not stored or reviewed by app admins beyond a status flag.</p>
+<div class="auth-bg"></div>
 
-      <div class="error-box" id="error"></div>
-      <div class="success-box" id="success"></div>
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
 
-      <form id="kyc-form">
-        <div class="field-row">
-          <div class="field"><label for="given_name">Legal first name</label><input id="given_name" required></div>
-          <div class="field"><label for="family_name">Legal last name</label><input id="family_name" required></div>
-        </div>
-        <div class="field"><label for="date_of_birth">Date of birth</label><input id="date_of_birth" type="date" required></div>
-        <div class="field"><label for="address_line1">Street address</label><input id="address_line1" required></div>
-        <div class="field"><label for="address_line2">Apt / suite (optional)</label><input id="address_line2"></div>
-        <div class="field-row">
-          <div class="field"><label for="city">City</label><input id="city" required></div>
-          <div class="field"><label for="state_region">State / region</label><input id="state_region" required></div>
-        </div>
-        <div class="field-row">
-          <div class="field"><label for="postal_code">Postal code</label><input id="postal_code" required></div>
+<div class="kyc-shell">
+
+    <div class="kyc-brand">
+    <img src="/images/wsc-logo.png" alt="Wall Street Capital"
+         style="width: 90px; height: 90px; object-fit: contain; margin: 0 auto 10px; display: block; filter: drop-shadow(0 0 12px rgba(212, 175, 106, 0.4));">
+    <div class="label">Wall Street Capital</div>
+  </div>
+
+  <div class="kyc-card" id="kyc-card">
+
+    <!-- FORM WRAPPER -->
+    <div id="kyc-form-wrap">
+
+      <!-- Progress -->
+      <div class="kyc-progress" id="kyc-progress">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div class="kyc-steps-count">
+        <span>Step <strong id="kyc-step-num">1</strong> of 5</span>
+        <span id="kyc-step-name">Personal</span>
+      </div>
+
+      <form id="kyc-form" novalidate>
+
+        <!-- STEP 1 — PERSONAL -->
+        <div class="kyc-panel active" data-step="1">
+          <h1 class="kyc-step-title">Personal information</h1>
+          <p class="kyc-step-sub">Use your full legal name as it appears on official documents. This cannot be changed after submission.</p>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="given_name">Legal first name</label>
+              <input id="given_name" autocomplete="given-name" required>
+            </div>
+            <div class="field">
+              <label for="family_name">Legal last name</label>
+              <input id="family_name" autocomplete="family-name" required>
+            </div>
+          </div>
+
           <div class="field">
-            <label for="country">Country</label>
-            <select id="country" required>
-              <option value="USA">United States</option>
-              <option value="CAN">Canada</option>
-              <option value="GBR">United Kingdom</option>
+            <label for="date_of_birth">Date of birth</label>
+            <input id="date_of_birth" type="date" autocomplete="bday" required>
+          </div>
+        </div>
+
+        <!-- STEP 2 — ADDRESS -->
+        <div class="kyc-panel" data-step="2">
+          <h1 class="kyc-step-title">Residential address</h1>
+          <p class="kyc-step-sub">Where you legally reside. P.O. boxes are not accepted.</p>
+
+          <div class="field">
+            <label for="address_line1">Street address</label>
+            <input id="address_line1" autocomplete="address-line1" required>
+          </div>
+          <div class="field">
+            <label for="address_line2">Apartment / suite <span class="muted">(optional)</span></label>
+            <input id="address_line2" autocomplete="address-line2">
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="city">City</label>
+              <input id="city" autocomplete="address-level2" required>
+            </div>
+            <div class="field">
+              <label for="state_region">State / region</label>
+              <input id="state_region" autocomplete="address-level1" required>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="postal_code">Postal code</label>
+            <input id="postal_code" autocomplete="postal-code" required>
+          </div>
+
+          <!-- Country pulled from signup, read-only -->
+          <div class="field">
+            <label>Country</label>
+            <div class="country-readout" id="country-readout">
+              <span class="flag">🌍</span>
+              <span class="name" id="country-name">—</span>
+              <a href="/signup.html">Wrong country? Update in profile</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3 — EMPLOYMENT & FUNDING -->
+        <div class="kyc-panel" data-step="3">
+          <h1 class="kyc-step-title">Employment &amp; funding</h1>
+          <p class="kyc-step-sub">Required for regulatory purposes. We do not sell this information.</p>
+
+          <div class="field">
+            <label for="employment_status">Employment status</label>
+            <select id="employment_status" required>
+              <option value="">Select…</option>
+              <option value="employed">Employed</option>
+              <option value="self_employed">Self-employed</option>
+              <option value="retired">Retired</option>
+              <option value="student">Student</option>
+              <option value="unemployed">Not currently employed</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="source_of_funds">Primary source of funds</label>
+            <select id="source_of_funds" required>
+              <option value="">Select…</option>
+              <option value="employment_income">Employment income</option>
+              <option value="savings">Savings</option>
+              <option value="investments">Investment income</option>
+              <option value="business_income">Business income</option>
+              <option value="inheritance">Inheritance</option>
+              <option value="other">Other</option>
             </select>
           </div>
         </div>
-        <div class="field">
-          <label for="employment_status">Employment status</label>
-          <select id="employment_status">
-            <option value="employed">Employed</option>
-            <option value="self_employed">Self-employed</option>
-            <option value="retired">Retired</option>
-            <option value="student">Student</option>
-            <option value="unemployed">Not currently employed</option>
-          </select>
+
+        <!-- STEP 4 — TAX ID -->
+        <div class="kyc-panel" data-step="4">
+          <h1 class="kyc-step-title">Tax identification</h1>
+          <p class="kyc-step-sub">Your tax ID is required by law to verify your identity and prevent fraud. It is encrypted at rest and never displayed in full.</p>
+
+          <div class="field">
+            <label for="tax_id_type">Tax ID type</label>
+            <select id="tax_id_type" required>
+              <option value="">Select…</option>
+              <option value="USA_SSN">US Social Security Number (SSN)</option>
+              <option value="USA_ITIN">US Individual Taxpayer ID (ITIN)</option>
+              <option value="FOREIGN">Foreign tax ID</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="ssn_full">Tax ID number</label>
+            <input id="ssn_full" autocomplete="off" spellcheck="false" required>
+            <p class="muted" style="margin-top: 8px;">Format: <span id="ssn-format-hint">XXX-XX-XXXX</span></p>
+          </div>
+
+          <div class="consent-row" style="margin-top: 24px;">
+            <input type="checkbox" id="tax-certify" required style="width:auto; flex-shrink:0;">
+            <label for="tax-certify">
+              I certify under penalty of perjury that the tax ID I provided is correct and belongs to me.
+            </label>
+          </div>
         </div>
-        <p class="muted" style="margin:10px 0 18px;">A tax ID (SSN) field would go here for a real deployment — collect it directly over TLS to your Broker API integration, never log it, and never store it in your own database in plaintext.</p>
-        <button class="btn btn-solid btn-block" type="submit">Submit for review</button>
+
+        <!-- STEP 5 — REVIEW & CONSENT -->
+        <div class="kyc-panel" data-step="5">
+          <h1 class="kyc-step-title">Review &amp; submit</h1>
+          <p class="kyc-step-sub">Confirm your details below. After submission, an administrator will verify your identity — usually within a few hours.</p>
+
+          <div class="review-block">
+            <div class="review-head">
+              <h4>Personal information</h4>
+              <button type="button" class="edit-link" data-goto="1">Edit</button>
+            </div>
+            <div class="review-rows">
+              <div class="row"><div class="k">Legal name</div><div class="v" id="rev-name">—</div></div>
+              <div class="row"><div class="k">Date of birth</div><div class="v" id="rev-dob">—</div></div>
+            </div>
+          </div>
+
+          <div class="review-block">
+            <div class="review-head">
+              <h4>Address</h4>
+              <button type="button" class="edit-link" data-goto="2">Edit</button>
+            </div>
+            <div class="review-rows">
+              <div class="row" style="grid-column: 1 / -1;"><div class="k">Street</div><div class="v" id="rev-address">—</div></div>
+              <div class="row"><div class="k">City</div><div class="v" id="rev-city">—</div></div>
+              <div class="row"><div class="k">State / region</div><div class="v" id="rev-state">—</div></div>
+              <div class="row"><div class="k">Postal code</div><div class="v" id="rev-postal">—</div></div>
+              <div class="row"><div class="k">Country</div><div class="v" id="rev-country">—</div></div>
+            </div>
+          </div>
+
+          <div class="review-block">
+            <div class="review-head">
+              <h4>Employment &amp; funding</h4>
+              <button type="button" class="edit-link" data-goto="3">Edit</button>
+            </div>
+            <div class="review-rows">
+              <div class="row"><div class="k">Employment status</div><div class="v" id="rev-emp">—</div></div>
+              <div class="row"><div class="k">Source of funds</div><div class="v" id="rev-funds">—</div></div>
+            </div>
+          </div>
+
+          <div class="review-block">
+            <div class="review-head">
+              <h4>Tax ID</h4>
+              <button type="button" class="edit-link" data-goto="4">Edit</button>
+            </div>
+            <div class="review-rows">
+              <div class="row"><div class="k">Type</div><div class="v" id="rev-tax-type">—</div></div>
+              <div class="row"><div class="k">Number</div><div class="v" id="rev-tax-num">—</div></div>
+            </div>
+          </div>
+
+          <div class="consent-row">
+            <input type="checkbox" id="consent-final" required style="width:auto; flex-shrink:0;">
+            <label for="consent-final">
+              I consent to electronic delivery of all documents and confirm that all information provided is accurate and complete.
+            </label>
+          </div>
+        </div>
+
+        <!-- Error/success boxes -->
+        <div class="error-box" id="kyc-error" style="margin-top: 20px;"></div>
+        <div class="success-box" id="kyc-success" style="margin-top: 20px;"></div>
+
+               <!-- Actions -->
+        <div class="kyc-actions">
+          <button type="button" class="btn btn-ghost hidden" id="btn-back">← Back</button>
+          <div class="spacer"></div>
+          <button type="button" class="btn btn-solid" id="btn-next">Continue →</button>
+          <button type="submit" class="btn btn-solid hidden" id="btn-submit">Submit for verification</button>
+        </div>
+
+        <!-- Skip link -->
+        <div class="kyc-skip-row">
+          <a href="#" id="btn-skip">Skip for now — remind me later</a>
+        </div>
       </form>
     </div>
+
+    <!-- PROCESSING SCREEN -->
+    <div class="kyc-processing" id="kyc-processing">
+      <div class="spinner"></div>
+      <h2>Verifying your identity</h2>
+      <p>Your information has been submitted. An administrator is reviewing your details. This usually takes a few hours during business days.</p>
+      <div class="submitted-at" id="submitted-at"></div>
+      <a href="/dashboard.html" class="btn btn-solid" style="min-width: 220px;">Go to dashboard →</a>
+    </div>
+
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="/js/three-bg.js"></script>
+<script src="/js/theme.js"></script>
 <script src="/js/api.js"></script>
 <script>
 requireAuth();
+
+/* ---------- Step navigation ---------- */
+let currentStep = 1;
+const TOTAL_STEPS = 5;
+const STEP_NAMES = ["Personal", "Address", "Employment", "Tax ID", "Review"];
+
+function showStep(n) {
+  currentStep = n;
+  document.querySelectorAll(".kyc-panel").forEach(p => {
+    p.classList.toggle("active", Number(p.dataset.step) === n);
+  });
+
+  // progress dots
+  document.querySelectorAll("#kyc-progress .dot").forEach((dot, i) => {
+    dot.classList.toggle("active", i + 1 === n);
+    dot.classList.toggle("done", i + 1 < n);
+  });
+
+  document.getElementById("kyc-step-num").textContent = n;
+  document.getElementById("kyc-step-name").textContent = STEP_NAMES[n - 1];
+
+  // buttons
+  document.getElementById("btn-back").classList.toggle("hidden", n === 1);
+  document.getElementById("btn-next").classList.toggle("hidden", n === TOTAL_STEPS);
+  document.getElementById("btn-submit").classList.toggle("hidden", n !== TOTAL_STEPS);
+
+  // scroll to top of card
+  document.getElementById("kyc-card").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+document.getElementById("btn-back").addEventListener("click", () => {
+  if (currentStep > 1) showStep(currentStep - 1);
+});
+
+document.getElementById("btn-next").addEventListener("click", () => {
+  if (validateStep(currentStep)) {
+    if (currentStep === TOTAL_STEPS - 1) buildReview();
+    showStep(currentStep + 1);
+  }
+});
+
+document.querySelectorAll(".edit-link[data-goto]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    buildReview();
+    showStep(Number(btn.dataset.goto));
+  });
+});
+
+/* ---------- Validation per step ---------- */
+function validateStep(n) {
+  const errorBox = document.getElementById("kyc-error");
+  errorBox.style.display = "none";
+
+  if (n === 1) {
+    if (!val("given_name") || !val("family_name")) return fail("Please enter your legal first and last name.");
+    if (!val("date_of_birth")) return fail("Please enter your date of birth.");
+  }
+  if (n === 2) {
+    if (!val("address_line1")) return fail("Please enter your street address.");
+    if (!val("city")) return fail("Please enter your city.");
+    if (!val("state_region")) return fail("Please enter your state or region.");
+    if (!val("postal_code")) return fail("Please enter your postal code.");
+  }
+  if (n === 3) {
+    if (!val("employment_status")) return fail("Please select your employment status.");
+    if (!val("source_of_funds")) return fail("Please select your source of funds.");
+  }
+  if (n === 4) {
+    if (!val("tax_id_type")) return fail("Please select your tax ID type.");
+    if (!val("ssn_full")) return fail("Please enter your tax ID number.");
+    if (!document.getElementById("tax-certify").checked) return fail("Please certify that your tax ID is correct.");
+  }
+  if (n === 5) {
+    if (!document.getElementById("consent-final").checked) return fail("Please consent to electronic delivery to continue.");
+  }
+  return true;
+}
+
+function val(id) {
+  return (document.getElementById(id).value || "").trim();
+}
+function fail(msg) {
+  const errorBox = document.getElementById("kyc-error");
+  errorBox.textContent = msg;
+  errorBox.style.display = "block";
+  return false;
+}
+
+/* ---------- Tax ID format hint ---------- */
+document.getElementById("tax_id_type").addEventListener("change", function () {
+  const hint = document.getElementById("ssn-format-hint");
+  const input = document.getElementById("ssn_full");
+  if (this.value === "USA_SSN") {
+    hint.textContent = "XXX-XX-XXXX";
+    input.placeholder = "123-45-6789";
+    input.maxLength = 11;
+  } else if (this.value === "USA_ITIN") {
+    hint.textContent = "9XX-XX-XXXX";
+    input.placeholder = "900-12-3456";
+    input.maxLength = 11;
+  } else {
+    hint.textContent = "your country's tax ID format";
+    input.placeholder = "";
+    input.maxLength = 30;
+  }
+});
+
+/* ---------- Review builder ---------- */
+function buildReview() {
+  const dob = val("date_of_birth");
+  document.getElementById("rev-name").textContent = val("given_name") + " " + val("family_name");
+  document.getElementById("rev-dob").textContent = dob ? new Date(dob).toLocaleDateString() : "—";
+
+  const line2 = val("address_line2");
+  document.getElementById("rev-address").textContent =
+    val("address_line1") + (line2 ? ", " + line2 : "");
+  document.getElementById("rev-city").textContent = val("city");
+  document.getElementById("rev-state").textContent = val("state_region");
+  document.getElementById("rev-postal").textContent = val("postal_code");
+  document.getElementById("rev-country").textContent = document.getElementById("country-name").textContent;
+
+  document.getElementById("rev-emp").textContent =
+    document.getElementById("employment_status").selectedOptions[0]?.text || "—";
+  document.getElementById("rev-funds").textContent =
+    document.getElementById("source_of_funds").selectedOptions[0]?.text || "—";
+
+  document.getElementById("rev-tax-type").textContent =
+    document.getElementById("tax_id_type").selectedOptions[0]?.text || "—";
+
+  // Mask the tax ID in the review
+  const tax = val("ssn_full");
+  const masked = tax.length > 4 ? "•".repeat(Math.min(tax.length - 4, 6)) + tax.slice(-4) : tax;
+  document.getElementById("rev-tax-num").textContent = masked;
+}
+
+/* ---------- Country readout (from stored user) ---------- */
+(function loadCountry() {
+  const user = Api.user() || {};
+  // Api.user() may not include country — try fetching from /auth/me
+  fetch("/api/auth/me", {
+    headers: { "Authorization": "Bearer " + (Api.token() || "") }
+  })
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      const country = (data && data.country) || user.country || "—";
+      document.getElementById("country-name").textContent = country;
+    })
+    .catch(() => {
+      document.getElementById("country-name").textContent = user.country || "—";
+    });
+})();
+
+/* ---------- Submit ---------- */
 document.getElementById("kyc-form").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const errorBox = document.getElementById("error");
-  const successBox = document.getElementById("success");
+
+  if (!validateStep(5)) return;
+
+  const errorBox = document.getElementById("kyc-error");
+  const successBox = document.getElementById("kyc-success");
   errorBox.style.display = "none";
   successBox.style.display = "none";
+
+  const submitBtn = document.getElementById("btn-submit");
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Submitting…";
+
+  const payload = {
+    given_name: val("given_name"),
+    family_name: val("family_name"),
+    date_of_birth: val("date_of_birth"),
+    address_line1: val("address_line1"),
+    address_line2: val("address_line2"),
+    city: val("city"),
+    state_region: val("state_region"),
+    postal_code: val("postal_code"),
+    employment_status: val("employment_status"),
+    source_of_funds: val("source_of_funds"),
+    tax_id_type: val("tax_id_type"),
+    ssn_full: val("ssn_full"),
+    consent_given: document.getElementById("consent-final").checked,
+    tax_certified: document.getElementById("tax-certify").checked,
+  };
+
   try {
-    const data = await Api.request("/kyc", {
+    await Api.request("/kyc", {
       method: "POST",
-      body: JSON.stringify({
-        given_name: document.getElementById("given_name").value,
-        family_name: document.getElementById("family_name").value,
-        date_of_birth: document.getElementById("date_of_birth").value,
-        address_line1: document.getElementById("address_line1").value,
-        address_line2: document.getElementById("address_line2").value,
-        city: document.getElementById("city").value,
-        state_region: document.getElementById("state_region").value,
-        postal_code: document.getElementById("postal_code").value,
-        country: document.getElementById("country").value,
-        employment_status: document.getElementById("employment_status").value,
-      }),
+      body: JSON.stringify(payload),
     });
-    successBox.textContent = "Submitted. Status: " + data.status + ". You can check progress on your dashboard.";
-    successBox.style.display = "block";
+
+    // Success — show processing screen
+    document.getElementById("kyc-form-wrap").classList.add("hidden");
+    document.getElementById("kyc-processing").classList.add("active");
+    document.getElementById("submitted-at").textContent =
+      "Submitted " + new Date().toLocaleString();
+
+    // After 6 seconds, prompt to go to dashboard (button is already there)
   } catch (err) {
     errorBox.textContent = err.message;
     errorBox.style.display = "block";
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Submit for verification";
   }
 });
+/* ---------- Skip for now ---------- */
+document.getElementById("btn-skip").addEventListener("click", (e) => {
+  e.preventDefault();
+
+  const confirmed = confirm(
+    "Skip identity verification for now?\n\n" +
+    "You can still browse your dashboard, but deposits, withdrawals, and trading " +
+    "will be locked until verification is complete.\n\n" +
+    "You can resume KYC anytime from your dashboard."
+  );
+
+  if (!confirmed) return;
+
+  // Mark that this user has deferred KYC
+  localStorage.setItem("wsc_kyc_skipped", "1");
+  sessionStorage.setItem("wsc_kyc_skipped_at", new Date().toISOString());
+
+  // Redirect to dashboard
+  window.location.href = "/dashboard.html#overview";
+});
+/* ---------- Init ---------- */
+showStep(1);
 </script>
+<!-- Smartsupp Live Chat script -->
+<script type="text/javascript">
+var _smartsupp = _smartsupp || {};
+_smartsupp.key = '3672f504f1db03cbf1594a0051bba8421d5aead2';
+window.smartsupp||(function(d) {
+  var s,c,o=smartsupp=function(){ o._.push(arguments)};o._=[];
+  s=d.getElementsByTagName('script')[0];c=d.createElement('script');
+  c.type='text/javascript';c.charset='utf-8';c.async=true;
+  c.src='https://www.smartsuppchat.com/loader.js?';s.parentNode.insertBefore(c,s);
+})(document);
+</script>
+<noscript>Powered by <a href="https://www.smartsupp.com" target="_blank">Smartsupp</a></noscript>
+
 </body>
 </html>

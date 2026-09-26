@@ -536,7 +536,7 @@ html[data-theme="light"] .sso-btn { background: rgba(0,0,0,0.03); }
 .theme-toggle {
   position: fixed;
   bottom: 24px;
-  right: 24px;
+  right: auto;
   top: auto;
   z-index: 20;
   width: 46px;
@@ -588,4 +588,223 @@ html[data-theme="dark"] .theme-toggle .icon-moon,
 @media (max-width: 480px) {
   .auth-card { padding: 32px 22px 26px; border-radius: 14px; }
   .sso-row { grid-template-columns: 1fr; }
+}
+.tv-embed-container {
+  color-scheme: light;
+}
+
+/* ============================================================
+   NOTIFICATIONS DROPDOWN
+   ============================================================ */
+.tb-notif-wrap {
+  position: relative;
+}
+.tb-notif-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 360px;
+  max-height: 480px;
+  display: none;
+  flex-direction: column;
+  background: rgba(15, 26, 48, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  z-index: 60;
+  overflow: hidden;
+  animation: notifIn 0.18s ease-out;
+}
+html[data-theme="light"] .tb-notif-panel {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.tb-notif-panel.open { display: flex; }
+@keyframes notifIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (max-width: 500px) {
+  .tb-notif-panel {
+    width: calc(100vw - 40px);
+    right: -20px;
+  }
+}
+
+.tb-notif-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line-soft);
+  flex-shrink: 0;
+}
+.tb-notif-head .title {
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
+}
+.tb-notif-head .mark-all {
+  font-size: 11.5px;
+  color: var(--gold-bright);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.tb-notif-head .mark-all:hover {
+  background: rgba(96, 165, 250, 0.1);
+  text-decoration: underline;
+}
+
+.tb-notif-list {
+  overflow-y: auto;
+  flex: 1;
+}
+.tb-notif-list::-webkit-scrollbar { width: 5px; }
+.tb-notif-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+.tb-notif-item {
+  display: flex;
+  gap: 12px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--line-soft);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.tb-notif-item:hover { background: rgba(59, 130, 246, 0.06); }
+.tb-notif-item.unread { background: rgba(59, 130, 246, 0.04); }
+.tb-notif-item .ni-icon {
+  width: 32px; height: 32px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  color: #FFFFFF;
+}
+.tb-notif-item .ni-icon svg { width: 15px; height: 15px; }
+.tb-notif-item .ni-icon.referral    { background: linear-gradient(135deg, #4ADE80, #15803D); }
+.tb-notif-item .ni-icon.loan        { background: linear-gradient(135deg, #FBBF24, #B45309); }
+.tb-notif-item .ni-icon.kyc         { background: linear-gradient(135deg, #60A5FA, #1D4ED8); }
+.tb-notif-item .ni-icon.transfer    { background: linear-gradient(135deg, #22D3EE, #0E7490); }
+.tb-notif-item .ni-icon.default     { background: linear-gradient(135deg, #94A3B8, #475569); }
+
+.tb-notif-item .ni-body {
+  flex: 1; min-width: 0;
+}
+.tb-notif-item .ni-title {
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+.tb-notif-item .ni-msg {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+.tb-notif-item .ni-time {
+  font-size: 10.5px;
+  color: var(--text-dimmer);
+  font-family: var(--mono);
+}
+.tb-notif-item .ni-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--gold-bright);
+  flex-shrink: 0;
+  align-self: center;
+  box-shadow: 0 0 8px var(--gold-bright);
+}
+
+.tb-notif-empty {
+  padding: 40px 20px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-dimmer);
+}
+
+/* Badge pulse animation for unread count */
+@keyframes notifPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.15); opacity: 0.85; }
+}
+.tb-icon-btn .dot.pulse { animation: notifPulse 2s infinite ease-in-out; }
+
+/* ============================================================
+   VERIFIED BADGE VARIANTS (topbar)
+   ============================================================ */
+.tb-verified.pending {
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.4);
+  color: #FDE68A;
+}
+.tb-verified.rejected {
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.4);
+  color: #FCA5A5;
+}
+
+/* ============================================================
+   INLINE LOADING SPINNER (small)
+   ============================================================ */
+.spinner-sm {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--gold-bright);
+  animation: spinSm 0.7s linear infinite;
+  vertical-align: middle;
+}
+@keyframes spinSm { to { transform: rotate(360deg); } }
+
+/* ============================================================
+   LOAN HISTORY TABLE (for the user's loan page)
+   ============================================================ */
+.loan-table { width: 100%; border-collapse: collapse; }
+.loan-table th, .loan-table td {
+  text-align: left;
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 13px;
+}
+.loan-table th {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dimmer);
+  font-weight: 600;
+}
+.loan-table td.mono { font-family: var(--mono); color: var(--text); }
+.loan-table tr:hover td { background: rgba(59, 130, 246, 0.04); }
+/* ============================================================
+   BRAND LOGO — shared across every page (logo only, no text)
+   ============================================================ */
+.wsc-logo {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.wsc-logo-img {
+  display: block;
+  height: 40px;
+  width: auto;
+  max-width: 220px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 6px rgba(212, 175, 106, 0.35));
+}
+
+/* Size variants */
+.wsc-logo.wsc-logo-sm .wsc-logo-img { height: 30px; }
+.wsc-logo.wsc-logo-lg .wsc-logo-img { height: 56px; max-width: 300px; }
+
+html[data-theme="light"] .wsc-logo-img {
+  filter: drop-shadow(0 0 4px rgba(180, 140, 60, 0.25));
 }

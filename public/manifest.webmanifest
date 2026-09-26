@@ -1,0 +1,51 @@
+{
+  "name": "Wall Street Capital",
+  "short_name": "WSC",
+  "description": "Capital allocated with discipline. Trade US equities and ETFs through our brokerage partner.",
+  "start_url": "/dashboard.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#050B18",
+  "theme_color": "#050B18",
+  "categories": ["finance", "business"],
+  "lang": "en-US",
+  "icons": [
+    {
+      "src": "/images/pwa/icon-192-v2.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/pwa/icon-192-v2.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/images/pwa/icon-512-v2.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/pwa/icon-512-v2.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/dashboard.html",
+      "description": "View your portfolio"
+    },
+    {
+      "name": "Fund account",
+      "url": "/dashboard.html#fund",
+      "description": "Add money to your account"
+    }
+  ]
+}

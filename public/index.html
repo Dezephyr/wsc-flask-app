@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
+  <!-- PWA -->
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#050B18">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WSC">
+<link rel="apple-touch-icon" href="/images/pwa/icon-192-v2.png">
+<link rel="icon" href="/images/pwa/icon-192-v2.png">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wall Street Capital — Capital allocated with discipline</title>
@@ -29,27 +37,68 @@
   html[data-theme="light"] .lp-nav { background: rgba(240, 244, 251, 0.78); }
   .lp-nav-mark { font-family: var(--serif); font-size: 20px; color: var(--text); text-decoration: none; }
   .lp-nav-mark em { font-style: normal; color: var(--gold-bright); }
-  .lp-nav-links { display: flex; align-items: center; gap: 26px; }
+  .lp-nav-links { display: flex; align-items: center; gap: 22px; }
   .lp-nav-links a { color: var(--text-dim); text-decoration: none; font-size: 14px; transition: color 0.2s; }
   .lp-nav-links a:hover { color: var(--text); }
-  @media (max-width: 860px) {
-    .lp-nav-links a:not(.btn) { display: none; }
+  
+
+  /* Language selector */
+  .lang-select { position: relative; }
+  .lang-trigger {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-radius: 20px;
+    border: 1px solid var(--line); background: var(--panel);
+    color: var(--text-dim); font-size: 13px; font-family: var(--sans);
+    cursor: pointer; transition: all 0.2s;
   }
+  .lang-trigger:hover {
+    border-color: var(--gold); color: var(--text);
+    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.25), 0 8px 22px rgba(59, 130, 246, 0.18);
+  }
+  .lang-trigger .globe { width: 15px; height: 15px; opacity: 0.85; }
+  .lang-trigger .caret { width: 12px; height: 12px; opacity: 0.6; transition: transform 0.2s; }
+  .lang-trigger.open .caret { transform: rotate(180deg); }
+
+  /* Apple-style glass menu */
+  .lang-menu {
+    position: absolute; top: calc(100% + 10px); right: 0;
+    min-width: 220px; max-height: 340px; overflow: hidden;
+    display: none; flex-direction: column;
+    background: rgba(15, 26, 48, 0.75);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08);
+    z-index: 50; padding: 6px;
+    animation: langIn 0.18s ease-out;
+  }
+  html[data-theme="light"] .lang-menu {
+    background: rgba(255, 255, 255, 0.78);
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.9);
+  }
+  .lang-menu.open { display: flex; }
+  @keyframes langIn {
+    from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .lang-menu .list { overflow-y: auto; }
+  .lang-menu .list::-webkit-scrollbar { width: 6px; }
+  .lang-menu .list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+  html[data-theme="light"] .lang-menu .list::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); }
+  .lang-menu .item {
+    padding: 10px 14px; font-size: 14px; color: var(--text);
+    border-radius: 10px; cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    transition: background 0.12s;
+  }
+  .lang-menu .item:hover, .lang-menu .item.active { background: rgba(96, 165, 250, 0.16); }
+  .lang-menu .item .flag { font-size: 16px; }
+  .lang-menu .item .native { font-size: 12.5px; color: var(--text-dimmer); margin-left: auto; }
 
   /* Hero */
   .lp-hero { max-width: 1120px; margin: 0 auto; padding: 100px 32px 80px; }
-  .lp-status {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: 13px; color: var(--text-dim);
-    padding: 6px 12px; border-radius: 20px;
-    border: 1px solid var(--line); background: var(--panel);
-    margin-bottom: 28px;
-  }
-  .lp-status .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-dimmer); }
-  .lp-status .dot.live { background: var(--tick-up); box-shadow: 0 0 10px var(--tick-up); animation: pulse 1.6s infinite; }
-  .lp-status .dot.closed { background: var(--gold); }
-  @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.4 } }
-
   .lp-hero h1 {
     font-family: var(--serif); font-weight: 500;
     font-size: clamp(40px, 6.5vw, 76px);
@@ -64,24 +113,24 @@
   .lp-hero .subhead { font-size: 19px; max-width: 56ch; color: var(--text-dim); margin: 0 0 40px; line-height: 1.6; }
   .lp-hero .actions { display: flex; gap: 14px; flex-wrap: wrap; }
 
-  /* Ticker */
-  .lp-ticker { overflow: hidden; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--panel); backdrop-filter: blur(16px); }
-  .lp-ticker-track { display: flex; width: max-content; animation: ticker-scroll 70s linear infinite; }
-  .lp-ticker-item { display: flex; align-items: center; gap: 12px; padding: 16px 32px; border-right: 1px solid var(--line-soft); white-space: nowrap; font-family: var(--mono); font-size: 14px; transition: background 0.5s ease; }
-  .lp-ticker-symbol { color: var(--text-dim); font-weight: 600; }
-  .lp-ticker-price { color: var(--text); }
-  .lp-ticker-change { font-size: 13px; }
-  .lp-ticker-change.up { color: var(--tick-up); }
-  .lp-ticker-change.down { color: var(--tick-down); }
-  .flash-up { background: rgba(74, 222, 128, 0.12); }
-  .flash-down { background: rgba(248, 113, 113, 0.12); }
-  @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+  /* TradingView Ticker Tape wrapper */
+  .tv-ticker-wrapper {
+    color-scheme: light;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+    backdrop-filter: blur(16px);
+    padding: 0;
+    overflow: hidden;
+    min-height: 46px;
+  }
+  .tv-ticker-wrapper iframe { display: block; }
 
   /* Trust bar */
   .lp-trust { max-width: 1120px; margin: 0 auto; padding: 50px 32px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px; border-bottom: 1px solid var(--line-soft); }
   @media (max-width: 800px) { .lp-trust { grid-template-columns: repeat(2, 1fr); } }
   .lp-trust-item { text-align: center; }
-  .lp-trust-item .value { font-family: var(--mono); font-size: 30px; color: var(--gold-bright); margin-bottom: 8px; text-shadow: 0 0 24px var(--gold-glow); }
+  .lp-trust-item .value { font-family: var(--mono); font-size: 26px; color: var(--gold-bright); margin-bottom: 8px; text-shadow: 0 0 24px var(--gold-glow); }
   .lp-trust-item .label { font-size: 12.5px; color: var(--text-dimmer); letter-spacing: 0.03em; }
 
   /* Section shell */
@@ -90,39 +139,26 @@
   .lp-section h2 { font-family: var(--serif); font-weight: 500; font-size: clamp(28px, 4vw, 42px); max-width: 22ch; margin: 0 0 20px; line-height: 1.15; color: var(--text); }
   .lp-section .lede { color: var(--text-dim); font-size: 17px; max-width: 60ch; line-height: 1.65; margin: 0 0 50px; }
 
-  /* ---------- FEATURES (8 cards, glow on hover) ---------- */
-  .lp-features {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
-  }
+  /* Features */
+  .lp-features { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
   @media (max-width: 1000px) { .lp-features { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 560px)  { .lp-features { grid-template-columns: 1fr; } }
-
   .lp-feature {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 26px 22px;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 26px 22px;
     backdrop-filter: blur(20px);
     transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
     display: flex; flex-direction: column;
-    position: relative;
   }
   .lp-feature:hover { transform: translateY(-6px); }
-
   .lp-feature .ico {
-    width: 42px; height: 42px;
-    border-radius: 11px;
+    width: 42px; height: 42px; border-radius: 11px;
     display: flex; align-items: center; justify-content: center;
-    margin-bottom: 18px;
-    color: #FFFFFF;
+    margin-bottom: 18px; color: #FFFFFF;
     transition: transform 0.35s ease;
   }
   .lp-feature:hover .ico { transform: scale(1.08) rotate(-4deg); }
   .lp-feature .ico svg { width: 20px; height: 20px; }
-
-  /* Distinct icon colors */
   .lp-feature[data-color="blue"]   .ico { background: linear-gradient(135deg, #60A5FA, #1D4ED8); }
   .lp-feature[data-color="green"]  .ico { background: linear-gradient(135deg, #4ADE80, #15803D); }
   .lp-feature[data-color="purple"] .ico { background: linear-gradient(135deg, #C084FC, #7E22CE); }
@@ -131,158 +167,112 @@
   .lp-feature[data-color="cyan"]   .ico { background: linear-gradient(135deg, #22D3EE, #0E7490); }
   .lp-feature[data-color="indigo"] .ico { background: linear-gradient(135deg, #818CF8, #3730A3); }
   .lp-feature[data-color="teal"]   .ico { background: linear-gradient(135deg, #2DD4BF, #0F766E); }
-
-  /* Glow on hover — matches icon color */
   .lp-feature[data-color="blue"]:hover {
     border-color: #60A5FA;
-    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.35),
-                0 20px 40px rgba(96, 165, 250, 0.25),
-                0 0 60px rgba(96, 165, 250, 0.18);
+    box-shadow: 0 0 0 1px rgba(96,165,250,0.35), 0 20px 40px rgba(96,165,250,0.25), 0 0 60px rgba(96,165,250,0.18);
   }
   .lp-feature[data-color="green"]:hover {
     border-color: #4ADE80;
-    box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.35),
-                0 20px 40px rgba(74, 222, 128, 0.25),
-                0 0 60px rgba(74, 222, 128, 0.18);
+    box-shadow: 0 0 0 1px rgba(74,222,128,0.35), 0 20px 40px rgba(74,222,128,0.25), 0 0 60px rgba(74,222,128,0.18);
   }
   .lp-feature[data-color="purple"]:hover {
     border-color: #C084FC;
-    box-shadow: 0 0 0 1px rgba(192, 132, 252, 0.35),
-                0 20px 40px rgba(192, 132, 252, 0.25),
-                0 0 60px rgba(192, 132, 252, 0.18);
+    box-shadow: 0 0 0 1px rgba(192,132,252,0.35), 0 20px 40px rgba(192,132,252,0.25), 0 0 60px rgba(192,132,252,0.18);
   }
   .lp-feature[data-color="amber"]:hover {
     border-color: #FBBF24;
-    box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.35),
-                0 20px 40px rgba(251, 191, 36, 0.25),
-                0 0 60px rgba(251, 191, 36, 0.18);
+    box-shadow: 0 0 0 1px rgba(251,191,36,0.35), 0 20px 40px rgba(251,191,36,0.25), 0 0 60px rgba(251,191,36,0.18);
   }
   .lp-feature[data-color="rose"]:hover {
     border-color: #FB7185;
-    box-shadow: 0 0 0 1px rgba(251, 113, 133, 0.35),
-                0 20px 40px rgba(251, 113, 133, 0.25),
-                0 0 60px rgba(251, 113, 133, 0.18);
+    box-shadow: 0 0 0 1px rgba(251,113,133,0.35), 0 20px 40px rgba(251,113,133,0.25), 0 0 60px rgba(251,113,133,0.18);
   }
   .lp-feature[data-color="cyan"]:hover {
     border-color: #22D3EE;
-    box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.35),
-                0 20px 40px rgba(34, 211, 238, 0.25),
-                0 0 60px rgba(34, 211, 238, 0.18);
+    box-shadow: 0 0 0 1px rgba(34,211,238,0.35), 0 20px 40px rgba(34,211,238,0.25), 0 0 60px rgba(34,211,238,0.18);
   }
   .lp-feature[data-color="indigo"]:hover {
     border-color: #818CF8;
-    box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.35),
-                0 20px 40px rgba(129, 140, 248, 0.25),
-                0 0 60px rgba(129, 140, 248, 0.18);
+    box-shadow: 0 0 0 1px rgba(129,140,248,0.35), 0 20px 40px rgba(129,140,248,0.25), 0 0 60px rgba(129,140,248,0.18);
   }
   .lp-feature[data-color="teal"]:hover {
     border-color: #2DD4BF;
-    box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.35),
-                0 20px 40px rgba(45, 212, 191, 0.25),
-                0 0 60px rgba(45, 212, 191, 0.18);
+    box-shadow: 0 0 0 1px rgba(45,212,191,0.35), 0 20px 40px rgba(45,212,191,0.25), 0 0 60px rgba(45,212,191,0.18);
   }
+  .lp-feature h3 { font-family: var(--serif); font-size: 17px; font-weight: 500; margin: 0 0 10px; color: var(--text); }
+  .lp-feature p { color: var(--text-dim); font-size: 14px; line-height: 1.6; margin: 0; flex: 1; }
 
-  .lp-feature h3 {
-    font-family: var(--serif); font-size: 17px; font-weight: 500;
-    margin: 0 0 10px; color: var(--text);
-  }
-  .lp-feature p {
-    color: var(--text-dim); font-size: 14px; line-height: 1.6; margin: 0;
-    flex: 1;
-  }
-
-  /* Coming soon strip */
-  .lp-soon {
-    margin-top: 60px;
-    padding: 36px 32px;
-    border: 1px dashed var(--line);
-    border-radius: 14px;
-    background: rgba(59, 130, 246, 0.03);
-  }
-  .lp-soon-head {
-    display: flex; align-items: center; gap: 12px;
-    margin-bottom: 22px;
-  }
-  .lp-soon-head .badge {
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--gold-bright);
-    border: 1px solid var(--gold);
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-weight: 600;
-  }
-  .lp-soon-head h3 {
-    font-family: var(--serif); font-size: 20px;
-    font-weight: 500; margin: 0; color: var(--text);
-  }
-  .lp-soon-list {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
-  }
+  /* Coming soon */
+  .lp-soon { margin-top: 60px; padding: 36px 32px; border: 1px dashed var(--line); border-radius: 14px; background: rgba(59, 130, 246, 0.03); }
+  .lp-soon-head { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+  .lp-soon-head .badge { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold-bright); border: 1px solid var(--gold); padding: 4px 10px; border-radius: 20px; font-weight: 600; }
+  .lp-soon-head h3 { font-family: var(--serif); font-size: 20px; font-weight: 500; margin: 0; color: var(--text); }
+  .lp-soon-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
   @media (max-width: 900px) { .lp-soon-list { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 560px) { .lp-soon-list { grid-template-columns: 1fr; } }
-  .lp-soon-item {
-    padding: 16px 18px;
-    border-radius: 10px;
-    background: var(--panel);
-    border: 1px solid var(--line);
-    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-  }
-  .lp-soon-item:hover {
-    transform: translateY(-4px);
-    border-color: var(--gold);
-    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.25),
-                0 16px 36px rgba(59, 130, 246, 0.22),
-                0 0 50px rgba(59, 130, 246, 0.15);
-  }
-  .lp-soon-item .name {
-    font-family: var(--serif); font-size: 15px;
-    color: var(--text); margin-bottom: 6px;
-  }
-  .lp-soon-item .desc {
-    font-size: 12.5px; color: var(--text-dimmer); line-height: 1.5;
-  }
+  .lp-soon-item { padding: 16px 18px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; }
+  .lp-soon-item:hover { transform: translateY(-4px); border-color: var(--gold); box-shadow: 0 0 0 1px rgba(96,165,250,0.25), 0 16px 36px rgba(59,130,246,0.22), 0 0 50px rgba(59,130,246,0.15); }
+  .lp-soon-item .name { font-family: var(--serif); font-size: 15px; color: var(--text); margin-bottom: 6px; }
+  .lp-soon-item .desc { font-size: 12.5px; color: var(--text-dimmer); line-height: 1.5; }
 
   /* Markets */
   .lp-markets { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
   @media (max-width: 800px) { .lp-markets { grid-template-columns: 1fr; } }
   .lp-markets-list { list-style: none; padding: 0; margin: 0; }
-  .lp-markets-list li {
-    padding: 18px 0; border-bottom: 1px solid var(--line-soft);
-    display: flex; justify-content: space-between; align-items: center;
-    color: var(--text-dim); font-size: 15px;
-    transition: padding-left 0.25s ease, color 0.25s ease;
-  }
+  .lp-markets-list li { padding: 18px 0; border-bottom: 1px solid var(--line-soft); display: flex; justify-content: space-between; align-items: center; color: var(--text-dim); font-size: 15px; transition: padding-left 0.25s ease, color 0.25s ease; }
   .lp-markets-list li:hover { padding-left: 8px; color: var(--text); }
   .lp-markets-list li strong { color: var(--text); font-family: var(--serif); font-size: 17px; font-weight: 500; }
   .lp-markets-list li span { font-family: var(--mono); font-size: 13px; color: var(--gold-bright); }
 
-  /* Trading explainer */
-  .lp-trading {
-    background: var(--panel); border: 1px solid var(--line);
-    border-radius: 16px; padding: 48px;
-    backdrop-filter: blur(20px);
-    display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: center;
+  /* TradingView chart wrapper */
+  .tv-embed-container {
+    color-scheme: light;
+    width: 100%;
+    height: 620px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: var(--panel-solid);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
     transition: border-color 0.35s ease, box-shadow 0.35s ease;
   }
-  .lp-trading:hover {
+  .tv-embed-container:hover {
     border-color: var(--gold);
-    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.25),
-                0 24px 48px rgba(59, 130, 246, 0.22),
-                0 0 80px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 0 1px rgba(96,165,250,0.3),
+                0 24px 52px rgba(59,130,246,0.26),
+                0 0 80px rgba(59,130,246,0.16);
   }
+  @media (max-width: 700px) { .tv-embed-container { height: 460px; border-radius: 12px; } }
+  .tv-embed-container .tradingview-widget-container__widget { width: 100%; height: 100%; }
+
+  /* Live market card */
+  .lp-market-card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 28px; backdrop-filter: blur(20px); box-shadow: 0 20px 50px rgba(0,0,0,0.35); transition: border-color 0.35s ease, box-shadow 0.35s ease; }
+  .lp-market-card:hover { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(96,165,250,0.3), 0 24px 52px rgba(59,130,246,0.26), 0 0 80px rgba(59,130,246,0.16); }
+  .lp-market-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--line-soft); }
+  .lp-market-head h3 { font-family: var(--serif); font-size: 18px; font-weight: 500; margin: 0; }
+  .lp-market-head .meta { font-size: 12px; color: var(--text-dimmer); font-family: var(--mono); }
+
+  /* Override tv-embed-container styles for the market overview card */
+  .tv-market-overview {
+    height: 460px !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+  }
+  .tv-market-overview:hover {
+    box-shadow: none !important;
+  }
+
+  /* Trading */
+  .lp-trading { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 48px; backdrop-filter: blur(20px); display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: center; transition: border-color 0.35s ease, box-shadow 0.35s ease; }
+  .lp-trading:hover { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(96,165,250,0.25), 0 24px 48px rgba(59,130,246,0.22), 0 0 80px rgba(59,130,246,0.15); }
   @media (max-width: 800px) { .lp-trading { grid-template-columns: 1fr; padding: 32px; } }
   .lp-trading h3 { font-family: var(--serif); font-size: 26px; font-weight: 500; margin: 0 0 18px; }
   .lp-trading ol { padding-left: 20px; margin: 0; }
   .lp-trading ol li { color: var(--text-dim); line-height: 1.7; margin-bottom: 12px; font-size: 15px; }
   .lp-trading ol li strong { color: var(--text); }
-  .lp-trading .side {
-    background: rgba(0,0,0,0.3); border: 1px solid var(--line);
-    border-radius: 12px; padding: 24px;
-  }
+  .lp-trading .side { background: rgba(0,0,0,0.3); border: 1px solid var(--line); border-radius: 12px; padding: 24px; }
   html[data-theme="light"] .lp-trading .side { background: rgba(255,255,255,0.5); }
   .lp-trading .side h4 { font-family: var(--serif); font-size: 16px; margin: 0 0 14px; color: var(--gold-bright); }
   .lp-trading .side ul { padding-left: 18px; margin: 0; }
@@ -292,136 +282,42 @@
   .lp-plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
   @media (max-width: 1000px) { .lp-plans { grid-template-columns: 1fr 1fr; } }
   @media (max-width: 640px) { .lp-plans { grid-template-columns: 1fr; } }
-  .lp-plan {
-    background: var(--panel); border: 1px solid var(--line);
-    border-radius: 16px; padding: 34px 28px;
-    backdrop-filter: blur(20px);
-    position: relative;
-    transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
-    display: flex; flex-direction: column;
-  }
-  .lp-plan:hover {
-    transform: translateY(-6px);
-    border-color: var(--gold);
-    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.3),
-                0 24px 52px rgba(59, 130, 246, 0.28),
-                0 0 80px rgba(59, 130, 246, 0.18);
-  }
-  .lp-plan.featured {
-    border-color: var(--gold);
-    box-shadow: 0 20px 60px var(--gold-glow);
-  }
-  .lp-plan.featured:hover {
-    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.45),
-                0 28px 60px rgba(59, 130, 246, 0.38),
-                0 0 100px rgba(59, 130, 246, 0.28);
-  }
-  .lp-plan .tag {
-    position: absolute; top: -12px; right: 20px;
-    background: linear-gradient(135deg, var(--gold-bright), var(--gold-deep));
-    color: #FFFFFF; font-size: 11px; font-weight: 700;
-    letter-spacing: 0.08em; text-transform: uppercase;
-    padding: 5px 12px; border-radius: 20px;
-  }
+  .lp-plan { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 34px 28px; backdrop-filter: blur(20px); position: relative; transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease; display: flex; flex-direction: column; }
+  .lp-plan:hover { transform: translateY(-6px); border-color: var(--gold); box-shadow: 0 0 0 1px rgba(96,165,250,0.3), 0 24px 52px rgba(59,130,246,0.28), 0 0 80px rgba(59,130,246,0.18); }
+  .lp-plan.featured { border-color: var(--gold); box-shadow: 0 20px 60px var(--gold-glow); }
+  .lp-plan.featured:hover { box-shadow: 0 0 0 1px rgba(96,165,250,0.45), 0 28px 60px rgba(59,130,246,0.38), 0 0 100px rgba(59,130,246,0.28); }
+  .lp-plan .tag { position: absolute; top: -12px; right: 20px; background: linear-gradient(135deg, var(--gold-bright), var(--gold-deep)); color: #FFFFFF; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 12px; border-radius: 20px; }
   .lp-plan h3 { font-family: var(--serif); font-size: 22px; font-weight: 500; margin: 0 0 6px; }
   .lp-plan .minimum { font-family: var(--mono); font-size: 28px; color: var(--gold-bright); margin: 14px 0 4px; }
   .lp-plan .minimum-label { font-size: 12px; color: var(--text-dimmer); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 24px; }
   .lp-plan ul { list-style: none; padding: 0; margin: 0 0 26px; flex: 1; }
-  .lp-plan ul li {
-    padding: 10px 0; border-top: 1px solid var(--line-soft);
-    color: var(--text-dim); font-size: 14px; display: flex; gap: 10px; align-items: flex-start;
-  }
+  .lp-plan ul li { padding: 10px 0; border-top: 1px solid var(--line-soft); color: var(--text-dim); font-size: 14px; display: flex; gap: 10px; align-items: flex-start; }
   .lp-plan ul li::before { content: "→"; color: var(--gold); flex-shrink: 0; }
 
   /* Process */
   .lp-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
   @media (max-width: 800px) { .lp-steps { grid-template-columns: 1fr; } }
-  .lp-step {
-    background: var(--panel); border: 1px solid var(--line);
-    border-radius: 14px; padding: 32px 28px;
-    backdrop-filter: blur(20px);
-    transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
-  }
-  .lp-step:hover {
-    transform: translateY(-6px);
-    border-color: var(--gold);
-    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.3),
-                0 24px 52px rgba(59, 130, 246, 0.26),
-                0 0 80px rgba(59, 130, 246, 0.16);
-  }
+  .lp-step { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 32px 28px; backdrop-filter: blur(20px); transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease; }
+  .lp-step:hover { transform: translateY(-6px); border-color: var(--gold); box-shadow: 0 0 0 1px rgba(96,165,250,0.3), 0 24px 52px rgba(59,130,246,0.26), 0 0 80px rgba(59,130,246,0.16); }
   .lp-step .num { font-family: var(--serif); font-size: 42px; color: var(--gold); opacity: 0.55; margin-bottom: 14px; line-height: 1; }
   .lp-step h3 { font-family: var(--serif); font-size: 20px; font-weight: 500; margin: 0 0 12px; color: var(--text); }
   .lp-step p { color: var(--text-dim); font-size: 14.5px; line-height: 1.65; margin: 0; }
 
-  /* Live market card */
-  .lp-market-card {
-    background: var(--panel); border: 1px solid var(--line);
-    border-radius: 16px; padding: 32px;
-    backdrop-filter: blur(20px);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.35);
-    transition: border-color 0.35s ease, box-shadow 0.35s ease;
-  }
-  .lp-market-card:hover {
-    border-color: var(--gold);
-    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.3),
-                0 24px 52px rgba(59, 130, 246, 0.26),
-                0 0 80px rgba(59, 130, 246, 0.16);
-  }
-  .lp-market-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--line-soft); }
-  .lp-market-head h3 { font-family: var(--serif); font-size: 18px; font-weight: 500; margin: 0; }
-  .lp-market-head .meta { font-size: 12px; color: var(--text-dimmer); font-family: var(--mono); }
-  .lp-market-table { width: 100%; border-collapse: collapse; }
-  .lp-market-table th, .lp-market-table td { text-align: left; padding: 14px 12px; border-bottom: 1px solid var(--line-soft); font-size: 14px; }
-  .lp-market-table th { font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dimmer); font-weight: 600; }
-  .lp-market-table td.sym { color: var(--gold-bright); font-family: var(--mono); font-weight: 600; }
-  .lp-market-table td.px { font-family: var(--mono); }
-  .lp-market-table td.up { color: var(--tick-up); font-family: var(--mono); }
-  .lp-market-table td.down { color: var(--tick-down); font-family: var(--mono); }
-  .lp-market-table td.time { color: var(--text-dimmer); font-family: var(--mono); font-size: 13px; }
-
   /* Security */
   .lp-security { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; }
   @media (max-width: 800px) { .lp-security { grid-template-columns: 1fr; } }
-  .lp-security-card {
-    background: var(--panel); border: 1px solid var(--line);
-    border-radius: 14px; padding: 30px;
-    backdrop-filter: blur(20px);
-    transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
-  }
-  .lp-security-card:hover {
-    transform: translateY(-5px);
-    border-color: var(--gold);
-    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.3),
-                0 22px 48px rgba(59, 130, 246, 0.26),
-                0 0 70px rgba(59, 130, 246, 0.16);
-  }
+  .lp-security-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 30px; backdrop-filter: blur(20px); transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease; }
+  .lp-security-card:hover { transform: translateY(-5px); border-color: var(--gold); box-shadow: 0 0 0 1px rgba(96,165,250,0.3), 0 22px 48px rgba(59,130,246,0.26), 0 0 70px rgba(59,130,246,0.16); }
   .lp-security-card h3 { font-family: var(--serif); font-size: 18px; font-weight: 500; margin: 0 0 12px; color: var(--gold-bright); }
   .lp-security-card p { color: var(--text-dim); font-size: 14.5px; line-height: 1.65; margin: 0; }
 
   /* FAQ */
   .lp-faq { max-width: 820px; margin: 0 auto; }
-  .lp-faq-item {
-    border-bottom: 1px solid var(--line-soft);
-    padding: 22px 16px;
-    border-radius: 10px;
-    transition: background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-  }
-  .lp-faq-item:hover {
-    background: rgba(59, 130, 246, 0.04);
-    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.18),
-                0 8px 26px rgba(59, 130, 246, 0.12);
-  }
-  .lp-faq-item summary {
-    cursor: pointer; font-family: var(--serif); font-size: 18px;
-    color: var(--text); font-weight: 500;
-    list-style: none; display: flex; justify-content: space-between;
-    align-items: center; gap: 16px;
-  }
+  .lp-faq-item { border-bottom: 1px solid var(--line-soft); padding: 22px 16px; border-radius: 10px; transition: background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; }
+  .lp-faq-item:hover { background: rgba(59, 130, 246, 0.04); box-shadow: 0 0 0 1px rgba(96,165,250,0.18), 0 8px 26px rgba(59,130,246,0.12); }
+  .lp-faq-item summary { cursor: pointer; font-family: var(--serif); font-size: 18px; color: var(--text); font-weight: 500; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
   .lp-faq-item summary::-webkit-details-marker { display: none; }
-  .lp-faq-item summary::after {
-    content: "+"; font-family: var(--mono); font-size: 22px; color: var(--gold);
-    transition: transform 0.2s;
-  }
+  .lp-faq-item summary::after { content: "+"; font-family: var(--mono); font-size: 22px; color: var(--gold); transition: transform 0.2s; }
   .lp-faq-item[open] summary::after { transform: rotate(45deg); }
   .lp-faq-item p { color: var(--text-dim); font-size: 15px; line-height: 1.7; margin: 16px 0 0; }
 
@@ -440,28 +336,12 @@
   .lp-footer-grid a:hover { color: var(--gold-bright); }
   .lp-disclosure { max-width: 1120px; margin: 60px auto 0; padding-top: 30px; border-top: 1px solid var(--line-soft); font-size: 12px; color: var(--text-dimmer); line-height: 1.7; }
 
-  /* Tier disclosure */
-  .lp-tier-disclosure {
-    max-width: 1120px; margin: 30px auto 0; padding: 0 32px;
-    font-size: 12.5px; color: var(--text-dimmer); line-height: 1.7;
-  }
+  .lp-tier-disclosure { max-width: 1120px; margin: 30px auto 0; padding: 0 32px; font-size: 12.5px; color: var(--text-dimmer); line-height: 1.7; }
 
-  /* ============================================================
-     SCROLL REVEAL
-     ============================================================ */
-  .reveal {
-    opacity: 0; transform: translateY(40px);
-    transition: opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
-                transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
-    will-change: opacity, transform;
-  }
+  /* Reveal animations */
+  .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1), transform 0.75s cubic-bezier(0.22, 1, 0.36, 1); will-change: opacity, transform; }
   .reveal.is-visible { opacity: 1; transform: translateY(0); }
-
-  .reveal-stagger > * {
-    opacity: 0; transform: translateY(40px);
-    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-                transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-  }
+  .reveal-stagger > * { opacity: 0; transform: translateY(40px); transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1); }
   .reveal-stagger.is-visible > * { opacity: 1; transform: translateY(0); }
   .reveal-stagger.is-visible > *:nth-child(1) { transition-delay: 0.00s; }
   .reveal-stagger.is-visible > *:nth-child(2) { transition-delay: 0.06s; }
@@ -471,12 +351,7 @@
   .reveal-stagger.is-visible > *:nth-child(6) { transition-delay: 0.30s; }
   .reveal-stagger.is-visible > *:nth-child(7) { transition-delay: 0.36s; }
   .reveal-stagger.is-visible > *:nth-child(8) { transition-delay: 0.42s; }
-
-  .reveal-hero {
-    opacity: 0; transform: translateY(60px);
-    transition: opacity 1.1s cubic-bezier(0.22, 1, 0.36, 1),
-                transform 1.1s cubic-bezier(0.22, 1, 0.36, 1);
-  }
+  .reveal-hero { opacity: 0; transform: translateY(60px); transition: opacity 1.1s cubic-bezier(0.22, 1, 0.36, 1), transform 1.1s cubic-bezier(0.22, 1, 0.36, 1); }
   .reveal-hero.is-visible { opacity: 1; transform: translateY(0); }
 
   @media (prefers-reduced-motion: reduce) {
@@ -484,9 +359,745 @@
       opacity: 1 !important; transform: none !important; transition: none !important;
     }
   }
+
+  /* Hide Google's default translate UI */
+  .goog-te-banner-frame, #goog-gt-tt, .goog-te-balloon-frame { display: none !important; }
+  body { top: 0 !important; }
+  .goog-text-highlight { background: transparent !important; box-shadow: none !important; }
+   /* ============================================================
+     PAGE PRELOADER
+     ============================================================ */
+  .wsc-preloader {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #050B18;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+    overflow: hidden;
+    padding: 24px;
+  }
+  html[data-theme="light"] .wsc-preloader {
+    background: #F0F4FB;
+  }
+  .wsc-preloader.fade-out {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* ---------- Rings + logo stage ---------- */
+  .wsc-preloader-stage {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-bottom: 28px;
+  }
+  @media (max-width: 700px) {
+    .wsc-preloader-stage { width: 220px; height: 220px; margin-bottom: 22px; }
+  }
+
+  .wsc-preloader-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    animation: wscSpin linear infinite;
+    will-change: transform;
+    pointer-events: none;
+  }
+  .wsc-preloader-ring.ring-1 {
+    border-top-color: #F5D67B;
+    border-right-color: #F5D67B;
+    animation-duration: 1.4s;
+    inset: 0;
+    filter: drop-shadow(0 0 6px rgba(245, 214, 123, 0.5));
+  }
+  .wsc-preloader-ring.ring-2 {
+    border-top-color: #D4AF37;
+    animation-duration: 2.0s;
+    animation-direction: reverse;
+    inset: 18px;
+    filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.45));
+  }
+  .wsc-preloader-ring.ring-3 {
+    border-bottom-color: #B8892B;
+    animation-duration: 2.8s;
+    inset: 36px;
+    filter: drop-shadow(0 0 5px rgba(184, 137, 43, 0.45));
+  }
+  .wsc-preloader-ring.ring-4 {
+    border-top-color: rgba(245, 214, 123, 0.65);
+    animation-duration: 3.6s;
+    animation-direction: reverse;
+    inset: 54px;
+    filter: drop-shadow(0 0 4px rgba(245, 214, 123, 0.4));
+  }
+  @media (max-width: 700px) {
+    .wsc-preloader-ring { border-width: 1.5px; }
+    .wsc-preloader-ring.ring-1 { inset: 0;   }
+    .wsc-preloader-ring.ring-2 { inset: 12px; }
+    .wsc-preloader-ring.ring-3 { inset: 24px; }
+    .wsc-preloader-ring.ring-4 { inset: 36px; }
+  }
+
+  @keyframes wscSpin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ---------- Logo badge in the middle of the rings ---------- */
+  .wsc-preloader-logo {
+    position: relative;
+    z-index: 1;
+    width: 150px;
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(15, 26, 48, 0.6);
+    border: 1px solid rgba(212, 175, 106, 0.35);
+    box-shadow:
+      0 0 0 12px rgba(212, 175, 106, 0.05),
+      0 0 40px 12px rgba(212, 175, 106, 0.18),
+      0 20px 60px rgba(212, 175, 106, 0.14);
+    animation: wscLogoPulse 2.4s ease-in-out infinite;
+  }
+  html[data-theme="light"] .wsc-preloader-logo {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(184, 137, 43, 0.4);
+    box-shadow:
+      0 0 0 12px rgba(180, 140, 60, 0.06),
+      0 0 40px 12px rgba(180, 140, 60, 0.15),
+      0 20px 60px rgba(180, 140, 60, 0.10);
+  }
+  @media (max-width: 700px) {
+    .wsc-preloader-logo { width: 110px; height: 110px; }
+  }
+
+  .wsc-preloader-logo img {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    display: block;
+  }
+  @media (max-width: 700px) {
+    .wsc-preloader-logo img { width: 74px; height: 74px; }
+  }
+
+  @keyframes wscLogoPulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.04); }
+  }
+
+  /* ---------- Brand wordmark + tagline ---------- */
+  .wsc-preloader-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 36px;
+    text-align: center;
+  }
+  @media (max-width: 700px) {
+    .wsc-preloader-brand { margin-bottom: 28px; gap: 8px; }
+  }
+
+  .wsc-preloader-wordmark {
+    font-family: var(--serif);
+    font-size: clamp(26px, 4.6vw, 40px);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #4A9EFF;
+    text-shadow: 0 0 24px rgba(74, 158, 255, 0.35);
+    line-height: 1.1;
+  }
+  html[data-theme="light"] .wsc-preloader-wordmark {
+    color: #1E64D6;
+    text-shadow: 0 0 24px rgba(30, 100, 214, 0.25);
+  }
+  @media (max-width: 700px) {
+    .wsc-preloader-wordmark { font-size: 22px; }
+  }
+
+  .wsc-preloader-tagline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.28em;
+    color: rgba(150, 175, 210, 0.75);
+    text-transform: uppercase;
+  }
+  html[data-theme="light"] .wsc-preloader-tagline {
+    color: rgba(80, 100, 130, 0.8);
+  }
+  .wsc-preloader-tagline .wsc-dot {
+    color: #4A9EFF;
+    font-size: 14px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transform: translateY(-1px);
+    text-shadow: 0 0 10px rgba(74, 158, 255, 0.6);
+  }
+  @media (max-width: 700px) {
+    .wsc-preloader-tagline { font-size: 9.5px; letter-spacing: 0.22em; gap: 8px; }
+    .wsc-preloader-tagline .wsc-dot { font-size: 12px; }
+  }
+
+  /* ---------- Status text with animated ellipsis ---------- */
+  .wsc-preloader-status {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 2px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    color: rgba(120, 145, 180, 0.7);
+    text-transform: uppercase;
+  }
+  html[data-theme="light"] .wsc-preloader-status {
+    color: rgba(90, 110, 140, 0.8);
+  }
+  .wsc-status-dots span {
+    display: inline-block;
+    opacity: 0;
+    animation: wscDotBlink 1.4s infinite;
+  }
+  .wsc-status-dots span:nth-child(1) { animation-delay: 0.0s; }
+  .wsc-status-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .wsc-status-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes wscDotBlink {
+    0%, 20% { opacity: 0; }
+    40%     { opacity: 1; }
+    80%,100%{ opacity: 0; }
+  }
+
+  /* Respect reduced-motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    .wsc-preloader-ring,
+    .wsc-preloader-logo,
+    .wsc-status-dots span {
+      animation: none !important;
+    }
+  }
+/* Landing navbar — logo sizing */
+.wsc-logo-navbar {
+  height: 56px;
+  width: auto;
+  max-width: 340px;
+  object-fit: contain;
+  object-position: left center;
+  filter: drop-shadow(0 0 10px rgba(212, 175, 106, 0.35));
+  display: block;
+}
+@media (max-width: 900px) {
+  .wsc-logo-navbar {
+    height: 40px;
+    max-width: 200px;
+  }
+}
+@media (max-width: 500px) {
+  .wsc-logo-navbar {
+    height: 34px;
+    max-width: 160px;
+  }
+}
+
+.wsc-logo-footer {
+  height: 44px !important;
+  max-height: 44px;
+  width: auto;
+}
+@media (max-width: 700px) {
+  .wsc-logo-navbar { height: 42px !important; }
+  .wsc-logo-footer { height: 34px !important; }
+}
+    /* ============================================================
+     LANDING PAGE NAV — desktop layout + mobile drawer
+     ============================================================ */
+  .lp-nav {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 14px 32px;
+    border-bottom: 1px solid var(--line-soft);
+    background: rgba(5, 11, 24, 0.72);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+  html[data-theme="light"] .lp-nav { background: rgba(240, 244, 251, 0.85); }
+
+  .lp-nav-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+  }
+
+  .lp-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+  }
+
+  .lp-nav-links {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+  }
+  .lp-nav-links > a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.2s;
+    white-space: nowrap;
+  }
+  .lp-nav-links > a:hover { color: var(--text); }
+
+  /* Language trigger: keep visible in both desktop and mobile */
+  .lang-select { position: relative; }
+  .lang-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--text-dim);
+    font-size: 13px;
+    font-family: var(--sans);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .lang-trigger:hover {
+    border-color: var(--gold);
+    color: var(--text);
+    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.25), 0 8px 22px rgba(59, 130, 246, 0.18);
+  }
+  .lang-trigger .globe { width: 15px; height: 15px; opacity: 0.85; }
+  .lang-trigger .caret { width: 12px; height: 12px; opacity: 0.6; transition: transform 0.2s; }
+  .lang-trigger.open .caret { transform: rotate(180deg); }
+
+  /* Auth actions */
+  .lp-nav-signin {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.2s;
+    white-space: nowrap;
+  }
+  .lp-nav-signin:hover { color: var(--text); }
+
+  .lp-nav-cta {
+    padding: 10px 20px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  /* Burger: hidden by default, shown below 900px */
+  .lp-nav-burger {
+    display: none;
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--text);
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex-shrink: 0;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .lp-nav-burger:hover { border-color: var(--gold); color: var(--gold-bright); }
+  .lp-nav-burger svg { width: 20px; height: 20px; }
+  .lp-nav-burger .icon-close { display: none; }
+  .lp-nav.menu-open .lp-nav-burger .icon-open { display: none; }
+  .lp-nav.menu-open .lp-nav-burger .icon-close { display: block; }
+
+  /* Backdrop */
+  .lp-nav-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    top: 68px;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(3px);
+    z-index: 55;
+  }
+  .lp-nav-backdrop.show,
+  .lp-nav.menu-open .lp-nav-backdrop { display: block; }
+
+  /* ---------- Desktop: links visible, burger hidden ---------- */
+  @media (min-width: 901px) {
+    .lp-nav-links { display: flex !important; }
+    .lp-nav-burger { display: none !important; }
+    .lp-nav-backdrop { display: none !important; }
+  }
+
+  /* ---------- Tablet & mobile ---------- */
+  @media (max-width: 900px) {
+    .lp-nav {
+      padding: 12px 18px;
+      gap: 10px;
+    }
+
+    /* Show burger */
+    .lp-nav-burger { display: flex; }
+
+      /* Mobile: turn the links into a slide-down panel */
+    .lp-nav-links {
+      position: fixed;
+      top: 64px;                       /* sits right under the sticky nav */
+      left: 0;
+      right: 0;
+      background: rgba(10, 20, 40, 0.98);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+      padding: 8px 20px 18px;
+      /* Hide by opacity + visibility — no transform games */
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateY(-8px);
+      transition:
+        opacity 0.22s ease,
+        transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0s linear 0.28s;
+      z-index: 59;
+      max-height: calc(100vh - 64px);
+      overflow-y: auto;
+      justify-content: flex-start;
+    }
+    html[data-theme="light"] .lp-nav-links {
+      background: rgba(255, 255, 255, 0.99);
+      border-bottom-color: rgba(0, 0, 0, 0.08);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+    }
+    .lp-nav.menu-open .lp-nav-links {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateY(0);
+      transition-delay: 0s, 0s, 0s;
+    }
+    /* ============================================================
+     LANDING PAGE — mobile spacing
+     ============================================================ */
+  @media (max-width: 900px) {
+    .lp-hero {
+      padding: 56px 20px 48px;
+      max-width: 100%;
+    }
+    .lp-hero h1 {
+      font-size: clamp(32px, 8vw, 44px);
+      line-height: 1.1;
+      margin-bottom: 18px;
+    }
+    .lp-hero .subhead {
+      font-size: 15.5px;
+      margin-bottom: 28px;
+      line-height: 1.55;
+    }
+    .lp-hero .actions {
+      gap: 10px;
+    }
+    .lp-hero .actions .btn {
+      flex: 1 1 100%;
+      justify-content: center;
+      padding: 13px 20px;
+      font-size: 14.5px;
+    }
+
+    .lp-section {
+      padding: 56px 20px;
+    }
+    .lp-label { font-size: 11px; margin-bottom: 14px; }
+    .lp-section h2 { font-size: clamp(24px, 6.4vw, 32px); margin-bottom: 14px; }
+    .lp-section .lede { font-size: 15px; margin-bottom: 34px; line-height: 1.6; }
+
+    .lp-trust {
+      padding: 32px 20px;
+      gap: 22px;
+    }
+    .lp-trust-item .value { font-size: 22px; }
+    .lp-trust-item .label { font-size: 11.5px; }
+  }
+
+  @media (max-width: 700px) {
+    .lp-hero { padding: 44px 18px 40px; }
+    .lp-hero h1 { font-size: clamp(28px, 9vw, 38px); }
+    .lp-hero .subhead { font-size: 15px; }
+
+    .lp-section { padding: 44px 18px; }
+
+    /* Features */
+    .lp-features { gap: 14px; }
+    .lp-feature { padding: 20px 18px; border-radius: 12px; }
+    .lp-feature .ico { width: 38px; height: 38px; border-radius: 10px; margin-bottom: 14px; }
+    .lp-feature .ico svg { width: 18px; height: 18px; }
+    .lp-feature h3 { font-size: 16px; margin-bottom: 8px; }
+    .lp-feature p { font-size: 13.5px; line-height: 1.55; }
+
+    /* Coming soon */
+    .lp-soon { padding: 24px 18px; margin-top: 40px; border-radius: 12px; }
+    .lp-soon-head { flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .lp-soon-head h3 { font-size: 17px; }
+    .lp-soon-list { gap: 12px; }
+    .lp-soon-item { padding: 14px 14px; }
+    .lp-soon-item .name { font-size: 14px; }
+    .lp-soon-item .desc { font-size: 12px; }
+
+    /* Markets */
+    .lp-markets { gap: 22px; }
+    .lp-markets-list li { padding: 14px 0; font-size: 14px; }
+    .lp-markets-list li strong { font-size: 15.5px; }
+    .lp-markets-list li span { font-size: 12px; }
+
+    .lp-market-card { padding: 20px 16px; border-radius: 12px; }
+    .lp-market-head { margin-bottom: 14px; padding-bottom: 12px; }
+    .lp-market-head h3 { font-size: 16px; }
+    .tv-market-overview { height: 340px !important; }
+
+    /* TradingView embed */
+    .tv-embed-container {
+      height: 340px;
+      border-radius: 12px;
+    }
+
+    /* Trading section */
+    .lp-trading {
+      grid-template-columns: 1fr;
+      padding: 24px 18px;
+      gap: 24px;
+      border-radius: 12px;
+    }
+    .lp-trading h3 { font-size: 20px; margin-bottom: 14px; }
+    .lp-trading ol li { font-size: 14px; margin-bottom: 10px; }
+    .lp-trading .side { padding: 18px 16px; }
+    .lp-trading .side h4 { font-size: 14.5px; }
+    .lp-trading .side ul li { font-size: 13px; }
+
+    /* Plans */
+    .lp-plans { gap: 16px; }
+    .lp-plan {
+      padding: 26px 20px;
+      border-radius: 14px;
+    }
+    .lp-plan h3 { font-size: 19px; }
+    .lp-plan .minimum { font-size: 24px; margin: 12px 0 4px; }
+    .lp-plan .minimum-label { font-size: 11px; margin-bottom: 18px; }
+    .lp-plan ul li { padding: 9px 0; font-size: 13.5px; }
+    .lp-plan .tag { font-size: 10px; padding: 4px 10px; right: 16px; }
+    .lp-tier-disclosure { margin-top: 24px; padding: 0 18px; font-size: 11.5px; line-height: 1.65; }
+
+    /* Process steps */
+    .lp-steps { gap: 16px; }
+    .lp-step { padding: 24px 20px; border-radius: 12px; }
+    .lp-step .num { font-size: 34px; margin-bottom: 10px; }
+    .lp-step h3 { font-size: 17px; margin-bottom: 10px; }
+    .lp-step p { font-size: 13.5px; line-height: 1.6; }
+
+    /* Security */
+    .lp-security { gap: 14px; }
+    .lp-security-card { padding: 22px 18px; border-radius: 12px; }
+    .lp-security-card h3 { font-size: 16px; margin-bottom: 10px; }
+    .lp-security-card p { font-size: 13.5px; line-height: 1.6; }
+
+    /* FAQ */
+    .lp-faq-item { padding: 18px 14px; }
+    .lp-faq-item summary { font-size: 15.5px; gap: 12px; }
+    .lp-faq-item p { font-size: 14px; margin-top: 12px; }
+
+    /* CTA */
+    .lp-cta { padding: 56px 20px; }
+    .lp-cta h2 { font-size: clamp(24px, 7vw, 32px); margin-bottom: 16px; }
+    .lp-cta p { font-size: 15px; margin-bottom: 24px; }
+    .lp-cta .btn { padding: 13px 30px !important; font-size: 14px !important; }
+
+    /* Footer */
+    .lp-footer { padding: 40px 20px 50px; }
+    .lp-footer-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 26px 20px;
+    }
+    .lp-footer-grid > div:first-child {
+      grid-column: 1 / -1;
+    }
+    .lp-footer-grid h4 { font-size: 10.5px; margin-bottom: 12px; }
+    .lp-footer-grid a { font-size: 13px; margin-bottom: 8px; }
+    .lp-disclosure { margin-top: 40px; padding-top: 22px; font-size: 11.5px; line-height: 1.7; }
+
+    /* Ticker tape */
+    .tv-ticker-wrapper { min-height: 42px; }
+  }
+
+  @media (max-width: 400px) {
+    .lp-hero { padding: 36px 14px 32px; }
+    .lp-section { padding: 36px 14px; }
+    .lp-hero h1 { font-size: clamp(26px, 9vw, 34px); }
+    .lp-footer-grid { grid-template-columns: 1fr; gap: 22px; }
+
+    .lp-plans,
+    .lp-features,
+    .lp-security,
+    .lp-steps { gap: 12px; }
+  }
+
+  /* Prevent horizontal scroll on mobile */
+  html, body { overflow-x: hidden; }
+  .lp-shell { overflow-x: hidden; }
+    /* Anchor scroll offset — account for sticky nav */
+  #features, #markets, #chart, #trading, #plans, #process,
+  #security, #faq { scroll-margin-top: 90px; }
+
+  @media (max-width: 900px) {
+    #features, #markets, #chart, #trading, #plans, #process,
+    #security, #faq { scroll-margin-top: 80px; }
+  }
+    /* ============================================================
+     MOBILE NAV DRAWER — final override
+     ============================================================ */
+  @media (max-width: 900px) {
+    #lp-nav-links {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: stretch !important;
+      justify-content: flex-start !important;
+
+      position: fixed !important;
+      top: 64px !important;
+      left: 0 !important;
+      right: 0 !important;
+
+      gap: 0 !important;
+      padding: 8px 20px 18px !important;
+
+      background: rgba(10, 20, 40, 0.98) !important;
+      backdrop-filter: blur(20px) saturate(180%) !important;
+      -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5) !important;
+
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateY(-8px);
+
+      transition:
+        opacity 0.22s ease,
+        transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0s linear 0.28s;
+
+      z-index: 10000 !important;
+      max-height: calc(100dvh - 64px);
+      overflow-y: auto;
+    }
+
+    html[data-theme="light"] #lp-nav-links {
+      background: rgba(255, 255, 255, 0.99) !important;
+      border-bottom-color: rgba(0, 0, 0, 0.08) !important;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12) !important;
+    }
+
+    /* Every link inside the panel — nothing can hide these now */
+    #lp-nav-links > a {
+      display: block !important;
+      padding: 15px 6px !important;
+      border-bottom: 1px solid var(--line-soft) !important;
+      font-size: 16px !important;
+      color: var(--text) !important;
+      text-align: left !important;
+      text-decoration: none !important;
+      white-space: normal !important;
+      background: transparent !important;
+    }
+    #lp-nav-links > a:last-of-type { border-bottom: none !important; }
+    #lp-nav-links > a:hover { color: var(--gold-bright) !important; }
+
+    /* Open state — highest specificity possible */
+    #lp-nav.menu-open #lp-nav-links {
+      opacity: 1 !important;
+      visibility: visible !important;
+      pointer-events: auto !important;
+      transform: translateY(0) !important;
+      transition-delay: 0s, 0s, 0s !important;
+      z-index: 10000 !important;
+    }
+
+    /* Backdrop */
+    #lp-nav.menu-open #lp-nav-backdrop,
+    #lp-nav-backdrop.show {
+      display: block !important;
+      position: fixed !important;
+      inset: 0 !important;
+      top: 64px !important;
+      background: rgba(0, 0, 0, 0.45) !important;
+      backdrop-filter: blur(3px) !important;
+      z-index: 9999 !important;
+    }
+  }
 </style>
 </head>
 <body>
+  <!-- Page preloader -->
+  <!-- Page preloader -->
+  <div class="wsc-preloader" id="wsc-preloader" aria-hidden="true">
+    <div class="wsc-preloader-stage">
+      <div class="wsc-preloader-ring ring-1"></div>
+      <div class="wsc-preloader-ring ring-2"></div>
+      <div class="wsc-preloader-ring ring-3"></div>
+      <div class="wsc-preloader-ring ring-4"></div>
+      <div class="wsc-preloader-logo">
+        <img src="/images/wsc-reloader.png" alt="Wall Street Capital">
+      </div>
+    </div>
+
+    <div class="wsc-preloader-brand">
+      <div class="wsc-preloader-wordmark">WALL STREET CAPITAL</div>
+      <div class="wsc-preloader-tagline">
+        <span>INVEST</span>
+        <span class="wsc-dot">·</span>
+        <span>GROW</span>
+        <span class="wsc-dot">·</span>
+        <span>EARN</span>
+      </div>
+    </div>
+
+    <div class="wsc-preloader-status">
+      <span class="wsc-status-text">INITIALIZING SECURE SESSION</span>
+      <span class="wsc-status-dots"><span>.</span><span>.</span><span>.</span></span>
+    </div>
+  </div>
 
 <div class="auth-bg"></div>
 
@@ -503,44 +1114,89 @@
 <div class="lp-shell">
 
   <!-- NAV -->
-  <nav class="lp-nav">
-    <a class="lp-nav-mark" href="/">Wall Street <em>Capital</em></a>
-    <div class="lp-nav-links">
+   <nav class="lp-nav" id="lp-nav">
+    <!-- Left cluster: logo + (on mobile) language + (on mobile) sign-in / get-started -->
+    <div class="lp-nav-left">
+      <a class="lp-nav-mark wsc-logo" href="/">
+        <img class="wsc-logo-img wsc-logo-navbar" src="/images/wsc-logo.png" alt="Wall Street Capital">
+      </a>
+    </div>
+
+    <!-- Middle cluster: section links (desktop only) -->
+    <div class="lp-nav-links" id="lp-nav-links">
       <a href="#features">Features</a>
       <a href="#markets">Markets</a>
+      <a href="#chart">Chart</a>
       <a href="#plans">Plans</a>
       <a href="#trading">Trading</a>
       <a href="#faq">FAQ</a>
-      <a href="/login.html" class="btn btn-outline">Sign In</a>
-      <a href="/signup.html" class="btn btn-solid">Get Started</a>
     </div>
+
+    <!-- Right cluster: language + auth + burger -->
+    <div class="lp-nav-right">
+      <!-- Language selector -->
+      <div class="lang-select" id="lang-select">
+        <button type="button" class="lang-trigger" id="lang-trigger" aria-label="Change language">
+          <svg class="globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/>
+          </svg>
+          <span id="lang-current" class="lang-current-label">English</span>
+          <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </button>
+        <div class="lang-menu" id="lang-menu">
+          <div class="list" id="lang-list"></div>
+        </div>
+      </div>
+
+      <!-- Auth actions: always visible -->
+      <a href="/login.html" class="lp-nav-signin">Sign in</a>
+      <a href="/signup.html" class="btn btn-solid lp-nav-cta">Get started</a>
+
+      <!-- Burger (mobile only, opens the section-links panel) -->
+      <button class="lp-nav-burger" id="lp-nav-burger" aria-label="Menu" aria-expanded="false">
+        <svg class="icon-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+        <svg class="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Backdrop for the mobile drawer -->
+    <div class="lp-nav-backdrop" id="lp-nav-backdrop"></div>
   </nav>
+   <!-- ===== TRADINGVIEW TICKER TAPE ===== -->
+  <div class="tv-ticker-wrapper">
+    <iframe
+      src="https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#%7B%22symbols%22%3A%5B%7B%22proName%22%3A%22FOREXCOM%3ASPXUSD%22%2C%22title%22%3A%22S%26P%20500%22%7D%2C%7B%22proName%22%3A%22NASDAQ%3AAAPL%22%2C%22title%22%3A%22Apple%22%7D%2C%7B%22proName%22%3A%22NASDAQ%3AMSFT%22%2C%22title%22%3A%22Microsoft%22%7D%2C%7B%22proName%22%3A%22NASDAQ%3ANVDA%22%2C%22title%22%3A%22NVIDIA%22%7D%2C%7B%22proName%22%3A%22AMEX%3ASPY%22%2C%22title%22%3A%22S%26P%20500%20ETF%22%7D%2C%7B%22proName%22%3A%22NASDAQ%3AQQQ%22%2C%22title%22%3A%22Nasdaq%20100%20ETF%22%7D%2C%7B%22proName%22%3A%22NASDAQ%3ATSLA%22%2C%22title%22%3A%22Tesla%22%7D%2C%7B%22proName%22%3A%22BITSTAMP%3ABTCUSD%22%2C%22title%22%3A%22Bitcoin%22%7D%5D%2C%22showSymbolLogo%22%3Atrue%2C%22isTransparent%22%3Atrue%2C%22displayMode%22%3A%22adaptive%22%2C%22colorTheme%22%3A%22dark%22%7D"
+      style="width:100%; height:46px; border:0; display:block;"
+      frameborder="0"
+      allowtransparency="true"
+      scrolling="no">
+    </iframe>
+  </div>
 
   <!-- HERO -->
   <section class="lp-hero">
-    <div class="lp-status reveal-hero" id="market-status">
-      <span class="dot" id="status-dot"></span>
-      <span id="status-text">Connecting to market data…</span>
-    </div>
     <h1 class="reveal-hero">Capital allocated with <em>discipline</em>, not noise.</h1>
     <p class="subhead reveal-hero">Sign up, verify your identity, link a bank account, and see a portfolio built from real, executed trades — not numbers an app invented for you.</p>
     <div class="actions reveal-hero">
-      <a class="btn btn-solid" href="/signup.html">Get Started</a>
-      <a class="btn btn-outline" href="/login.html">Sign In</a>
+      <a class="btn btn-solid" href="/signup.html">Get started</a>
+      <a class="btn" href="/login.html">Sign in</a>
     </div>
   </section>
 
-  <!-- TICKER -->
-  <div class="lp-ticker">
-    <div class="lp-ticker-track" id="ticker-track"></div>
-  </div>
-
+ 
   <!-- TRUST -->
   <div class="lp-trust reveal-stagger">
-    <div class="lp-trust-item"><div class="value" id="stat-latency">—</div><div class="label">Data latency (IEX)</div></div>
+    <div class="lp-trust-item"><div class="value">IEX</div><div class="label">Real-time market feed</div></div>
     <div class="lp-trust-item"><div class="value">$0</div><div class="label">Commission on US equities</div></div>
     <div class="lp-trust-item"><div class="value">SIPC</div><div class="label">Brokerage partner coverage</div></div>
-    <div class="lp-trust-item"><div class="value" id="stat-trades">0</div><div class="label">Trades streamed this session</div></div>
+    <div class="lp-trust-item"><div class="value">TradingView</div><div class="label">Charting &amp; market data</div></div>
   </div>
 
   <!-- FEATURES -->
@@ -550,114 +1206,60 @@
     <p class="lede reveal">Built on top of Alpaca's Broker API. Every feature below reflects real infrastructure — not a mocked-up screenshot.</p>
 
     <div class="lp-features reveal-stagger">
-
       <div class="lp-feature" data-color="blue">
-        <div class="ico">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 17l6-6 4 4 8-8"/><path d="M17 7h4v4"/>
-          </svg>
-        </div>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M17 7h4v4"/></svg></div>
         <h3>Stock Market</h3>
         <p>Trade US-listed equities and ETFs. Real orders routed to real exchanges through our brokerage partner.</p>
       </div>
-
       <div class="lp-feature" data-color="green">
-        <div class="ico">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/><path d="m9 12 2 2 4-4"/>
-          </svg>
-        </div>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/><path d="m9 12 2 2 4-4"/></svg></div>
         <h3>Identity Verification</h3>
         <p>KYC/CIP runs at the brokerage. We store a status flag — never your SSN or documents.</p>
       </div>
-
       <div class="lp-feature" data-color="purple">
-        <div class="ico">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/><circle cx="7" cy="14" r="1"/>
-          </svg>
-        </div>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/><circle cx="7" cy="14" r="1"/></svg></div>
         <h3>Bank Linking</h3>
         <p>Secure linking via Plaid. We never see your account or routing numbers — a scoped processor token goes to Alpaca.</p>
       </div>
-
       <div class="lp-feature" data-color="cyan">
-        <div class="ico">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M7 17l-4-4 4-4"/><path d="M3 13h12a4 4 0 0 0 4-4V4"/><path d="M17 7l4 4-4 4"/>
-          </svg>
-        </div>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l-4-4 4-4"/><path d="M3 13h12a4 4 0 0 0 4-4V4"/><path d="M17 7l4 4-4 4"/></svg></div>
         <h3>ACH Transfers</h3>
         <p>Deposit or withdraw by ACH. Every transfer is a call to Alpaca's Transfers API — nothing is fabricated in our database.</p>
       </div>
-
       <div class="lp-feature" data-color="amber">
-        <div class="ico">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/>
-          </svg>
-        </div>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg></div>
         <h3>Live Market Data</h3>
-        <p>Real-time IEX feed streams trades as they happen. What you see on this page is what the brokerage sees.</p>
+        <p>Real-time feed streams prices as they happen. Charting powered by TradingView, market data by IEX.</p>
       </div>
-
       <div class="lp-feature" data-color="indigo">
-        <div class="ico">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 14h2M8 18h6"/>
-          </svg>
-        </div>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 14h2M8 18h6"/></svg></div>
         <h3>Portfolio View</h3>
         <p>Positions, market value, and unrealized P/L read directly from the brokerage — refreshed on every dashboard load.</p>
       </div>
-
       <div class="lp-feature" data-color="teal">
-        <div class="ico">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="9"/><path d="M12 3v9l6 3"/>
-          </svg>
-        </div>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6 3"/></svg></div>
         <h3>Fractional Shares</h3>
         <p>Buy any US stock from $1. Own a slice of Apple, Tesla, or an index ETF without needing the full share price.</p>
       </div>
-
       <div class="lp-feature" data-color="rose">
-        <div class="ico">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/>
-          </svg>
-        </div>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div>
         <h3>Audit-Trail Admin</h3>
         <p>Every admin action is written to an append-only log. Admins can sync status — they can never invent a balance.</p>
       </div>
-
     </div>
 
     <div class="lp-soon reveal">
       <div class="lp-soon-head">
-        <span class="badge">Active</span>
-        
+        <span class="badge">Coming soon</span>
+        <h3>On the roadmap — not yet available</h3>
       </div>
       <div class="lp-soon-list">
-        <div class="lp-soon-item">
-          <div class="name">Copy Trading</div>
-          <div class="desc">Mirror allocations from experienced investors. Requires trade-mirroring infrastructure.</div>
-        </div>
-        <div class="lp-soon-item">
-          <div class="name">Bot Trading</div>
-          <div class="desc">A Bot that handles all your trades for you.</div>
-        </div>
-        <div class="lp-soon-item">
-          <div class="name">Crypto Trading</div>
-          <div class="desc">Bitcoin and major tokens. Would require a licensed crypto custodian — not yet integrated.</div>
-        </div>
-        <div class="lp-soon-item">
-          <div class="name">Crypto Staking</div>
-          <div class="desc">Proof-of-stake rewards. Only possible once crypto custody is live.</div>
-        </div>
+        <div class="lp-soon-item"><div class="name">Copy Trading</div><div class="desc">Mirror allocations from experienced investors. Requires trade-mirroring infrastructure.</div></div>
+        <div class="lp-soon-item"><div class="name">Automated Strategies</div><div class="desc">Rule-based order automation. Separate regulatory review required before launch.</div></div>
+        <div class="lp-soon-item"><div class="name">Crypto Trading</div><div class="desc">Bitcoin and major tokens. Would require a licensed crypto custodian — not yet integrated.</div></div>
+        <div class="lp-soon-item"><div class="name">Crypto Staking</div><div class="desc">Proof-of-stake rewards. Only possible once crypto custody is live.</div></div>
       </div>
     </div>
-
   </section>
 
   <!-- MARKETS -->
@@ -674,17 +1276,121 @@
         <li><strong>Dividend Reinvestment</strong><span>DRIP supported</span></li>
         <li><strong>Extended-hours Trading</strong><span>Pre &amp; post market</span></li>
       </ul>
+
       <div class="lp-market-card reveal">
         <div class="lp-market-head">
-          <h3>Live market sample</h3>
-          <div class="meta">Source: IEX</div>
+          <h3>Live market overview</h3>
+          <div class="meta">Source: TradingView</div>
         </div>
-        <table class="lp-market-table" id="live-table">
-          <thead><tr><th>Symbol</th><th>Last</th><th>Change</th><th>Size</th><th>Time</th></tr></thead>
-          <tbody></tbody>
-        </table>
+        <div class="tv-market-overview">
+          <!-- TradingView Widget BEGIN -->
+          <div class="tradingview-widget-container" style="width:100%; height:100%;">
+            <div class="tradingview-widget-container__widget" style="width:100%; height:100%;"></div>
+            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
+            {
+              "colorTheme": "dark",
+              "dateRange": "12M",
+              "showChart": true,
+              "locale": "en",
+              "width": "100%",
+              "height": "100%",
+              "largeChartUrl": "",
+              "isTransparent": true,
+              "showSymbolLogo": true,
+              "showFloatingTooltip": false,
+              "plotLineColorGrowing": "rgba(96, 165, 250, 1)",
+              "plotLineColorFalling": "rgba(248, 113, 113, 1)",
+              "gridLineColor": "rgba(106, 153, 255, 0.1)",
+              "scaleFontColor": "rgba(157, 169, 192, 1)",
+              "belowLineFillColorGrowing": "rgba(96, 165, 250, 0.12)",
+              "belowLineFillColorFalling": "rgba(248, 113, 113, 0.12)",
+              "belowLineFillColorGrowingBottom": "rgba(96, 165, 250, 0)",
+              "belowLineFillColorFallingBottom": "rgba(248, 113, 113, 0)",
+              "symbolActiveColor": "rgba(96, 165, 250, 0.14)",
+              "tabs": [
+                {
+                  "title": "Indices",
+                  "symbols": [
+                    { "s": "FOREXCOM:SPXUSD", "d": "S&P 500" },
+                    { "s": "FOREXCOM:NSXUSD", "d": "Nasdaq 100" },
+                    { "s": "FOREXCOM:DJI",    "d": "Dow 30" },
+                    { "s": "INDEX:NKY",       "d": "Nikkei 225" },
+                    { "s": "INDEX:DEU40",     "d": "DAX" },
+                    { "s": "FOREXCOM:UKXGBP", "d": "FTSE 100" }
+                  ]
+                },
+                {
+                  "title": "US Stocks",
+                  "symbols": [
+                    { "s": "NASDAQ:AAPL", "d": "Apple" },
+                    { "s": "NASDAQ:MSFT", "d": "Microsoft" },
+                    { "s": "NASDAQ:NVDA", "d": "NVIDIA" },
+                    { "s": "NASDAQ:TSLA", "d": "Tesla" },
+                    { "s": "NASDAQ:GOOGL","d": "Alphabet" },
+                    { "s": "NASDAQ:AMZN", "d": "Amazon" },
+                    { "s": "NASDAQ:META", "d": "Meta" }
+                  ]
+                },
+                {
+                  "title": "ETFs",
+                  "symbols": [
+                    { "s": "AMEX:SPY",  "d": "SPY" },
+                    { "s": "NASDAQ:QQQ", "d": "QQQ" },
+                    { "s": "AMEX:DIA",  "d": "DIA" },
+                    { "s": "AMEX:IWM",  "d": "IWM" }
+                  ]
+                },
+                {
+                  "title": "Crypto",
+                  "symbols": [
+                    { "s": "BITSTAMP:BTCUSD", "d": "Bitcoin" },
+                    { "s": "BITSTAMP:ETHUSD", "d": "Ethereum" }
+                  ]
+                }
+              ]
+            }
+            </script>
+          </div>
+          <!-- TradingView Widget END -->
+        </div>
       </div>
     </div>
+  </section>
+
+  <!-- ===== TRADINGVIEW CHART ===== -->
+  <section class="lp-section" id="chart">
+    <div class="lp-label reveal">Interactive chart</div>
+    <h2 class="reveal">Analyze the markets in real time.</h2>
+    <p class="lede reveal">Powered by TradingView. Search any symbol, change timeframes, add indicators, and draw on the chart — the same tool used by millions of traders worldwide.</p>
+
+    <div class="tv-embed-container reveal">
+      <div class="tradingview-widget-container" style="width:100%; height:100%;">
+        <div class="tradingview-widget-container__widget" style="width:100%; height:100%;"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+        {
+          "autosize": true,
+          "symbol": "NASDAQ:AAPL",
+          "interval": "D",
+          "timezone": "Etc/UTC",
+          "theme": "dark",
+          "style": "1",
+          "locale": "en",
+          "enable_publishing": false,
+          "allow_symbol_change": true,
+          "calendar": false,
+          "hide_side_toolbar": false,
+          "details": true,
+          "hotlist": false,
+          "studies": ["STD;SMA", "STD;RSI"],
+          "support_host": "https://www.tradingview.com"
+        }
+        </script>
+      </div>
+    </div>
+
+    <p class="muted" style="margin-top: 18px; font-size: 12.5px;">
+      US equity data on this free widget may be delayed. Chart provided by TradingView; Wall Street Capital does not control the data feed.
+    </p>
   </section>
 
   <!-- TRADING -->
@@ -721,86 +1427,49 @@
     <h2 class="reveal">Tiers based on funded balance.</h2>
     <p class="lede reveal">Higher tiers unlock better service — faster funding, priority support, richer reporting. Trading capabilities are identical across all tiers.</p>
     <div class="lp-plans reveal-stagger">
-
       <div class="lp-plan">
         <h3>Starter</h3>
         <div class="minimum">$20,000</div>
         <div class="minimum-label">Minimum funded balance</div>
-        <ul>
-          <li>Standard ACH funding</li>
-          <li>Email support</li>
-          <li>Standard execution</li>
-          <li>Web dashboard</li>
-        </ul>
-        <a href="/signup.html" class="btn btn-solid btn-block">Open Starter</a>
+        <ul><li>Standard ACH funding</li><li>Email support</li><li>Standard execution</li><li>Web dashboard</li></ul>
+        <a href="/signup.html" class="btn btn-solid btn-block">Get started</a>
       </div>
-
       <div class="lp-plan">
         <h3>Growth</h3>
         <div class="minimum">$50,000</div>
         <div class="minimum-label">Minimum funded balance</div>
-        <ul>
-          <li>Priority email &amp; phone support</li>
-          <li>Faster ACH windows</li>
-          <li>Standard execution</li>
-          <li>Web dashboard</li>
-        </ul>
-        <a href="/signup.html" class="btn btn-solid btn-block">Open Growth</a>
+        <ul><li>Priority email &amp; phone support</li><li>Faster ACH windows</li><li>Standard execution</li><li>Web dashboard</li></ul>
+        <a href="/signup.html" class="btn btn-solid btn-block">Get started</a>
       </div>
-
       <div class="lp-plan">
         <h3>Professional</h3>
         <div class="minimum">$100,000</div>
         <div class="minimum-label">Minimum funded balance</div>
-        <ul>
-          <li>Wire funding</li>
-          <li>Priority support</li>
-          <li>Quarterly statement package</li>
-          <li>Standard execution</li>
-        </ul>
-        <a href="/signup.html" class="btn btn-solid btn-block">Open Professional</a>
+        <ul><li>Wire funding</li><li>Priority support</li><li>Quarterly statement package</li><li>Standard execution</li></ul>
+        <a href="/signup.html" class="btn btn-solid btn-block">Get started</a>
       </div>
-
       <div class="lp-plan featured">
         <div class="tag">Most popular</div>
         <h3>Premier</h3>
         <div class="minimum">$200,000</div>
         <div class="minimum-label">Minimum funded balance</div>
-        <ul>
-          <li>Annual account review call</li>
-          <li>Extended-hours support</li>
-          <li>Wire funding</li>
-          <li>Quarterly statement package</li>
-        </ul>
-        <a href="/signup.html" class="btn btn-solid btn-block">Open Premier</a>
+        <ul><li>Annual account review call</li><li>Extended-hours support</li><li>Wire funding</li><li>Quarterly statement package</li></ul>
+        <a href="/signup.html" class="btn btn-solid btn-block">Get started</a>
       </div>
-
       <div class="lp-plan">
         <h3>Private</h3>
         <div class="minimum">$250,000</div>
         <div class="minimum-label">Minimum funded balance</div>
-        <ul>
-          <li>Direct line to support team</li>
-          <li>Custom reporting</li>
-          <li>Wire funding</li>
-          <li>Annual account review</li>
-        </ul>
-        <a href="/signup.html" class="btn btn-solid btn-block">Open Private</a>
+        <ul><li>Direct line to support team</li><li>Custom reporting</li><li>Wire funding</li><li>Annual account review</li></ul>
+        <a href="/signup.html" class="btn btn-solid btn-block">Get started</a>
       </div>
-
       <div class="lp-plan">
         <h3>Institutional</h3>
         <div class="minimum">$300,000</div>
         <div class="minimum-label">Minimum funded balance</div>
-        <ul>
-          <li>Bespoke onboarding</li>
-          <li>Dedicated integration support</li>
-          <li>Wire funding</li>
-          <li>Custom reporting</li>
-        </ul>
-        <a href="/signup.html" class="btn btn-solid btn-block">Open Institutional</a>
+        <ul><li>Bespoke onboarding</li><li>Dedicated integration support</li><li>Wire funding</li><li>Custom reporting</li></ul>
+        <a href="/signup.html" class="btn btn-solid btn-block">Get started</a>
       </div>
-
     </div>
     <div class="lp-tier-disclosure reveal">
       <strong>Tier disclosure.</strong> "Tier" refers to the level of service based on the total funded balance of your brokerage account, held at our SIPC-member partner. Tier status is not a security, does not confer ownership, and does not change the trading capabilities of your account — all customers have access to the same markets and order types. Balances are never locked; you may withdraw at any time, and your tier adjusts automatically if your funded balance changes. No fees are charged for tier status.
@@ -813,21 +1482,9 @@
     <h2 class="reveal">From signup to your first executed trade.</h2>
     <p class="lede reveal">Three steps. No friction. Real trades settle at the brokerage — not in this app.</p>
     <div class="lp-steps reveal-stagger">
-      <div class="lp-step">
-        <div class="num">01</div>
-        <h3>Create your account</h3>
-        <p>Email and password. No credit check. No minimum deposit to open.</p>
-      </div>
-      <div class="lp-step">
-        <div class="num">02</div>
-        <h3>Verify your identity</h3>
-        <p>Submit your legal name, address, and date of birth. Our brokerage partner runs the actual KYC/CIP check — we never see your SSN.</p>
-      </div>
-      <div class="lp-step">
-        <div class="num">03</div>
-        <h3>Fund and trade</h3>
-        <p>Link a bank account via Plaid, deposit via ACH, and place your first order. Funds settle at the brokerage, not in our app.</p>
-      </div>
+      <div class="lp-step"><div class="num">01</div><h3>Create your account</h3><p>Email and password. No credit check. No minimum deposit to open.</p></div>
+      <div class="lp-step"><div class="num">02</div><h3>Verify your identity</h3><p>Submit your legal name, address, and date of birth. Our brokerage partner runs the actual KYC/CIP check — we never see your SSN.</p></div>
+      <div class="lp-step"><div class="num">03</div><h3>Fund and trade</h3><p>Link a bank account via Plaid, deposit via ACH, and place your first order. Funds settle at the brokerage, not in our app.</p></div>
     </div>
   </section>
 
@@ -836,22 +1493,10 @@
     <div class="lp-label reveal">Security &amp; custody</div>
     <h2 class="reveal">We never hold your money. That's the point.</h2>
     <div class="lp-security reveal-stagger">
-      <div class="lp-security-card">
-        <h3>Custody at the brokerage</h3>
-        <p>All funds are held at our SIPC-member brokerage partner. If Wall Street Capital disappeared tomorrow, your assets would still be at the brokerage, in your name.</p>
-      </div>
-      <div class="lp-security-card">
-        <h3>No balance mutations</h3>
-        <p>Our database has no column that can increment a balance. Every dollar movement is a call to the brokerage's Transfers API. This isn't a policy — it's a schema constraint.</p>
-      </div>
-      <div class="lp-security-card">
-        <h3>KYC without the PII burden</h3>
-        <p>Identity verification runs at the brokerage. We store a status flag and a submission timestamp. Your SSN never touches our servers.</p>
-      </div>
-      <div class="lp-security-card">
-        <h3>Audit trail</h3>
-        <p>Every admin action is written to an append-only audit log. Admins can sync KYC status from the brokerage — they can never invent an approval.</p>
-      </div>
+      <div class="lp-security-card"><h3>Custody at the brokerage</h3><p>All funds are held at our SIPC-member brokerage partner. If Wall Street Capital disappeared tomorrow, your assets would still be at the brokerage, in your name.</p></div>
+      <div class="lp-security-card"><h3>No balance mutations</h3><p>Our database has no column that can increment a balance. Every dollar movement is a call to the brokerage's Transfers API. This isn't a policy — it's a schema constraint.</p></div>
+      <div class="lp-security-card"><h3>KYC without the PII burden</h3><p>Identity verification runs at the brokerage. We store a status flag and a submission timestamp. Your SSN never touches our servers.</p></div>
+      <div class="lp-security-card"><h3>Audit trail</h3><p>Every admin action is written to an append-only audit log. Admins can sync KYC status from the brokerage — they can never invent an approval.</p></div>
     </div>
   </section>
 
@@ -861,79 +1506,40 @@
     <h2 class="reveal">Questions we actually get.</h2>
     <p class="lede reveal">If yours isn't here, open a support ticket from your dashboard.</p>
     <div class="lp-faq">
-
-      <details class="lp-faq-item reveal">
-        <summary>Is Wall Street Capital a broker?</summary>
-        <p>No. Wall Street Capital is a technology company. Brokerage services — custody, execution, clearing — are provided by our SIPC-member partner, a registered broker-dealer. We build the interface; they hold the license.</p>
-      </details>
-
-      <details class="lp-faq-item reveal">
-        <summary>Where is my money held?</summary>
-        <p>At the brokerage, in your name. We never take custody of customer funds. Every deposit and withdrawal is a call to the brokerage's Transfers API — we do not have a balance field in our database that could be incremented.</p>
-      </details>
-
-      <details class="lp-faq-item reveal">
-        <summary>Are there any account minimums?</summary>
-        <p>No minimum to open an account. You can fund with as little as $1 using fractional shares. Higher account tiers exist for service reasons (see Plans section) but they are based on funded balance, not required to trade.</p>
-      </details>
-
-      <details class="lp-faq-item reveal">
-        <summary>What does it cost?</summary>
-        <p>$0 commission on US equities and ETFs. Regulatory fees and any third-party charges (wire transfers, for example) are passed through at cost.</p>
-      </details>
-
-      <details class="lp-faq-item reveal">
-        <summary>How do you verify my identity?</summary>
-        <p>Through our brokerage partner. You submit name, address, date of birth, and tax ID. They run the actual CIP/KYC check. We store a status flag indicating whether you've been approved — we do not store your SSN or documents.</p>
-      </details>
-
-      <details class="lp-faq-item reveal">
-        <summary>How long does verification take?</summary>
-        <p>Most accounts are verified within a few hours. Complex cases can take 1–2 business days. You can track the status on your dashboard while it's in progress.</p>
-      </details>
-
-      <details class="lp-faq-item reveal">
-        <summary>How do I fund my account?</summary>
-        <p>Link a bank account through Plaid and transfer via ACH. ACH deposits typically settle in 3–5 business days. Wire transfers are available for higher tiers and settle same-day.</p>
-      </details>
-
-      <details class="lp-faq-item reveal">
-        <summary>Can I withdraw my money at any time?</summary>
-        <p>Yes. There's no lock-up. Withdrawals go back to the same bank account you funded from, subject to standard ACH settlement timelines and any unsettled trades.</p>
-      </details>
-
-      <details class="lp-faq-item reveal">
-        <summary>Do you offer crypto?</summary>
-        <p>Not currently. This platform is focused on US equities and ETFs. If we add crypto later, it will be through a licensed crypto custodian — not a token we invented.</p>
-      </details>
-
-      <details class="lp-faq-item reveal">
-        <summary>Is my money insured?</summary>
-        <p>Brokerage accounts at our SIPC-member partner are covered by SIPC up to $500,000 (including $250,000 for cash claims), subject to SIPC rules. SIPC protects against broker failure, not market losses. There is no FDIC insurance because this is not a bank.</p>
-      </details>
-
+      <details class="lp-faq-item reveal"><summary>Is Wall Street Capital a broker?</summary><p>No. Wall Street Capital is a technology company. Brokerage services — custody, execution, clearing — are provided by our SIPC-member partner, a registered broker-dealer. We build the interface; they hold the license.</p></details>
+      <details class="lp-faq-item reveal"><summary>Where is my money held?</summary><p>At the brokerage, in your name. We never take custody of customer funds. Every deposit and withdrawal is a call to the brokerage's Transfers API — we do not have a balance field in our database that could be incremented.</p></details>
+      <details class="lp-faq-item reveal"><summary>Are there any account minimums?</summary><p>No minimum to open an account. You can fund with as little as $1 using fractional shares. Higher account tiers exist for service reasons (see Plans section) but they are based on funded balance, not required to trade.</p></details>
+      <details class="lp-faq-item reveal"><summary>What does it cost?</summary><p>$0 commission on US equities and ETFs. Regulatory fees and any third-party charges (wire transfers, for example) are passed through at cost.</p></details>
+      <details class="lp-faq-item reveal"><summary>How do you verify my identity?</summary><p>Through our brokerage partner. You submit name, address, date of birth, and tax ID. They run the actual CIP/KYC check. We store a status flag indicating whether you've been approved — we do not store your SSN or documents.</p></details>
+      <details class="lp-faq-item reveal"><summary>How long does verification take?</summary><p>Most accounts are verified within a few hours. Complex cases can take 1–2 business days. You can track the status on your dashboard while it's in progress.</p></details>
+      <details class="lp-faq-item reveal"><summary>How do I fund my account?</summary><p>Link a bank account through Plaid and transfer via ACH. ACH deposits typically settle in 3–5 business days. Wire transfers are available for higher tiers and settle same-day.</p></details>
+      <details class="lp-faq-item reveal"><summary>Can I withdraw my money at any time?</summary><p>Yes. There's no lock-up. Withdrawals go back to the same bank account you funded from, subject to standard ACH settlement timelines and any unsettled trades.</p></details>
+      <details class="lp-faq-item reveal"><summary>Do you offer crypto?</summary><p>Not currently. This platform is focused on US equities and ETFs. If we add crypto later, it will be through a licensed crypto custodian — not a token we invented.</p></details>
+      <details class="lp-faq-item reveal"><summary>Is my money insured?</summary><p>Brokerage accounts at our SIPC-member partner are covered by SIPC up to $500,000 (including $250,000 for cash claims), subject to SIPC rules. SIPC protects against broker failure, not market losses. There is no FDIC insurance because this is not a bank.</p></details>
     </div>
   </section>
 
   <!-- FINAL CTA -->
   <section class="lp-cta">
-    <h2 class="reveal">Open an account. See what real allocation looks like.</h2>
+    <h2 class="reveal">Get started. See what real allocation looks like.</h2>
     <p class="reveal">No minimum. No simulated returns. No invented numbers.</p>
-    <a class="btn btn-solid reveal" href="/signup.html" style="font-size: 15px; padding: 15px 38px;">Open an account</a>
+    <a class="btn btn-solid reveal" href="/signup.html" style="font-size: 15px; padding: 15px 38px;">Get started</a>
   </section>
 
   <!-- FOOTER -->
   <footer class="lp-footer">
     <div class="lp-footer-grid reveal-stagger">
       <div>
-        <div class="lp-nav-mark" style="margin-bottom: 14px;">Wall Street <em>Capital</em></div>
-        <p class="muted" style="max-width: 40ch; line-height: 1.65;">Investing involves risk, including possible loss of principal. Not FDIC insured. Not bank guaranteed.</p>
+              <div class="lp-nav-mark wsc-logo" style="margin-bottom: 14px;">
+          <img class="wsc-logo-img wsc-logo-footer" src="/images/wsc-logo.png" alt="Wall Street Capital">
+        </div>  <p class="muted" style="max-width: 40ch; line-height: 1.65;">Investing involves risk, including possible loss of principal. Not FDIC insured. Not bank guaranteed.</p>
       </div>
       <div>
         <h4>Product</h4>
-        <a href="/signup.html">Open an account</a>
-        <a href="/login.html">Log in</a>
+        <a href="/signup.html">Get started</a>
+        <a href="/login.html">Sign in</a>
         <a href="#features">Features</a>
+        <a href="#chart">Chart</a>
         <a href="#plans">Plans</a>
       </div>
       <div>
@@ -944,129 +1550,26 @@
       </div>
       <div>
         <h4>Support</h4>
-        <a href="/dashboard.html">Contact support</a>
+        <a href="/contact.html">Contact support</a>
         <a href="#faq">FAQ</a>
         <a href="/status.html">System status</a>
       </div>
     </div>
     <div class="lp-disclosure">
-      Wall Street Capital is a technology company, not a broker-dealer. Brokerage services, custody, and execution are provided by our SIPC-member partner. Market data is provided by Alpaca's IEX feed and may differ from consolidated tape. Nothing on this page is investment advice. Past performance does not guarantee future results.
+      Wall Street Capital is a brokerage platform.
+      <br><br>
+      <strong>Language notice:</strong> Legal disclosures are provided in English only. Machine translations of this page are for convenience — in case of any conflict, the English version governs.
     </div>
   </footer>
 
 </div>
 
 <script src="/js/theme.js"></script>
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script>
-(function () {
-  const SYMBOLS = ["AAPL", "MSFT", "NVDA", "SPY", "QQQ", "TSLA"];
-  const state = {};
-
-  const trackEl   = document.getElementById("ticker-track");
-  const statusDot = document.getElementById("status-dot");
-  const statusTxt = document.getElementById("status-text");
-  const latencyEl = document.getElementById("stat-latency");
-  const tradesEl  = document.getElementById("stat-trades");
-  const tableBody = document.querySelector("#live-table tbody");
-
-  function initRows() {
-    trackEl.innerHTML = "";
-    tableBody.innerHTML = "";
-    SYMBOLS.forEach(sym => {
-      const item = document.createElement("div");
-      item.className = "lp-ticker-item";
-      item.dataset.symbol = sym;
-      item.innerHTML = `
-        <span class="lp-ticker-symbol">${sym}</span>
-        <span class="lp-ticker-price" data-price>—</span>
-        <span class="lp-ticker-change" data-change>—</span>`;
-      trackEl.appendChild(item);
-
-      const row = document.createElement("tr");
-      row.dataset.symbol = sym;
-      row.innerHTML = `
-        <td class="sym">${sym}</td>
-        <td class="px" data-price>—</td>
-        <td class="px" data-change>—</td>
-        <td class="px" data-size>—</td>
-        <td class="time" data-time>—</td>`;
-      tableBody.appendChild(row);
-    });
-    trackEl.innerHTML += trackEl.innerHTML;
-  }
-
-  function setStatus(cls, text) {
-    statusDot.className = "dot " + cls;
-    statusTxt.textContent = text;
-  }
-
-  function updateSymbol(symbol, price, size, timestamp) {
-    let s = state[symbol];
-    if (!s) s = state[symbol] = { price: null, prevClose: null, totalTrades: 0 };
-    const prev = s.price;
-    s.price = price;
-    s.totalTrades += 1;
-
-    const dir = prev === null ? "flat" : price > prev ? "up" : price < prev ? "down" : "flat";
-    const change = s.prevClose !== null ? price - s.prevClose : null;
-
-    document.querySelectorAll(`.lp-ticker-item[data-symbol="${symbol}"]`).forEach(el => {
-      el.querySelector("[data-price]").textContent = price.toFixed(2);
-      const chg = el.querySelector("[data-change]");
-      if (change !== null) {
-        chg.textContent = (change >= 0 ? "+" : "") + change.toFixed(2);
-        chg.className = "lp-ticker-change " + (change >= 0 ? "up" : "down");
-      }
-      if (dir !== "flat") {
-        el.classList.remove("flash-up", "flash-down");
-        void el.offsetWidth;
-        el.classList.add(dir === "up" ? "flash-up" : "flash-down");
-      }
-    });
-
-    const row = tableBody.querySelector(`tr[data-symbol="${symbol}"]`);
-    if (row) {
-      row.querySelector("[data-price]").textContent = price.toFixed(2);
-      const chg = row.querySelector("[data-change]");
-      if (change !== null) {
-        chg.textContent = (change >= 0 ? "+" : "") + change.toFixed(2);
-        chg.className = "px " + (change >= 0 ? "up" : "down");
-      }
-      row.querySelector("[data-size]").textContent = size;
-      row.querySelector("[data-time]").textContent = new Date(timestamp).toLocaleTimeString();
-    }
-
-    const total = Object.values(state).reduce((a, b) => a + b.totalTrades, 0);
-    tradesEl.textContent = total;
-  }
-
-  initRows();
-
-  const socket = io({ transports: ["polling"] });
-
-  socket.on("connect", () => setStatus("live", "Live — IEX exchange feed"));
-  socket.on("disconnect", () => setStatus("closed", "Disconnected from market data"));
-  socket.on("market:trade", (msg) => updateSymbol(msg.symbol, msg.price, msg.size, msg.timestamp));
-  socket.on("market:bar",   (msg) => {
-    const s = state[msg.symbol];
-    if (s && s.prevClose === null && msg.open) s.prevClose = msg.open;
-  });
-
-  setTimeout(() => {
-    if (Object.keys(state).length === 0) {
-      setStatus("closed", "Market closed — data resumes at next session");
-      latencyEl.textContent = "—";
-    }
-  }, 8000);
-})();
-</script>
-
-<script>
+/* ---------- Scroll reveal ---------- */
 (function () {
   if (!("IntersectionObserver" in window)) {
-    document.querySelectorAll(".reveal, .reveal-stagger, .reveal-hero")
-      .forEach(el => el.classList.add("is-visible"));
+    document.querySelectorAll(".reveal, .reveal-stagger, .reveal-hero").forEach(el => el.classList.add("is-visible"));
     return;
   }
   var observer = new IntersectionObserver(function (entries) {
@@ -1077,11 +1580,509 @@
       }
     });
   }, { threshold: 0.12, rootMargin: "0px 0px -60px 0px" });
+  document.querySelectorAll(".reveal, .reveal-stagger, .reveal-hero").forEach(el => observer.observe(el));
+})();
 
-  document.querySelectorAll(".reveal, .reveal-stagger, .reveal-hero")
-    .forEach(function (el) { observer.observe(el); });
+/* ---------- Language selector ---------- */
+(function () {
+  const LANGUAGES = [
+    { code: "en",    flag: "🇬🇧", name: "English",    native: "English" },
+    { code: "fr",    flag: "🇫🇷", name: "French",     native: "Français" },
+    { code: "es",    flag: "🇪🇸", name: "Spanish",    native: "Español" },
+    { code: "ar",    flag: "🇸🇦", name: "Arabic",     native: "العربية", rtl: true },
+    { code: "pt",    flag: "🇵🇹", name: "Portuguese", native: "Português" },
+    { code: "de",    flag: "🇩🇪", name: "German",     native: "Deutsch" },
+    { code: "it",    flag: "🇮🇹", name: "Italian",    native: "Italiano" },
+    { code: "zh-CN", flag: "🇨🇳", name: "Chinese",    native: "中文" },
+    { code: "ja",    flag: "🇯🇵", name: "Japanese",   native: "日本語" },
+    { code: "ko",    flag: "🇰🇷", name: "Korean",     native: "한국어" },
+    { code: "hi",    flag: "🇮🇳", name: "Hindi",      native: "हिन्दी" },
+    { code: "ru",    flag: "🇷🇺", name: "Russian",    native: "Русский" },
+    { code: "tr",    flag: "🇹🇷", name: "Turkish",    native: "Türkçe" },
+    { code: "sw",    flag: "🇰🇪", name: "Swahili",    native: "Kiswahili" },
+    { code: "yo",    flag: "🇳🇬", name: "Yoruba",     native: "Yorùbá" },
+    { code: "ha",    flag: "🇳🇬", name: "Hausa",      native: "Hausa" },
+    { code: "ig",    flag: "🇳🇬", name: "Igbo",       native: "Igbo" }
+  ];
+
+  const trigger = document.getElementById("lang-trigger");
+  const menu    = document.getElementById("lang-menu");
+  const list    = document.getElementById("lang-list");
+  const current = document.getElementById("lang-current");
+
+  function renderList() {
+    const saved = localStorage.getItem("wsc_lang") || "en";
+    list.innerHTML = "";
+    LANGUAGES.forEach(lang => {
+      const el = document.createElement("div");
+      el.className = "item" + (lang.code === saved ? " active" : "");
+      el.dataset.code = lang.code;
+      el.innerHTML = `<span class="flag">${lang.flag}</span><span>${lang.name}</span><span class="native">${lang.native}</span>`;
+      el.addEventListener("click", () => selectLanguage(lang.code));
+      list.appendChild(el);
+    });
+  }
+
+  function selectLanguage(code) {
+    localStorage.setItem("wsc_lang", code);
+    const lang = LANGUAGES.find(l => l.code === code);
+    if (lang) current.textContent = lang.name;
+    closeMenu();
+    applyGoogleTranslate(code);
+  }
+
+  function applyGoogleTranslate(code) {
+    const domain = window.location.hostname;
+    document.cookie = `googtrans=/en/${code}; path=/; domain=${domain}`;
+    document.cookie = `googtrans=/en/${code}; path=/`;
+    if (code === "en") {
+      document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
+      document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${domain}`;
+    }
+    window.location.reload();
+  }
+
+  function openMenu() { menu.classList.add("open"); trigger.classList.add("open"); }
+  function closeMenu() { menu.classList.remove("open"); trigger.classList.remove("open"); }
+
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (menu.classList.contains("open")) closeMenu();
+    else openMenu();
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!document.getElementById("lang-select").contains(e.target)) closeMenu();
+  });
+
+  renderList();
+  const saved = localStorage.getItem("wsc_lang") || "en";
+  const lang = LANGUAGES.find(l => l.code === saved);
+  if (lang) current.textContent = lang.name;
 })();
 </script>
 
+<!-- Google Translate engine (hidden UI) -->
+<div id="google_translate_element" style="display:none;"></div>
+<script>
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    autoDisplay: false
+  }, 'google_translate_element');
+}
+</script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+<!-- Smartsupp Live Chat script -->
+<script type="text/javascript">
+var _smartsupp = _smartsupp || {};
+_smartsupp.key = '3672f504f1db03cbf1594a0051bba8421d5aead2';
+window.smartsupp||(function(d) {
+  var s,c,o=smartsupp=function(){ o._.push(arguments)};o._=[];
+  s=d.getElementsByTagName('script')[0];c=d.createElement('script');
+  c.type='text/javascript';c.charset='utf-8';c.async=true;
+  c.src='https://www.smartsuppchat.com/loader.js?';s.parentNode.insertBefore(c,s);
+})(document);
+</script>
+<noscript>Powered by <a href="https://www.smartsupp.com" target="_blank">Smartsupp</a></noscript>
+<script>
+  (function () {
+    var pre = document.getElementById("wsc-preloader");
+    if (!pre) return;
+
+    // Minimum visible time — the rings should be seen
+    var MIN_MS = 700;
+    var start = Date.now();
+
+    function hide() {
+      var elapsed = Date.now() - start;
+      var wait = Math.max(0, MIN_MS - elapsed);
+      setTimeout(function () {
+        pre.classList.add("fade-out");
+        // Remove from the DOM after the fade completes
+        setTimeout(function () {
+          if (pre.parentNode) pre.parentNode.removeChild(pre);
+        }, 60);
+      }, wait);
+    }
+
+    // Hide when the page is fully loaded (images, stylesheets, scripts)
+    if (document.readyState === "complete") {
+      hide();
+    } else {
+      window.addEventListener("load", hide);
+    }
+
+    // Safety net: force-hide after 5 seconds no matter what
+    setTimeout(hide, 500);
+  })();
+
+  /* ---------- Landing nav burger ---------- */
+  (function () {
+  const nav      = document.getElementById("lp-nav");
+  const burger   = document.getElementById("lp-nav-burger");
+  const backdrop = document.getElementById("lp-nav-backdrop");
+  const links    = document.getElementById("lp-nav-links");
+  if (!nav || !burger || !backdrop) return;
+
+  function openMenu() {
+    nav.classList.add("menu-open");
+    burger.setAttribute("aria-expanded", "true");
+    backdrop.classList.add("show");
+  }
+  function closeMenu() {
+    nav.classList.remove("menu-open");
+    burger.setAttribute("aria-expanded", "false");
+    backdrop.classList.remove("show");
+  }
+  function toggleMenu() {
+    if (nav.classList.contains("menu-open")) closeMenu();
+    else openMenu();
+  }
+
+  burger.addEventListener("click", toggleMenu);
+  backdrop.addEventListener("click", closeMenu);
+
+  // Close when any link inside the panel is tapped
+  if (links) {
+    links.querySelectorAll("a").forEach(a => {
+      a.addEventListener("click", () => {
+        // Give the browser a tick to start the anchor scroll, then close
+        setTimeout(closeMenu, 80);
+      });
+    });
+  }
+
+  // Close on Escape
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && nav.classList.contains("menu-open")) closeMenu();
+  });
+})();
+</script>
+
+<!-- PWA Install Prompt (iOS + Android) -->
+<div class="pwa-install-backdrop" id="pwa-install" aria-hidden="true">
+  <div class="pwa-install-sheet" role="dialog" aria-modal="true">
+    <button class="pwa-install-close" id="pwa-install-close" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6 6 18M6 6l12 12"/>
+      </svg>
+    </button>
+
+    <div class="pwa-install-head">
+      <img class="pwa-install-icon" src="/images/pwa/icon-192-v2.png" alt="">
+      <div class="pwa-install-title-block">
+        <div class="pwa-install-title">Install Wall Street Capital</div>
+        <div class="pwa-install-sub" id="pwa-install-sub">
+          Add to your Home Screen for the best experience
+        </div>
+      </div>
+    </div>
+
+    <!-- iOS instructions -->
+    <div class="pwa-install-steps" id="pwa-install-ios">
+      <div class="pwa-install-step">
+        <span class="pwa-install-num">1</span>
+        <span>Tap the <strong>Share</strong>
+          <svg class="pwa-inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+            <path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/>
+          </svg>
+          button in Safari
+        </span>
+      </div>
+      <div class="pwa-install-step">
+        <span class="pwa-install-num">2</span>
+        <span>Scroll down and tap <strong>Add to Home Screen</strong></span>
+      </div>
+      <div class="pwa-install-step">
+        <span class="pwa-install-num">3</span>
+        <span>Tap <strong>Add</strong> to confirm</span>
+      </div>
+    </div>
+
+    <!-- Android button (revealed only when beforeinstallprompt fired) -->
+    <button class="pwa-install-android-btn" id="pwa-install-android" style="display:none;">
+      Install app
+    </button>
+
+    <button class="pwa-install-dismiss" id="pwa-install-dismiss">Remind me later</button>
+  </div>
+</div>
+
+<style>
+  .pwa-install-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 12px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+  .pwa-install-backdrop.open { display: flex; }
+
+  .pwa-install-sheet {
+    position: relative;
+    width: 100%;
+    max-width: 460px;
+    background: var(--panel, #0f1a30);
+    border: 1px solid var(--line, rgba(106,153,255,0.16));
+    border-radius: 20px;
+    padding: 22px 20px 16px;
+    backdrop-filter: blur(24px) saturate(180%);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+    animation: pwaSheetUp 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  html[data-theme="light"] .pwa-install-sheet {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  @keyframes pwaSheetUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  .pwa-install-close {
+    position: absolute;
+    top: 12px; right: 12px;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--line, rgba(106,153,255,0.16));
+    background: transparent;
+    color: var(--text-dim, #9DA9C0);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pwa-install-close:hover { color: var(--gold-bright, #60A5FA); border-color: var(--gold, #3B82F6); }
+  .pwa-install-close svg { width: 14px; height: 14px; }
+
+  .pwa-install-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-bottom: 18px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--line-soft, rgba(255,255,255,0.06));
+  }
+  .pwa-install-icon {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    flex-shrink: 0;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  }
+  .pwa-install-title {
+    font-family: var(--serif, Georgia, serif);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text, #fff);
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .pwa-install-sub {
+    font-size: 13px;
+    color: var(--text-dim, #9DA9C0);
+    line-height: 1.45;
+  }
+
+  .pwa-install-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .pwa-install-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(96, 165, 250, 0.06);
+    border: 1px solid rgba(96, 165, 250, 0.14);
+    color: var(--text, #fff);
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+  .pwa-install-step strong { color: var(--gold-bright, #60A5FA); font-weight: 600; }
+  .pwa-install-num {
+    flex-shrink: 0;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: rgba(59, 130, 246, 0.18);
+    color: var(--gold-bright, #60A5FA);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono, monospace);
+    font-size: 11.5px;
+    font-weight: 700;
+    margin-top: 1px;
+  }
+  .pwa-inline-icon {
+    display: inline-block;
+    width: 13px; height: 13px;
+    vertical-align: -2px;
+    margin: 0 2px;
+    color: var(--gold-bright, #60A5FA);
+  }
+
+  .pwa-install-android-btn,
+  .pwa-install-dismiss {
+    width: 100%;
+    padding: 13px 18px;
+    border-radius: 12px;
+    font-family: var(--sans, -apple-system, sans-serif);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+  .pwa-install-android-btn {
+    background: linear-gradient(135deg, #60A5FA, #1D4ED8);
+    color: #fff;
+    margin-bottom: 10px;
+    box-shadow: 0 6px 18px rgba(59, 130, 246, 0.35);
+  }
+  .pwa-install-android-btn:hover { transform: translateY(-1px); }
+  .pwa-install-dismiss {
+    background: transparent;
+    border: 1px solid var(--line, rgba(106,153,255,0.16));
+    color: var(--text-dim, #9DA9C0);
+  }
+  .pwa-install-dismiss:hover {
+    border-color: var(--gold, #3B82F6);
+    color: var(--gold-bright, #60A5FA);
+  }
+</style>
+
+<script>
+(function () {
+  "use strict";
+  console.log("[PWA] install script started");
+
+  const LS_KEY = "wsc_pwa_install_dismissed_at";
+  const RE_SHOW_DAYS = 14;   // default cooldown for X button
+
+  const isStandalone =
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true;
+
+  if (isStandalone) return;
+
+  // Respect an earlier dismissal — "later" = 1 day, "never" (X) = 14 days
+  const lastDismiss = Number(localStorage.getItem(LS_KEY) || 0);
+  const snoozeDays = Number(localStorage.getItem("wsc_pwa_install_snooze_days") || RE_SHOW_DAYS);
+  const daysSince = (Date.now() - lastDismiss) / (1000 * 60 * 60 * 24);
+  if (lastDismiss && daysSince < snoozeDays) return;
+
+  const ua = window.navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) ||
+                (ua.includes("Mac") && "ontouchend" in document);
+  const isAndroid = /Android/i.test(ua);
+  const isSafari = /^((?!chrome|android|crios|fxios).)*safari/i.test(ua);
+
+  const backdrop   = document.getElementById("pwa-install");
+  const closeBtn   = document.getElementById("pwa-install-close");
+  const dismissBtn = document.getElementById("pwa-install-dismiss");
+  const iosBlock   = document.getElementById("pwa-install-ios");
+  const androidBtn = document.getElementById("pwa-install-android");
+  const subEl      = document.getElementById("pwa-install-sub");
+
+  let deferredPrompt = null;
+
+  function markDismissed(scope) {
+    // scope: "later" = 1 day, "never" (X button) = 14 days
+    const days = scope === "later" ? 1 : RE_SHOW_DAYS;
+    localStorage.setItem(LS_KEY, String(Date.now()));
+    localStorage.setItem("wsc_pwa_install_snooze_days", String(days));
+  }
+
+  function openSheet() {
+    backdrop.classList.add("open");
+    backdrop.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+  function closeSheet() {
+    backdrop.classList.remove("open");
+    backdrop.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+
+  closeBtn.addEventListener("click", () => { markDismissed("never"); closeSheet(); });
+  dismissBtn.addEventListener("click", () => { markDismissed("later"); closeSheet(); });
+  backdrop.addEventListener("click", (e) => {
+    if (e.target === backdrop) { markDismissed("later"); closeSheet(); }
+  });
+
+  // -------- Android: capture the native prompt, show our own button --------
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    // Show our sheet with the "Install app" button
+    if (isAndroid) {
+      iosBlock.style.display = "none";
+      androidBtn.style.display = "";
+      subEl.textContent = "Install the app for a faster, full-screen experience";
+
+      androidBtn.addEventListener("click", async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        if (outcome === "accepted") {
+          markDismissed("never");
+          closeSheet();
+        }
+      });
+
+      setTimeout(openSheet, 1200);
+    }
+  });
+
+  // -------- iOS: no native prompt — show our instructions --------
+  if (isIOS) {
+    console.log("[PWA] iOS detected, showing sheet in 1200ms");
+    iosBlock.style.display = "";
+    androidBtn.style.display = "none";
+
+    // Update the sub-text and step 1 based on the browser
+    if (isSafari) {
+      subEl.textContent = "Add to your Home Screen for the best experience";
+    } else {
+      subEl.textContent = "Open in Safari to install this app";
+      const step1 = document.querySelector('#pwa-install-ios .pwa-install-step:nth-child(1) span:last-child');
+      if (step1) {
+        step1.innerHTML = 'Tap the <strong>Share</strong> icon in Safari. <br><small>You are currently in a different browser.</small>';
+      }
+    }
+    setTimeout(openSheet, 1200);   // pop right after the preloader fades
+  } else if (!isAndroid) {
+    console.log("[PWA] Desktop browser detected — no sheet");
+  } else {
+    console.log("[PWA] Android — waiting for beforeinstallprompt event");
+  }
+})();
+</script>
+<script>
+// Register Service Worker — REQUIRED for Android PWA install prompt
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(registration => {
+        console.log('[PWA] Service Worker registered:', registration.scope);
+      })
+      .catch(error => {
+        console.log('[PWA] Service Worker registration failed:', error);
+      });
+  });
+}
+</script>
 </body>
 </html>

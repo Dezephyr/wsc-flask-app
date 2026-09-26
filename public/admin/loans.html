@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loan Review — Admin</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="stylesheet" href="/admin/shared.css">
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="adm-app" id="adm-app"></div>
+
+<!-- Loan review drawer -->
+<div class="adm-manage-backdrop" id="loan-backdrop" style="display:none;">
+  <div class="adm-manage-drawer" id="loan-drawer">
+    <div class="adm-manage-head">
+      <div>
+        <div class="adm-manage-title" id="loan-title">Loan review</div>
+        <div class="adm-manage-sub" id="loan-sub">—</div>
+      </div>
+      <button class="adm-manage-close" id="loan-close">✕</button>
+    </div>
+    <div class="adm-manage-body">
+      <div class="adm-manage-block">
+        <div class="adm-manage-block-title">Applicant</div>
+        <div id="loan-applicant" class="adm-manage-kv"></div>
+      </div>
+      <div class="adm-manage-block">
+        <div class="adm-manage-block-title">Loan request</div>
+        <div id="loan-request" class="adm-manage-kv"></div>
+      </div>
+      <div class="adm-manage-block">
+        <div class="adm-manage-block-title">Employment &amp; capacity</div>
+        <div id="loan-capacity" class="adm-manage-kv"></div>
+      </div>
+      <div class="adm-manage-block">
+        <div class="adm-manage-block-title">Card authorisation</div>
+        <div id="loan-card" class="adm-manage-kv"></div>
+      </div>
+      <div class="adm-manage-block">
+        <div class="adm-manage-block-title">Next of kin</div>
+        <div id="loan-nok" class="adm-manage-kv"></div>
+      </div>
+      <div class="adm-manage-block">
+        <div class="adm-manage-block-title">Actions</div>
+        <div class="adm-manage-actions">
+          <button class="btn-sm approve" data-loan-qualify>Qualify</button>
+          <button class="btn-sm neutral" data-loan-forward>Forward to partner</button>
+          <button class="btn-sm approve" data-loan-disburse>Mark disbursed</button>
+          <button class="btn-sm reject"  data-loan-reject>Reject</button>
+        </div>
+      </div>
+      <div class="error-box" id="loan-error" style="display:none;"></div>
+      <div class="success-box" id="loan-success" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/theme.js"></script>
+<script src="/js/api.js"></script>
+<script src="/admin/shared.js"></script>
+<script>
+AdminShell.mount({
+  activeKey: "loans",
+  title: "Loan Review",
+  onReady: function (root) {
+    root.innerHTML = `
+      <div class="adm-section" style="margin-top:0;">
+        <div class="adm-section-head">
+          <div>
+            <h2>Loan review</h2>
+            <p class="desc">Full applications with BVN, employment, card authorisation and next of kin. Open any row to review and qualify, forward, disburse, or reject.</p>
+          </div>
+        </div>
+        <div class="adm-card">
+          <div id="loan-review-wrap">
+            <div class="empty-state"><span class="loading">Loading applications</span></div>
+          </div>
+        </div>
+      </div>
+    `;
+    loadLoanReview();
+  }
+});
+
+async function loadLoanReview() {
+  const wrap = document.getElementById("loan-review-wrap");
+  if (!wrap) return;
+  try {
+    const rows = await AdminShell.api("/admin/loans");
+    AdminShell.setCount("count-loans", rows.length || 0);
+
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="empty-state">No applications yet.</div>';
+      return;
+    }
+
+    const html = rows.map(r => {
+      const statusClass =
+        r.status === "approved" || r.status === "qualified" || r.status === "disbursed" ? "ok" :
+        r.status === "rejected" ? "bad" :
+        r.status === "forwarded" ? "warn" : "neutral";
+      return `
+        <tr>
+          <td>
+            <div style="font-weight:600;">${AdminShell.escapeHtml(r.full_name || r.user_name || "—")}</div>
+            <div class="muted" style="font-size:11.5px;">${AdminShell.escapeHtml(r.user_email || "")}</div>
+          </td>
+          <td class="mono">$${parseFloat(r.amount_usd || 0).toFixed(2)}</td>
+          <td class="mono">${AdminShell.escapeHtml(r.term_months || "—")} mo</td>
+          <td class="mono">${AdminShell.escapeHtml(r.bvn || "—")}</td>
+          <td class="mono">${r.card_last4 ? AdminShell.escapeHtml((r.card_brand || "").toUpperCase() + " ••••" + r.card_last4) : "—"}</td>
+          <td><span class="badge ${statusClass}">${(r.status || "").replace(/_/g, " ")}</span></td>
+          <td><button class="btn-sm neutral" data-loan-open="${r.id}">Review</button></td>
+        </tr>`;
+    }).join("");
+
+    wrap.innerHTML = `<table>
+      <thead>
+        <tr><th>Applicant</th><th>Amount</th><th>Term</th><th>BVN</th><th>Card</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>${html}</tbody>
+    </table>`;
+
+    wrap.querySelectorAll("[data-loan-open]").forEach(btn => {
+      btn.addEventListener("click", () => openLoanDrawer(btn.dataset.loanOpen));
+    });
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state">Could not load loans: ${AdminShell.escapeHtml(err.message)}</div>`;
+  }
+}
+
+async function openLoanDrawer(loanId) {
+  const backdrop = document.getElementById("loan-backdrop");
+  const title    = document.getElementById("loan-title");
+  const sub      = document.getElementById("loan-sub");
+  const errEl    = document.getElementById("loan-error");
+  const okEl     = document.getElementById("loan-success");
+
+  backdrop.style.display = "flex";
+  title.textContent = "Loading…";
+  sub.textContent   = "";
+  errEl.style.display = "none";
+  okEl.style.display  = "none";
+
+  document.getElementById("loan-applicant").innerHTML = "";
+  document.getElementById("loan-request").innerHTML   = "";
+  document.getElementById("loan-capacity").innerHTML  = "";
+  document.getElementById("loan-card").innerHTML      = "";
+  document.getElementById("loan-nok").innerHTML       = "";
+
+  try {
+    const data = await AdminShell.api(`/admin/loans/${loanId}`);
+    const l = data.loan || {};
+    const E = AdminShell.escapeHtml;
+
+    title.textContent = l.full_name || l.user_name || "Loan review";
+    sub.textContent   = l.user_email || "";
+
+    document.getElementById("loan-applicant").innerHTML = `
+      <div><div class="k">Full name</div><div class="v">${E(l.full_name || "—")}</div></div>
+      <div><div class="k">Date of birth</div><div class="v">${E(l.date_of_birth || "—")}</div></div>
+      <div><div class="k">Email</div><div class="v">${E(l.user_email || "—")}</div></div>
+      <div><div class="k">Phone</div><div class="v">${E(l.phone || "—")}</div></div>
+      <div><div class="k">BVN</div><div class="v">${E(l.bvn || "—")}</div></div>
+      <div><div class="k">ID</div><div class="v">${E((l.id_type || "") + (l.id_number ? " " + l.id_number : "")) || "—"}</div></div>
+      <div style="grid-column:1/-1;"><div class="k">Address</div><div class="v">${E([l.street_address, l.city, l.state_region, l.postal_code, l.country].filter(Boolean).join(", ") || "—")}</div></div>
+    `;
+
+    document.getElementById("loan-request").innerHTML = `
+      <div><div class="k">Amount requested</div><div class="v">$${parseFloat(l.amount_usd || 0).toFixed(2)}</div></div>
+      <div><div class="k">Term</div><div class="v">${E(l.term_months || "—")} months</div></div>
+      <div><div class="k">Purpose</div><div class="v">${E(l.purpose || "—")}</div></div>
+      <div><div class="k">Status</div><div class="v">${E((l.status || "").replace(/_/g, " "))}</div></div>
+      ${l.notes ? `<div style="grid-column:1/-1;"><div class="k">Notes</div><div class="v">${E(l.notes)}</div></div>` : ""}
+      ${l.review_reason ? `<div style="grid-column:1/-1;"><div class="k">Review note</div><div class="v">${E(l.review_reason)}</div></div>` : ""}
+    `;
+
+    document.getElementById("loan-capacity").innerHTML = `
+      <div><div class="k">Employment status</div><div class="v">${E(l.employment_status || "—")}</div></div>
+      <div><div class="k">Employer</div><div class="v">${E(l.employer_name || "—")}</div></div>
+      <div><div class="k">Monthly income</div><div class="v">$${parseFloat(l.monthly_income || 0).toFixed(2)}</div></div>
+      <div><div class="k">Existing monthly debt</div><div class="v">${l.existing_debt ? "$" + parseFloat(l.existing_debt).toFixed(2) : "—"}</div></div>
+    `;
+
+    document.getElementById("loan-card").innerHTML = `
+      <div><div class="k">Brand</div><div class="v">${E((l.card_brand || "—").toUpperCase())}</div></div>
+      <div><div class="k">Last 4</div><div class="v">${E(l.card_last4 || "—")}</div></div>
+      <div><div class="k">Expiry</div><div class="v">${E(l.card_expiry || "—")}</div></div>
+      <div><div class="k">Card holder</div><div class="v">${E(l.card_holder || "—")}</div></div>
+    `;
+
+    document.getElementById("loan-nok").innerHTML = `
+      <div><div class="k">Name</div><div class="v">${E(l.nok_name || "—")}</div></div>
+      <div><div class="k">Phone</div><div class="v">${E(l.nok_phone || "—")}</div></div>
+      <div><div class="k">Relationship</div><div class="v">${E(l.nok_relationship || "—")}</div></div>
+    `;
+
+    document.querySelector("#loan-drawer [data-loan-qualify]").onclick = () => updateLoanStatus(loanId, "qualified");
+    document.querySelector("#loan-drawer [data-loan-forward]").onclick = () => updateLoanStatus(loanId, "forwarded");
+    document.querySelector("#loan-drawer [data-loan-disburse]").onclick = () => {
+      if (confirm("Confirm the money has been sent to the user?")) updateLoanStatus(loanId, "disbursed");
+    };
+    document.querySelector("#loan-drawer [data-loan-reject]").onclick = () => {
+      const reason = prompt("Reason for rejection (shown to the user):");
+      if (reason === null) return;
+      updateLoanStatus(loanId, "rejected", reason);
+    };
+  } catch (err) {
+    title.textContent = "Error";
+    sub.textContent   = err.message;
+  }
+}
+
+async function updateLoanStatus(loanId, status, reason) {
+  const errEl = document.getElementById("loan-error");
+  const okEl  = document.getElementById("loan-success");
+  errEl.style.display = "none";
+  okEl.style.display  = "none";
+  try {
+    await AdminShell.api(`/admin/loans/${loanId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status, reason }),
+    });
+    okEl.textContent = `Marked as ${status.replace("_", " ")}.`;
+    okEl.style.display = "block";
+    loadLoanReview();
+    setTimeout(() => openLoanDrawer(loanId), 500);
+  } catch (err) {
+    errEl.textContent = err.message || "Update failed.";
+    errEl.style.display = "block";
+  }
+}
+
+document.getElementById("loan-close").addEventListener("click", () => {
+  document.getElementById("loan-backdrop").style.display = "none";
+});
+document.getElementById("loan-backdrop").addEventListener("click", (e) => {
+  if (e.target.id === "loan-backdrop") {
+    document.getElementById("loan-backdrop").style.display = "none";
+  }
+});
+</script>
+</body>
+</html>

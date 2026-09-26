@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bot Trading — Admin</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<style>
+  .aw-wrap { max-width: 1180px; margin: 0 auto; padding: 32px 24px 80px; }
+  .aw-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; flex-wrap: wrap; margin-bottom: 24px; }
+  .aw-head h1 { font-family: var(--serif); font-size: 26px; font-weight: 500; margin: 0 0 6px; color: var(--text); }
+  .aw-head .sub { color: var(--text-dim); font-size: 13.5px; line-height: 1.55; max-width: 70ch; }
+  .aw-head .links a { color: var(--gold-bright); text-decoration: none; font-size: 13px; margin-left: 14px; }
+  .aw-head .links a:hover { text-decoration: underline; }
+
+  .aw-grid { display: grid; grid-template-columns: 380px 1fr; gap: 22px; }
+  @media (max-width: 900px) { .aw-grid { grid-template-columns: 1fr; } }
+
+  .aw-card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 16px; padding: 22px;
+    backdrop-filter: blur(20px);
+  }
+  .aw-card h3 {
+    font-family: var(--serif); font-size: 16px;
+    font-weight: 500; margin: 0 0 16px; color: var(--text);
+  }
+
+  .aw-field { margin-bottom: 12px; }
+  .aw-field label {
+    display: block; font-size: 11.5px; color: var(--text-dim);
+    font-weight: 500; margin-bottom: 6px;
+  }
+  .aw-field input, .aw-field select, .aw-field textarea {
+    width: 100%; padding: 10px 12px;
+    border-radius: 8px; background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text); font-size: 13px;
+    font-family: var(--sans);
+  }
+  .aw-field textarea { font-family: var(--mono); font-size: 12.5px; resize: vertical; }
+  .aw-field input:focus, .aw-field select:focus, .aw-field textarea:focus {
+    outline: none; border-color: var(--input-border-focus);
+    box-shadow: 0 0 0 3px var(--gold-glow);
+  }
+  .aw-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .btn-primary {
+    width: 100%; padding: 12px;
+    border-radius: 10px; border: none;
+    background: linear-gradient(135deg, #60A5FA, #1D4ED8);
+    color: #FFF; font-family: var(--sans);
+    font-size: 14px; font-weight: 700;
+    letter-spacing: 0.04em; cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(59,130,246,0.4); }
+
+  table.aw-table { width: 100%; border-collapse: collapse; }
+  .aw-table th, .aw-table td {
+    text-align: left; padding: 12px 10px;
+    border-bottom: 1px solid var(--line-soft);
+    font-size: 13px; vertical-align: middle;
+  }
+  .aw-table th {
+    font-size: 10.5px; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-dimmer);
+    font-weight: 600;
+  }
+  .aw-table td.mono { font-family: var(--mono); font-size: 12.5px; color: var(--text); }
+  .aw-table tr:hover td { background: rgba(59,130,246,0.05); }
+
+  .badge { display: inline-block; padding: 4px 10px; border-radius: 20px;
+           font-size: 11px; font-weight: 600; border: 1px solid; text-transform: capitalize; }
+  .badge.ok      { color: var(--tick-up); border-color: var(--tick-up); background: rgba(74,222,128,0.08); }
+  .badge.bad     { color: var(--tick-down); border-color: var(--tick-down); background: rgba(248,113,113,0.08); }
+  .badge.warn    { color: var(--gold-bright); border-color: var(--gold); background: rgba(96,165,250,0.08); }
+  .badge.neutral { color: var(--text-dim); border-color: var(--line); background: transparent; }
+
+  .btn-sm {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 8px;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer; border: 1px solid;
+    transition: all 0.2s;
+  }
+  .btn-sm.edit { border-color: var(--gold); color: var(--gold-bright); background: transparent; }
+  .btn-sm.edit:hover { background: var(--gold); color: #FFF; }
+  .btn-sm.danger { border-color: var(--tick-down); color: var(--tick-down); background: transparent; }
+  .btn-sm.danger:hover { background: var(--tick-down); color: #FFF; }
+  .btn-sm + .btn-sm { margin-left: 6px; }
+
+  .msg { padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; font-size: 12.5px; display: none; }
+  .msg.ok  { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.35); color: var(--tick-up); display: block; }
+  .msg.err { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.35); color: var(--tick-down); display: block; }
+</style>
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2"/>
+  </svg>
+</button>
+
+<div class="aw-wrap">
+
+  <div class="aw-head">
+    <div>
+      <h1>Bot Trading Hub</h1>
+      <div class="sub">
+        Create and manage the bot marketplace. Users see this catalog on their dashboard
+        and can invest into any active bot. Accrued profit is credited by the bot worker
+        running on the server.
+      </div>
+    </div>
+    <div class="links">
+      <a href="/admin/index.html">← Back to admin</a>
+    </div>
+  </div>
+
+  <div class="aw-grid">
+
+    <!-- CREATE / EDIT FORM -->
+    <div class="aw-card">
+      <h3 id="bot-form-title">Create a bot</h3>
+
+      <div class="msg" id="bot-msg"></div>
+
+      <input type="hidden" id="bot-id">
+
+      <div class="aw-field">
+        <label for="bot-name">Name</label>
+        <input id="bot-name" type="text" placeholder="ForexMaster Pro">
+      </div>
+
+      <div class="aw-field">
+        <label for="bot-tagline">Tagline</label>
+        <input id="bot-tagline" type="text" placeholder="Forex Trading">
+      </div>
+
+      <div class="aw-row">
+        <div class="aw-field">
+          <label for="bot-category">Category</label>
+          <select id="bot-category">
+            <option value="forex">Forex</option>
+            <option value="crypto">Crypto</option>
+            <option value="stocks">Stocks</option>
+            <option value="commodities">Commodities</option>
+          </select>
+        </div>
+        <div class="aw-field">
+          <label for="bot-success">Success rate %</label>
+          <input id="bot-success" type="number" min="0" max="100" placeholder="87">
+        </div>
+      </div>
+
+      <div class="aw-field">
+        <label for="bot-description">Description</label>
+        <textarea id="bot-description" rows="4" placeholder="Advanced forex trading bot..."></textarea>
+      </div>
+
+      <div class="aw-row">
+        <div class="aw-field">
+          <label for="bot-profit-min">Daily profit % (min)</label>
+          <input id="bot-profit-min" type="number" step="0.01" placeholder="0.80">
+        </div>
+        <div class="aw-field">
+          <label for="bot-profit-max">Daily profit % (max)</label>
+          <input id="bot-profit-max" type="number" step="0.01" placeholder="2.50">
+        </div>
+      </div>
+
+      <div class="aw-row">
+        <div class="aw-field">
+          <label for="bot-duration">Duration (days)</label>
+          <input id="bot-duration" type="number" min="1" placeholder="30">
+        </div>
+        <div class="aw-field">
+          <label for="bot-sort">Sort order</label>
+          <input id="bot-sort" type="number" placeholder="100">
+        </div>
+      </div>
+
+      <div class="aw-row">
+        <div class="aw-field">
+          <label for="bot-min">Min investment ($)</label>
+          <input id="bot-min" type="number" step="0.01" placeholder="100">
+        </div>
+        <div class="aw-field">
+          <label for="bot-max">Max investment ($)</label>
+          <input id="bot-max" type="number" step="0.01" placeholder="10000">
+        </div>
+      </div>
+
+      <div class="aw-field">
+        <label for="bot-pairs">Trading pairs (comma separated)</label>
+        <input id="bot-pairs" type="text" placeholder="EUR/USD, GBP/USD, USD/JPY">
+      </div>
+
+      <div class="aw-row">
+        <div class="aw-field">
+          <label for="bot-elite">Elite</label>
+          <select id="bot-elite">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+          </select>
+        </div>
+        <div class="aw-field">
+          <label for="bot-active">Active</label>
+          <select id="bot-active">
+            <option value="1">Yes</option>
+            <option value="0">No (hidden)</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="bot-save" style="margin-top:8px;">Save bot</button>
+      <button class="btn-sm neutral" id="bot-reset" style="margin-top:10px;width:100%;justify-content:center;">Reset form</button>
+    </div>
+
+    <!-- LIST -->
+    <div class="aw-card">
+      <h3>Active bots</h3>
+      <div id="bot-list-wrap">
+        <div class="empty-state">Loading…</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="aw-card" style="margin-top:22px;">
+    <h3>User investments</h3>
+    <div id="bot-inv-wrap">
+      <div class="empty-state">Loading…</div>
+    </div>
+  </div>
+
+</div>
+
+<script src="/js/theme.js"></script>
+<script src="/js/api.js"></script>
+<script>
+requireAuth();
+const me = Api.user();
+if (!me || (me.role !== "admin" && me.role !== "support")) {
+  window.location.href = "/login.html";
+}
+
+function escapeHtml(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+let cache = [];
+
+async function loadBots() {
+  const wrap = document.getElementById("bot-list-wrap");
+  try {
+    // We reuse /admin/bots (added in admin_routes.py below)
+    const rows = await Api.request("/admin/bots");
+    cache = rows || [];
+
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="empty-state">No bots yet. Create one.</div>';
+      return;
+    }
+
+    wrap.innerHTML = `
+      <table class="aw-table">
+        <thead>
+          <tr>
+            <th>Name</th><th>Category</th><th>Rate</th>
+            <th>Profit / Day</th><th>Range</th><th>Status</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(b => `
+            <tr>
+              <td>
+                <div style="font-weight:600;">${escapeHtml(b.name)}</div>
+                <div style="font-size:11.5px;color:var(--text-dimmer);">${escapeHtml(b.tagline || "")}</div>
+              </td>
+              <td><span class="badge neutral">${escapeHtml(b.category)}</span></td>
+              <td class="mono">${b.success_rate}%</td>
+              <td class="mono">${b.daily_profit_min}% – ${b.daily_profit_max}%</td>
+              <td class="mono">$${b.min_amount}–$${b.max_amount}</td>
+              <td>${b.active
+                    ? '<span class="badge ok">Active</span>'
+                    : '<span class="badge neutral">Hidden</span>'}</td>
+              <td>
+                <button class="btn-sm edit" data-edit="${escapeHtml(b.id)}">Edit</button>
+                <button class="btn-sm danger" data-del="${escapeHtml(b.id)}">Delete</button>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>`;
+
+    wrap.querySelectorAll("[data-edit]").forEach(btn => {
+      btn.addEventListener("click", () => loadIntoForm(btn.dataset.edit));
+    });
+    wrap.querySelectorAll("[data-del]").forEach(btn => {
+      btn.addEventListener("click", () => deleteBot(btn.dataset.del));
+    });
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state">Could not load bots: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+async function loadInvestments() {
+  const wrap = document.getElementById("bot-inv-wrap");
+  try {
+    const rows = await Api.request("/admin/bot-investments");
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="empty-state">No user investments yet.</div>';
+      return;
+    }
+
+    wrap.innerHTML = `
+      <table class="aw-table">
+        <thead>
+          <tr>
+            <th>User</th><th>Bot</th><th>Amount</th>
+            <th>Accrued</th><th>Matures</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              <td>
+                <div>${escapeHtml(r.user_name || r.user_email || "—")}</div>
+                <div style="font-size:11.5px;color:var(--text-dimmer);">${escapeHtml(r.user_email || "")}</div>
+              </td>
+              <td>${escapeHtml(r.bot_name)}</td>
+              <td class="mono">$${parseFloat(r.amount_usd || 0).toFixed(2)}</td>
+              <td class="mono">$${parseFloat(r.accrued_usd || 0).toFixed(2)}</td>
+              <td class="mono">${r.matures_at ? new Date(r.matures_at).toLocaleDateString() : "—"}</td>
+              <td><span class="badge ${r.status === 'active' ? 'ok' : r.status === 'matured' ? 'warn' : 'neutral'}">${escapeHtml(r.status)}</span></td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>`;
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state">Could not load investments: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+function loadIntoForm(id) {
+  const b = cache.find(x => x.id === id);
+  if (!b) return;
+  document.getElementById("bot-form-title").textContent = "Edit bot";
+  document.getElementById("bot-id").value          = b.id;
+  document.getElementById("bot-name").value        = b.name || "";
+  document.getElementById("bot-tagline").value     = b.tagline || "";
+  document.getElementById("bot-category").value    = b.category || "forex";
+  document.getElementById("bot-success").value     = b.success_rate || 0;
+  document.getElementById("bot-description").value = b.description || "";
+  document.getElementById("bot-profit-min").value  = b.daily_profit_min || 0;
+  document.getElementById("bot-profit-max").value  = b.daily_profit_max || 0;
+  document.getElementById("bot-duration").value    = b.duration_days || 30;
+  document.getElementById("bot-sort").value        = b.sort_order || 100;
+  document.getElementById("bot-min").value         = b.min_amount || 100;
+  document.getElementById("bot-max").value         = b.max_amount || 10000;
+  document.getElementById("bot-pairs").value       = b.trading_pairs || "";
+  document.getElementById("bot-elite").value       = b.elite ? "1" : "0";
+  document.getElementById("bot-active").value      = b.active ? "1" : "0";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function resetForm() {
+  document.getElementById("bot-form-title").textContent = "Create a bot";
+  ["bot-id","bot-name","bot-tagline","bot-success","bot-description",
+   "bot-profit-min","bot-profit-max","bot-duration","bot-sort",
+   "bot-min","bot-max","bot-pairs"].forEach(id => {
+     document.getElementById(id).value = "";
+  });
+  document.getElementById("bot-category").value = "forex";
+  document.getElementById("bot-elite").value    = "0";
+  document.getElementById("bot-active").value   = "1";
+}
+
+async function saveBot() {
+  const msg = document.getElementById("bot-msg");
+  msg.className = "msg";
+
+  const id = document.getElementById("bot-id").value;
+  const payload = {
+    name:              document.getElementById("bot-name").value.trim(),
+    tagline:           document.getElementById("bot-tagline").value.trim(),
+    category:          document.getElementById("bot-category").value,
+    success_rate:      parseInt(document.getElementById("bot-success").value || 0, 10),
+    description:       document.getElementById("bot-description").value.trim(),
+    daily_profit_min:  parseFloat(document.getElementById("bot-profit-min").value || 0),
+    daily_profit_max:  parseFloat(document.getElementById("bot-profit-max").value || 0),
+    duration_days:     parseInt(document.getElementById("bot-duration").value || 0, 10),
+    sort_order:        parseInt(document.getElementById("bot-sort").value || 100, 10),
+    min_amount:        parseFloat(document.getElementById("bot-min").value || 0),
+    max_amount:        parseFloat(document.getElementById("bot-max").value || 0),
+    trading_pairs:     document.getElementById("bot-pairs").value.trim(),
+    elite:             document.getElementById("bot-elite").value === "1",
+    active:            document.getElementById("bot-active").value === "1",
+  };
+
+  if (!payload.name) {
+    msg.textContent = "Name is required.";
+    msg.className = "msg err";
+    return;
+  }
+  if (!payload.daily_profit_min || !payload.daily_profit_max || !payload.duration_days) {
+    msg.textContent = "Profit range and duration are required.";
+    msg.className = "msg err";
+    return;
+  }
+
+  try {
+    if (id) {
+      await Api.request(`/admin/bots/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+    } else {
+      await Api.request("/admin/bots", { method: "POST", body: JSON.stringify(payload) });
+    }
+    msg.textContent = id ? "Bot updated." : "Bot created.";
+    msg.className = "msg ok";
+    resetForm();
+    loadBots();
+  } catch (err) {
+    msg.textContent = err.message;
+    msg.className = "msg err";
+  }
+}
+
+async function deleteBot(id) {
+  if (!confirm("Delete this bot? Users with active investments will keep them, but the bot disappears from the catalog.")) return;
+  try {
+    await Api.request(`/admin/bots/${id}`, { method: "DELETE" });
+    loadBots();
+  } catch (err) {
+    alert("Delete failed: " + err.message);
+  }
+}
+
+document.getElementById("bot-save").addEventListener("click", saveBot);
+document.getElementById("bot-reset").addEventListener("click", resetForm);
+
+loadBots();
+loadInvestments();
+</script>
+</body>
+</html>

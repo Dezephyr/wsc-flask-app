@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Wall Street Capital</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<style>
+  .legal-shell {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 60px 24px 100px;
+    position: relative;
+    z-index: 1;
+  }
+  .legal-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+  .legal-brand img {
+    height: 70px;
+    width: auto;
+    filter: drop-shadow(0 0 12px rgba(212, 175, 106, 0.35));
+  }
+  .legal-card {
+    background: rgba(15, 26, 48, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    border-radius: 20px;
+    padding: 48px 44px;
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+  html[data-theme="light"] .legal-card {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+  .legal-card h1 {
+    font-family: var(--serif);
+    font-size: 34px;
+    font-weight: 500;
+    margin: 0 0 8px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .legal-updated {
+    font-size: 12.5px;
+    color: var(--text-dimmer);
+    font-family: var(--mono);
+    letter-spacing: 0.04em;
+    margin-bottom: 36px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .legal-card h2 {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 500;
+    margin: 36px 0 14px;
+    color: var(--gold-bright);
+    letter-spacing: -0.005em;
+  }
+  .legal-card h2:first-of-type { margin-top: 0; }
+  .legal-card p {
+    font-size: 14.5px;
+    line-height: 1.75;
+    color: var(--text-dim);
+    margin: 0 0 16px;
+  }
+  .legal-card ul {
+    padding-left: 22px;
+    margin: 0 0 16px;
+  }
+  .legal-card li {
+    font-size: 14.5px;
+    line-height: 1.75;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .legal-card li strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .legal-card a {
+    color: var(--gold-bright);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(96, 165, 250, 0.35);
+    transition: border-color 0.2s;
+  }
+  .legal-card a:hover { border-bottom-color: var(--gold-bright); }
+  .legal-card strong { color: var(--text); font-weight: 600; }
+  .legal-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line-soft);
+    font-size: 13px;
+    color: var(--text-dim);
+    text-decoration: none;
+  }
+  .legal-back:hover { color: var(--gold-bright); }
+  @media (max-width: 600px) {
+    .legal-shell { padding: 40px 16px 80px; }
+    .legal-card { padding: 32px 24px; border-radius: 16px; }
+    .legal-card h1 { font-size: 26px; }
+    .legal-card h2 { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="legal-shell">
+  <div class="legal-brand">
+    <img src="/images/wsc-logo.png" alt="Wall Street Capital">
+  </div>
+
+  <div class="legal-card">
+    <h1>Privacy Policy</h1>
+    <div class="legal-updated">Last updated: 26 September 2026</div>
+
+    <p>Wall Street Capital ("we", "our", "us") is committed to protecting your privacy. This policy explains what personal information we collect, how we use it, and the choices you have.</p>
+
+    <h2>1. Information we collect</h2>
+    <p>We collect information you provide directly to us and information we receive from third-party services when you use the platform:</p>
+    <ul>
+      <li><strong>Account information</strong> — name, username, email address, phone number, country of residence, and password.</li>
+      <li><strong>Identity verification data</strong> — legal name, date of birth, residential address, tax identification number, and government-issued identification, submitted when you complete KYC. This information is transmitted to our brokerage partner for identity verification and is not stored on our servers beyond a submission timestamp and status flag.</li>
+      <li><strong>Financial information</strong> — bank account linkage details, which are handled through our partners (Plaid, Alpaca). We never store raw account or routing numbers.</li>
+      <li><strong>Transaction data</strong> — deposits, withdrawals, trades, and account activity.</li>
+      <li><strong>Technical data</strong> — IP address, browser type, device information, and access logs.</li>
+    </ul>
+
+    <h2>2. How we use your information</h2>
+    <ul>
+      <li>To provide and operate your account</li>
+      <li>To verify your identity and comply with anti-money-laundering regulations</li>
+      <li>To process deposits, withdrawals, and trades</li>
+      <li>To communicate with you about your account</li>
+      <li>To detect and prevent fraud</li>
+      <li>To comply with legal and regulatory obligations</li>
+    </ul>
+
+    <h2>3. Sharing your information</h2>
+    <p>We share your information with third parties only in the following cases:</p>
+    <ul>
+      <li><strong>Brokerage partner</strong> — to open and operate your brokerage account</li>
+      <li><strong>Identity verification</strong> — to run required KYC/CIP checks</li>
+      <li><strong>Bank linking services</strong> — to connect your bank account securely</li>
+      <li><strong>Legal authorities</strong> — when required by law, subpoena, or court order</li>
+    </ul>
+    <p>We do not sell your personal information to third parties.</p>
+
+    <h2>4. Data retention</h2>
+    <p>We retain your information for as long as your account is active and for the period required by applicable law. Records relating to financial transactions are typically retained for at least seven (7) years.</p>
+
+    <h2>5. Your rights</h2>
+    <p>Depending on your jurisdiction, you may have the right to:</p>
+    <ul>
+      <li>Access a copy of the personal information we hold about you</li>
+      <li>Request corrections to inaccurate information</li>
+      <li>Request deletion of your data (subject to legal retention obligations)</li>
+      <li>Object to certain types of processing</li>
+    </ul>
+    <p>To exercise any of these rights, contact us at <a href="mailto:privacy@wallstreetcapital.app">privacy@wallstreetcapital.app</a>.</p>
+
+    <h2>6. Security</h2>
+    <p>We use industry-standard technical and organisational measures to protect your information. However, no method of transmission over the internet is completely secure, and we cannot guarantee absolute security.</p>
+
+    <h2>7. Cookies</h2>
+    <p>We use essential cookies to keep you signed in and to remember your theme preferences. We do not use advertising or tracking cookies.</p>
+
+    <h2>8. Changes to this policy</h2>
+    <p>We may update this policy from time to time. When we do, we will revise the "Last updated" date at the top of this page.</p>
+
+    <h2>9. Contact</h2>
+    <p>If you have questions about this policy, contact us at <a href="mailto:privacy@wallstreetcapital.app">privacy@wallstreetcapital.app</a>.</p>
+
+    <a class="legal-back" href="/">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Back to home
+    </a>
+  </div>
+</div>
+
+<script src="/js/theme.js"></script>
+</body>
+</html>

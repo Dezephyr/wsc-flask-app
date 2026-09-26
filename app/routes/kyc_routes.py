@@ -9,7 +9,7 @@ bp = Blueprint("kyc", __name__, url_prefix="/api/kyc")
 
 REQUIRED_FIELDS = [
     "given_name", "family_name", "date_of_birth", "address_line1",
-    "city", "state_region", "postal_code", "country",
+    "city", "state_region", "postal_code",
 ]
 
 
@@ -34,6 +34,11 @@ def submit_kyc():
         return jsonify({"error": f"Missing required fields: {', '.join(missing)}"}), 400
 
     db = get_db()
+
+    # Country comes from the user's signup record, not the KYC form
+    user_row = db.execute("SELECT country FROM users WHERE id = ?", (g.user["id"],)).fetchone()
+    country = (user_row["country"] if user_row else None) or body.get("country") or "USA"
+
     submission_id = str(uuid.uuid4())
     db.execute(
         """INSERT INTO kyc_submissions
@@ -45,16 +50,12 @@ def submit_kyc():
             submission_id, g.user["id"],
             f"{body['given_name']} {body['family_name']}",
             body["date_of_birth"], body["address_line1"], body.get("address_line2"),
-            body["city"], body["state_region"], body["postal_code"], body["country"],
+            body["city"], body["state_region"], body["postal_code"], country,
             body.get("employment_status"), 0 if body.get("is_us_citizen") is False else 1,
         ),
     )
     db.commit()
 
-    # Hand the actual identity-verification decision to Alpaca. If Broker API
-    # credentials aren't configured yet (e.g. still in the partner-approval
-    # process), save the submission as pending_review instead of failing the
-    # whole request — an admin can retry the sync once credentials exist.
     try:
         user = db.execute("SELECT email FROM users WHERE id = ?", (g.user["id"],)).fetchone()
         account = alpaca.create_account({**body, "email": user["email"]})
