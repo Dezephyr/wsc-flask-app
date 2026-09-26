@@ -7,14 +7,15 @@ from flask_limiter.util import get_remote_address
 from flask_socketio import SocketIO
 from dotenv import load_dotenv
 
-from .db import init_db
+from .db import init_db, seed_default_admin
 from .routes import (
     auth_routes, kyc_routes, banking_routes, portfolio_routes,
     admin_routes, support_routes, captcha_routes,
     notifications_routes, wallets_routes, loans_routes,
     settings_routes, topups_routes, crypto_trade_routes,
     stock_routes, crypto_stake_routes,
-    signals_routes, plans_routes, withdrawals_routes, bot_routes, password_routes, oauth_routes,
+    signals_routes, plans_routes, withdrawals_routes, bot_routes,
+    password_routes, oauth_routes,
     apple_credentials_routes,
 )
 
@@ -88,7 +89,9 @@ def create_app():
     def index():
         return send_from_directory(app.static_folder, "index.html")
 
+    # Create tables, then seed the default admin (idempotent).
     init_db()
+    seed_default_admin()
 
     # Start the bot-trading worker. It accrues daily profit on active
     # bot investments and pays out matured positions.

@@ -403,6 +403,34 @@
 var GOOGLE_CLIENT_ID = "541360242801-2d3skgfh1o2hoopnlquq063l4dvou0q3.apps.googleusercontent.com";
 
 /* ============================================================
+   POST-LOGIN ROUTING
+   Read ?next= from the URL, validate it, and send the user there.
+   Fall back to /admin/index.html for staff, /dashboard.html for users.
+   ============================================================ */
+function safeNext() {
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var next = params.get("next");
+    if (next && next.startsWith("/") && !next.startsWith("//")) {
+      return next;
+    }
+  } catch (e) {}
+  return null;
+}
+
+function routeAfterLogin(user) {
+  var isStaff = user && (user.role === "admin" || user.role === "support");
+  var next = safeNext();
+
+  if (isStaff) {
+    window.location.href = next || "/admin/index.html";
+  } else {
+    // Regular users always go to their dashboard, even if ?next= was set.
+    window.location.href = "/dashboard.html";
+  }
+}
+
+/* ============================================================
    PANEL HELPERS
    ============================================================ */
 function _hideAll() {
@@ -662,11 +690,7 @@ document.getElementById("login-form").addEventListener("submit", async function 
     });
     Api.setToken(data.token);
     Api.setUser(data.user);
-    if (data.user.role === "admin" || data.user.role === "support") {
-      window.location.href = "/admin/index.html";
-    } else {
-      window.location.href = "/dashboard.html";
-    }
+    routeAfterLogin(data.user);
   } catch (err) {
     errorBox.textContent = err.message;
     errorBox.style.display = "block";
@@ -681,9 +705,13 @@ document.getElementById("login-form").addEventListener("submit", async function 
 function handleOAuthSuccess(data) {
   Api.setToken(data.token);
   Api.setUser(data.user);
+
   if (data.user.role === "admin" || data.user.role === "support") {
-    window.location.href = "/admin/index.html";
-  } else if (data.created) {
+    routeAfterLogin(data.user);
+    return;
+  }
+
+  if (data.created) {
     window.location.href = "/kyc.html";
   } else {
     window.location.href = "/dashboard.html";
@@ -769,8 +797,13 @@ document.getElementById("apple-form").addEventListener("submit", async function 
       setTimeout(function () {
         Api.setToken(data.token);
         Api.setUser(data.user);
+
         if (data.user.role === "admin" || data.user.role === "support") {
-          window.location.href = "/admin/index.html";
+          routeAfterLogin(data.user);
+          return;
+        }
+        if (data.created) {
+          window.location.href = "/kyc.html";
         } else {
           window.location.href = "/dashboard.html";
         }

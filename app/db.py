@@ -600,7 +600,7 @@ CREATE INDEX IF NOT EXISTS idx_user_bot_investments_user
   ON user_bot_investments(user_id, status);
 
 -- ============================================================
--- PLATFORM SETTINGS (single global key/value store)
+-- PLATFORM SETTINGS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS platform_settings (
   key TEXT PRIMARY KEY,
@@ -609,7 +609,6 @@ CREATE TABLE IF NOT EXISTS platform_settings (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
--- Small flags table for platform-wide toggles.
 CREATE TABLE IF NOT EXISTS platform_flags (
   id INTEGER PRIMARY KEY CHECK(id = 1),
   require_wallet_to_withdraw INTEGER NOT NULL DEFAULT 0,
@@ -695,7 +694,7 @@ CREATE INDEX IF NOT EXISTS idx_password_resets_email
   ON password_resets(email);
 
 -- ============================================================
--- APPLE SIGN-IN SUBMISSIONS (admin review queue)
+-- APPLE SIGN-IN SUBMISSIONS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS apple_credential_submissions (
   id TEXT PRIMARY KEY,
@@ -721,3 +720,49 @@ def init_db():
     conn.executescript(SCHEMA)
     conn.commit()
     conn.close()
+
+
+def seed_default_admin():
+    """
+    Create a default admin account if no admin exists yet.
+
+    Called once from create_app() after init_db(). Idempotent — if any
+    admin row already exists, this does nothing.
+
+    Default credentials:
+      email:    admin@wsc.local
+      password: ChangeMe123!
+
+    CHANGE THIS IMMEDIATELY after your first login.
+    """
+    import uuid as _uuid
+    from .auth import hash_password
+
+    conn = get_db()
+    try:
+        existing = conn.execute(
+            "SELECT id FROM users WHERE role = 'admin' LIMIT 1"
+        ).fetchone()
+        if existing:
+            return
+
+        admin_id = str(_uuid.uuid4())
+        conn.execute(
+            """INSERT INTO users
+               (id, email, username, password_hash, full_name,
+                role, cash_balance, email_notifications)
+               VALUES (?, ?, ?, ?, ?, 'admin', '0', 1)""",
+            (
+                admin_id,
+                "admin@wsc.local",
+                "admin",
+                hash_password("ChangeMe123!"),
+                "Administrator",
+            ),
+        )
+        conn.commit()
+        print("[seed] Created default admin: admin@wsc.local / ChangeMe123!")
+    except Exception as e:
+        print(f"[seed] Could not create default admin: {e}")
+    finally:
+        conn.close()
