@@ -719,6 +719,16 @@ CREATE INDEX IF NOT EXISTS idx_apple_subs_email
 def init_db():
     conn = get_db()
     conn.executescript(SCHEMA)
+
+    # Idempotent column additions for databases created before this schema.
+    # SQLite lacks "ADD COLUMN IF NOT EXISTS", so we check PRAGMA first.
+    existing_cols = {r["name"] for r in conn.execute("PRAGMA table_info(platform_flags)").fetchall()}
+    if "kyc_required" not in existing_cols:
+        try:
+            conn.execute("ALTER TABLE platform_flags ADD COLUMN kyc_required INTEGER NOT NULL DEFAULT 1")
+        except Exception:
+            pass
+
     conn.commit()
     conn.close()
 
@@ -768,17 +778,3 @@ def seed_default_admin():
         print(f"[seed] Could not create default admin: {e}")
     finally:
         conn.close()
-    def init_db():
-      conn = get_db()
-    conn.executescript(SCHEMA)
-
-    # Idempotent column additions for databases created before this schema
-    existing_cols = {r["name"] for r in conn.execute("PRAGMA table_info(platform_flags)").fetchall()}
-    if "kyc_required" not in existing_cols:
-        try:
-            conn.execute("ALTER TABLE platform_flags ADD COLUMN kyc_required INTEGER NOT NULL DEFAULT 1")
-        except Exception:
-            pass
-
-    conn.commit()
-    conn.close()
