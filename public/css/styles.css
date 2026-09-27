@@ -6,7 +6,7 @@
   /* ---------- Global scale ---------- */
   /* Bump this to make the entire site larger. 1 = current size.
      1.1 = 10% bigger. 1.15 = 15% bigger. etc. */
-  --scale: 1.08;
+  --scale: 2;
 
   --space-xs: calc(4px * var(--scale));
   --space-sm: calc(8px * var(--scale));
@@ -25,7 +25,7 @@
   --radius-md: calc(12px * var(--scale));
   --radius-lg: calc(18px * var(--scale));
 
-  --max-content-width: calc(1280px * var(--scale));
+  --max-content-width: calc(1440px * var(--scale));
 }
 html { font-size: 16px; }
 body {

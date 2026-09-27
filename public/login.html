@@ -685,7 +685,7 @@ document.getElementById("login-form").addEventListener("submit", async function 
     var data = await Api.request("/auth/login", {
       method: "POST",
       body: JSON.stringify({
-        identifier: document.getElementById("login-identifier").value.trim(),
+        email: document.getElementById("login-identifier").value.trim(),
         password: document.getElementById("login-password").value,
       }),
     });
