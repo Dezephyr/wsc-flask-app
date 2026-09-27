@@ -1,174 +1,163 @@
-// Theme toggle: persists to localStorage, applies via <html data-theme>
+// ============================================================
+// Wall Street Capital — theme toggle
+// - Switches between dark + light modes
+// - Makes the toggle draggable (persists position across pages)
+// ============================================================
+
 (function () {
-  var stored = localStorage.getItem("wsc_theme");
-  var initial = stored || "dark";
-  document.documentElement.setAttribute("data-theme", initial);
+  /* ---------- Theme switching ---------- */
+  const KEY = "wsc_theme";
+  const root = document.documentElement;
 
-  window.toggleTheme = function () {
-    var current = document.documentElement.getAttribute("data-theme") || "dark";
-    var next = current === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute("data-theme", next);
-    localStorage.setItem("wsc_theme", next);
-  };
+  function applyTheme(t) {
+    root.setAttribute("data-theme", t);
+  }
 
-  // Apply on load to avoid flash — also set before DOM ready
+  function currentTheme() {
+    return localStorage.getItem(KEY) || "dark";
+  }
+
+  applyTheme(currentTheme());
+
   document.addEventListener("DOMContentLoaded", function () {
-    var btn = document.getElementById("theme-toggle-btn");
-    if (btn) {
-      btn.addEventListener("click", function (e) {
+    const btn = document.getElementById("theme-toggle-btn");
+    if (!btn) return;
+
+    // ---------- Click to toggle theme ----------
+    // Distinguish a click from a drag by tracking movement distance.
+    let wasDragged = false;
+
+    btn.addEventListener("click", function (e) {
+      if (wasDragged) { wasDragged = false; return; }
+      const next = currentTheme() === "dark" ? "light" : "dark";
+      localStorage.setItem(KEY, next);
+      applyTheme(next);
+    });
+
+    /* ============================================================
+       Draggable behaviour
+       ============================================================ */
+    const POS_KEY = "wsc_theme_pos";       // stored position
+    const EDGE    = 12;                    // min distance from viewport edge
+    const DRAG_THRESHOLD = 4;              // px movement before it's a "drag"
+
+    let startX = 0, startY = 0;
+    let offsetX = 0, offsetY = 0;
+    let dragging = false;
+    let pointerId = null;
+
+    // ---------- Restore saved position on load ----------
+    function restorePosition() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(POS_KEY));
+        if (saved && typeof saved.x === "number" && typeof saved.y === "number") {
+          place(saved.x, saved.y, false);
+          return;
+        }
+      } catch (e) {}
+      // No saved position — snap to bottom-right by default
+      const r = btn.getBoundingClientRect();
+      place(
+        window.innerWidth  - r.width  - 24,
+        window.innerHeight - r.height - 24,
+        false
+      );
+    }
+
+    // ---------- Place at (x, y) with edge clamping ----------
+    function place(x, y, save = true) {
+      const w = btn.offsetWidth;
+      const h = btn.offsetHeight;
+      const maxX = window.innerWidth  - w - EDGE;
+      const maxY = window.innerHeight - h - EDGE;
+      const minX = EDGE;
+      const minY = EDGE;
+
+      x = Math.max(minX, Math.min(maxX, x));
+      y = Math.max(minY, Math.min(maxY, y));
+
+      btn.style.left = x + "px";
+      btn.style.top  = y + "px";
+      btn.style.right = "auto";
+      btn.style.bottom = "auto";
+
+      if (save) {
+        try { localStorage.setItem(POS_KEY, JSON.stringify({ x, y })); } catch (e) {}
+      }
+    }
+
+    // ---------- Pointer events (works for mouse + touch + pen) ----------
+    btn.addEventListener("pointerdown", function (e) {
+      // Left-click only
+      if (e.button !== undefined && e.button !== 0) return;
+
+      dragging = true;
+      pointerId = e.pointerId;
+      wasDragged = false;
+      startX = e.clientX;
+      startY = e.clientY;
+
+      const r = btn.getBoundingClientRect();
+      offsetX = e.clientX - r.left;
+      offsetY = e.clientY - r.top;
+
+      btn.classList.add("dragging");
+      btn.setPointerCapture && btn.setPointerCapture(e.pointerId);
+    });
+
+    btn.addEventListener("pointermove", function (e) {
+      if (!dragging || e.pointerId !== pointerId) return;
+
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+
+      if (!wasDragged && Math.hypot(dx, dy) > DRAG_THRESHOLD) {
+        wasDragged = true;
+      }
+
+      if (wasDragged) {
         e.preventDefault();
-        window.toggleTheme();
-      });
+        place(e.clientX - offsetX, e.clientY - offsetY, false);
+      }
+    });
+
+    function endDrag(e) {
+      if (!dragging) return;
+      dragging = false;
+
+      btn.classList.remove("dragging");
+
+      if (wasDragged) {
+        // Snap to nearest edge horizontally (optional UX touch)
+        btn.classList.add("snapping");
+        const r = btn.getBoundingClientRect();
+        const distLeft  = r.left;
+        const distRight = window.innerWidth - r.right;
+        const snapX = distLeft < distRight
+          ? EDGE
+          : window.innerWidth - r.width - EDGE;
+
+        place(snapX, r.top, true);
+
+        setTimeout(function () { btn.classList.remove("snapping"); }, 300);
+      }
+
+      if (pointerId !== null && btn.releasePointerCapture) {
+        try { btn.releasePointerCapture(pointerId); } catch (e) {}
+      }
+      pointerId = null;
     }
+
+    btn.addEventListener("pointerup",     endDrag);
+    btn.addEventListener("pointercancel", endDrag);
+
+    // ---------- Keep it in-bounds on window resize ----------
+    window.addEventListener("resize", function () {
+      const r = btn.getBoundingClientRect();
+      place(r.left, r.top, true);
+    });
+
+    // ---------- Initialize ----------
+    restorePosition();
   });
-})();
-/* ============================================================
-   DRAGGABLE THEME TOGGLE
-   ------------------------------------------------------------
-   The user can drag the toggle to any corner. When released,
-   it snaps to the nearest corner. The position is saved in
-   localStorage under "wsc_theme_pos" so it persists across
-   page loads.
-   ============================================================ */
-(function () {
-  "use strict";
-
-  var btn = document.getElementById("theme-toggle-btn");
-  if (!btn) return;
-
-  var STORAGE_KEY = "wsc_theme_pos";   // "top-left" | "top-right" | "bottom-left" | "bottom-right"
-  var MARGIN = 20;                     // distance from the corner in px
-  var DRAG_THRESHOLD = 6;              // px moved before we treat it as a drag, not a click
-
-  var corners = {
-    "top-left":     function () { return { x: MARGIN, y: MARGIN }; },
-    "top-right":    function () { return { x: window.innerWidth  - btn.offsetWidth  - MARGIN,
-                                            y: MARGIN }; },
-    "bottom-left":  function () { return { x: MARGIN,
-                                            y: window.innerHeight - btn.offsetHeight - MARGIN }; },
-    "bottom-right": function () { return { x: window.innerWidth  - btn.offsetWidth  - MARGIN,
-                                            y: window.innerHeight - btn.offsetHeight - MARGIN }; }
-  };
-
-  function applyCorner(corner, animate) {
-    var fn = corners[corner] || corners["top-right"];
-    var pos = fn();
-    if (animate) btn.classList.add("snapping");
-    btn.style.left   = pos.x + "px";
-    btn.style.top    = pos.y + "px";
-    btn.style.right  = "auto";
-    btn.style.bottom = "auto";
-    if (animate) {
-      setTimeout(function () { btn.classList.remove("snapping"); }, 320);
-    }
-  }
-
-  function nearestCorner(x, y) {
-    var cx = x + btn.offsetWidth  / 2;
-    var cy = y + btn.offsetHeight / 2;
-    var vw = window.innerWidth;
-    var vh = window.innerHeight;
-    var horiz = cx < vw / 2 ? "left" : "right";
-    var vert  = cy < vh / 2 ? "top"  : "bottom";
-    return vert + "-" + horiz;
-  }
-
-  // Load saved position
-  var saved = "top-right";
-  try { saved = localStorage.getItem(STORAGE_KEY) || "top-right"; } catch (e) {}
-  applyCorner(saved, false);
-
-  // Reposition on resize (keep it in the same corner)
-  var resizeTimer;
-  window.addEventListener("resize", function () {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(function () {
-      var current = "top-right";
-      try { current = localStorage.getItem(STORAGE_KEY) || "top-right"; } catch (e) {}
-      applyCorner(current, false);
-    }, 120);
-  });
-
-  // ---------- Pointer drag ----------
-  var startX = 0, startY = 0;
-  var startLeft = 0, startTop = 0;
-  var isDragging = false;
-  var moved = false;
-
-  function onPointerDown(e) {
-    // Only respond to primary button / touch / pen
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-
-    isDragging = true;
-    moved = false;
-
-    var rect = btn.getBoundingClientRect();
-    startLeft = rect.left;
-    startTop  = rect.top;
-    startX = e.clientX;
-    startY = e.clientY;
-
-    btn.classList.add("dragging");
-    btn.setPointerCapture(e.pointerId);
-
-    // Prevent the click event from firing after we drag
-    e.preventDefault();
-  }
-
-  function onPointerMove(e) {
-    if (!isDragging) return;
-
-    var dx = e.clientX - startX;
-    var dy = e.clientY - startY;
-
-    if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) {
-      moved = true;
-    }
-
-    // Keep it within the viewport
-    var vw = window.innerWidth;
-    var vh = window.innerHeight;
-    var x = Math.max(0, Math.min(startLeft + dx, vw - btn.offsetWidth));
-    var y = Math.max(0, Math.min(startTop  + dy, vh - btn.offsetHeight));
-
-    btn.style.left   = x + "px";
-    btn.style.top    = y + "px";
-    btn.style.right  = "auto";
-    btn.style.bottom = "auto";
-  }
-
-  function onPointerUp(e) {
-    if (!isDragging) return;
-    isDragging = false;
-    btn.classList.remove("dragging");
-
-    try { btn.releasePointerCapture(e.pointerId); } catch (_) {}
-
-    // If the user didn't really move, let the theme.js click handler do its thing
-    if (!moved) return;
-
-    // Snap to the nearest corner
-    var rect = btn.getBoundingClientRect();
-    var corner = nearestCorner(rect.left, rect.top);
-    applyCorner(corner, true);
-
-    try { localStorage.setItem(STORAGE_KEY, corner); } catch (err) {}
-
-    // Suppress the click that follows a drag
-    btn.dataset.suppressClick = "1";
-    setTimeout(function () { delete btn.dataset.suppressClick; }, 400);
-  }
-
-  btn.addEventListener("pointerdown", onPointerDown);
-  btn.addEventListener("pointermove", onPointerMove);
-  btn.addEventListener("pointerup",   onPointerUp);
-  btn.addEventListener("pointercancel", onPointerUp);
-
-  // Block the click if the user dragged
-  btn.addEventListener("click", function (e) {
-    if (btn.dataset.suppressClick) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-    }
-  }, true);
 })();
