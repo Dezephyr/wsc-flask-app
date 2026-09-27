@@ -741,8 +741,8 @@ def seed_default_admin():
     admin row already exists, this does nothing.
 
     Default credentials:
-      email:    admin@wsc.local
-      password: ChangeMe123!
+      email:    uniquejoseph77@gmail.com
+      password: Accounts?78
 
     CHANGE THIS IMMEDIATELY after your first login.
     """
