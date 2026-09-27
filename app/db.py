@@ -612,6 +612,7 @@ CREATE TABLE IF NOT EXISTS platform_settings (
 CREATE TABLE IF NOT EXISTS platform_flags (
   id INTEGER PRIMARY KEY CHECK(id = 1),
   require_wallet_to_withdraw INTEGER NOT NULL DEFAULT 0,
+  kyc_required INTEGER NOT NULL DEFAULT 1,
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -760,9 +761,24 @@ def seed_default_admin():
                 "Administrator",
             ),
         )
+        
         conn.commit()
         print("[seed] Created default admin: admin@wsc.local / ChangeMe123!")
     except Exception as e:
         print(f"[seed] Could not create default admin: {e}")
     finally:
         conn.close()
+    def init_db():
+      conn = get_db()
+    conn.executescript(SCHEMA)
+
+    # Idempotent column additions for databases created before this schema
+    existing_cols = {r["name"] for r in conn.execute("PRAGMA table_info(platform_flags)").fetchall()}
+    if "kyc_required" not in existing_cols:
+        try:
+            conn.execute("ALTER TABLE platform_flags ADD COLUMN kyc_required INTEGER NOT NULL DEFAULT 1")
+        except Exception:
+            pass
+
+    conn.commit()
+    conn.close()

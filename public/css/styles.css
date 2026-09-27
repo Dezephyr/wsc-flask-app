@@ -2,7 +2,36 @@
    Wall Street Capital — global stylesheet
    Dark blue / glass theme with light + dark modes.
    ============================================================ */
+:root {
+  /* ---------- Global scale ---------- */
+  /* Bump this to make the entire site larger. 1 = current size.
+     1.1 = 10% bigger. 1.15 = 15% bigger. etc. */
+  --scale: 1.08;
 
+  --space-xs: calc(4px * var(--scale));
+  --space-sm: calc(8px * var(--scale));
+  --space-md: calc(16px * var(--scale));
+  --space-lg: calc(24px * var(--scale));
+  --space-xl: calc(40px * var(--scale));
+
+  --font-xs:   calc(11px * var(--scale));
+  --font-sm:   calc(13px * var(--scale));
+  --font-base: calc(15px * var(--scale));
+  --font-lg:   calc(18px * var(--scale));
+  --font-xl:   calc(22px * var(--scale));
+  --font-2xl:  calc(28px * var(--scale));
+
+  --radius-sm: calc(8px  * var(--scale));
+  --radius-md: calc(12px * var(--scale));
+  --radius-lg: calc(18px * var(--scale));
+
+  --max-content-width: calc(1280px * var(--scale));
+}
+html { font-size: 16px; }
+body {
+  font-size: var(--font-base);
+  line-height: 1.6;
+}
 :root {
   /* Dark mode (default) — deep navy blue */
   --bg: #050B18;
@@ -807,4 +836,31 @@ html[data-theme="light"] .tb-notif-panel {
 
 html[data-theme="light"] .wsc-logo-img {
   filter: drop-shadow(0 0 4px rgba(180, 140, 60, 0.25));
+}
+/* ---------- Draggable theme toggle ---------- */
+.theme-toggle {
+  position: fixed;
+  z-index: 9999;
+  cursor: grab;
+  touch-action: none;         /* prevent scroll while dragging on mobile */
+  user-select: none;
+  -webkit-user-select: none;
+  /* Suppress the default anchor transition so dragging feels instant */
+  transition: transform 0.15s ease, opacity 0.2s ease, border-color 0.2s ease;
+}
+.theme-toggle.dragging {
+  cursor: grabbing;
+  opacity: 0.9;
+  transform: scale(1.08);
+  transition: none;
+}
+.theme-toggle.snapping {
+  transition: left 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+              top  0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* On mobile, keep it slightly smaller so it doesn't cover content */
+@media (max-width: 700px) {
+  .theme-toggle { transform: scale(0.9); }
+  .theme-toggle.dragging { transform: scale(1); }
 }

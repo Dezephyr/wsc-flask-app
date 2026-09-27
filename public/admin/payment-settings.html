@@ -128,6 +128,27 @@ AdminShell.mount({
           <div class="error-box" id="pw-error" style="margin-top:14px;"></div>
           <button class="btn btn-solid" id="pw-save" style="margin-top:14px;">Save policy</button>
         </div>
+        
+        <!-- KYC requirement toggle -->
+<div class="adm-card ps-card">
+  <h3>KYC requirement <span class="pill">Platform-wide</span></h3>
+  <div style="display:flex; align-items:flex-start; gap:14px; padding:14px; border-radius:12px; background:rgba(59,130,246,0.06); border:1px solid rgba(96,165,250,0.2);">
+    <input type="checkbox" id="kyc-required-toggle"
+           style="width:auto; margin-top:3px; flex-shrink:0; transform:scale(1.2);">
+    <label for="kyc-required-toggle" style="cursor:pointer; flex:1; margin:0;">
+      <div style="font-size:13.5px; color:var(--text); font-weight:600; margin-bottom:4px;">
+        Require identity verification (KYC) after signup
+      </div>
+      <div style="font-size:12.5px; color:var(--text-dim); line-height:1.6; margin:0;">
+        When enabled, new users are redirected to the KYC form immediately after creating
+        an account. When disabled, they land straight on their dashboard.
+      </div>
+    </label>
+  </div>
+  <div class="success-box" id="kyc-success" style="margin-top:14px;"></div>
+  <div class="error-box" id="kyc-error" style="margin-top:14px;"></div>
+  <button class="btn btn-solid" id="kyc-save" style="margin-top:14px;">Save KYC policy</button>
+</div>
 
         <!-- Bank transfer -->
         <div class="adm-card ps-card">
@@ -231,14 +252,46 @@ AdminShell.mount({
     `;
 
     loadWalletSetting();
+    loadKycSetting(); 
     loadPaymentSettings();
 
+    document.getElementById("pw-save").addEventListener("click", saveWalletSetting);
+    document.getElementById("kyc-save").addEventListener("click", saveKycSetting); 
     document.getElementById("pw-save").addEventListener("click", saveWalletSetting);
     document.getElementById("ps-save-all").addEventListener("click", saveAllPaymentSettings);
     document.getElementById("ps-reset").addEventListener("click", loadPaymentSettings);
     document.getElementById("ps-add-coin").addEventListener("click", () => addCoinRow({}, true));
   }
+  
 });
+async function loadKycSetting() {
+  try {
+    const s = await AdminShell.api("/admin/kyc-required");
+    document.getElementById("kyc-required-toggle").checked = !!s.kyc_required;
+  } catch (err) { /* silent */ }
+}
+
+async function saveKycSetting() {
+  const okEl  = document.getElementById("kyc-success");
+  const errEl = document.getElementById("kyc-error");
+  okEl.style.display = "none";
+  errEl.style.display = "none";
+
+  const value = document.getElementById("kyc-required-toggle").checked;
+  try {
+    await AdminShell.api("/admin/kyc-required", {
+      method: "PUT",
+      body: JSON.stringify({ kyc_required: value }),
+    });
+    okEl.textContent = value
+      ? "KYC is now required after signup."
+      : "KYC is now optional after signup.";
+    okEl.style.display = "block";
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = "block";
+  }
+}
 
 /* ============================================================
    Withdrawal wallet toggle

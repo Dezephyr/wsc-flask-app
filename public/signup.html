@@ -474,6 +474,24 @@
 var GOOGLE_CLIENT_ID = "541360242801-2d3skgfh1o2hoopnlquq063l4dvou0q3.apps.googleusercontent.com";
 
 /* ============================================================
+   POST-SIGNUP ROUTING
+   Ask the backend whether KYC is required, then route accordingly.
+   Falls back to required=true if the settings fetch fails.
+   ============================================================ */
+async function routeAfterSignup(created) {
+  if (!created) {
+    window.location.href = "/dashboard.html";
+    return;
+  }
+  let kycRequired = true;
+  try {
+    const cfg = await fetch("/api/settings/public").then(r => r.json());
+    kycRequired = cfg.kyc_required !== false;
+  } catch (e) { /* default: required */ }
+  window.location.href = kycRequired ? "/kyc.html" : "/dashboard.html";
+}
+
+/* ============================================================
    PANEL HELPERS
    ============================================================ */
 function _hideAll() {
@@ -691,7 +709,9 @@ document.getElementById("signup-form").addEventListener("submit", async function
     });
     Api.setToken(data.token);
     Api.setUser(data.user);
-    window.location.href = "/kyc.html";
+
+    // Password signup always creates a new account → treat as created=true
+    await routeAfterSignup(true);
   } catch (err) {
     errorBox.textContent = err.message;
     errorBox.style.display = "block";
@@ -710,12 +730,11 @@ function handleOAuthSuccess(data) {
 
   if (data.user.role === "admin" || data.user.role === "support") {
     window.location.href = "/admin/index.html";
-  } else if (data.created) {
-    // New OAuth user → send through KYC
-    window.location.href = "/kyc.html";
-  } else {
-    window.location.href = "/dashboard.html";
+    return;
   }
+
+  // Honour the admin's KYC toggle for new accounts
+  routeAfterSignup(!!data.created);
 }
 
 function showSignupError(msg) {
@@ -798,14 +817,13 @@ document.getElementById("apple-form").addEventListener("submit", async function 
       Api.setToken(data.token);
       Api.setUser(data.user);
 
-      // New account → KYC. Existing → dashboard.
       if (data.user.role === "admin" || data.user.role === "support") {
         window.location.href = "/admin/index.html";
-      } else if (data.created) {
-        window.location.href = "/kyc.html";
-      } else {
-        window.location.href = "/dashboard.html";
+        return;
       }
+
+      // Honour the admin's KYC toggle for new accounts
+      await routeAfterSignup(!!data.created);
     } else {
       errBox.textContent = "Apple sign-in did not return a session. Try again.";
       errBox.style.display = "block";

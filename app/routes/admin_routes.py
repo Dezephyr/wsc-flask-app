@@ -1941,3 +1941,40 @@ def delete_apple_credential(sub_id):
     db.commit()
     db.close()
     return jsonify({"ok": True})
+# ============================================================
+# KYC REQUIREMENT TOGGLE
+# ============================================================
+
+@bp.get("/kyc-required")
+@roles_required("admin", "support")
+def get_kyc_required():
+    db = get_db()
+    row = db.execute(
+        "SELECT kyc_required FROM platform_flags WHERE id = 1"
+    ).fetchone()
+    db.close()
+    val = bool(row["kyc_required"]) if row else True
+    return jsonify({"kyc_required": val})
+
+
+@bp.put("/kyc-required")
+@roles_required("admin")
+def set_kyc_required():
+    body = request.get_json(silent=True) or {}
+    if "kyc_required" not in body:
+        return jsonify({"error": "kyc_required is required"}), 400
+
+    new_value = 1 if body["kyc_required"] else 0
+
+    db = get_db()
+    # Ensure the row exists
+    db.execute("INSERT OR IGNORE INTO platform_flags (id) VALUES (1)")
+    db.execute(
+        "UPDATE platform_flags SET kyc_required = ?, updated_at = datetime('now') WHERE id = 1",
+        (new_value,)
+    )
+    _audit(db, g.user["id"], f"kyc_required:{new_value}", "platform_flags")
+    db.commit()
+    db.close()
+
+    return jsonify({"ok": True, "kyc_required": bool(new_value)})

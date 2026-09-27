@@ -270,3 +270,34 @@ def update_preferences():
         db.commit()
     db.close()
     return jsonify({"ok": True})
+
+@bp.post("/bootstrap-admin")
+def bootstrap_admin():
+    """
+    TEMPORARY: promote a user to admin.
+    Only works if the bootstrap token matches. Delete this route after use.
+    """
+    import os
+    expected = os.environ.get("BOOTSTRAP_TOKEN")
+    if not expected:
+        return jsonify({"error": "BOOTSTRAP_TOKEN not set"}), 403
+
+    body = request.get_json(silent=True) or {}
+    token = (body.get("token") or "").strip()
+    email = (body.get("email") or "").strip().lower()
+
+    if token != expected:
+        return jsonify({"error": "Forbidden"}), 403
+    if not email:
+        return jsonify({"error": "email is required"}), 400
+
+    db = get_db()
+    row = db.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+    if not row:
+        db.close()
+        return jsonify({"error": "User not found"}), 404
+
+    db.execute("UPDATE users SET role = 'admin' WHERE id = ?", (row["id"],))
+    db.commit()
+    db.close()
+    return jsonify({"ok": True, "email": email, "role": "admin"})

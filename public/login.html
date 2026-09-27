@@ -163,14 +163,15 @@
 
       <form id="login-form" novalidate>
         <div class="field">
-          <label for="login-email">Email address</label>
-          <div class="input-icon">
-            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/>
-            </svg>
-            <input id="login-email" type="email" placeholder="name@example.com" autocomplete="email" required>
-          </div>
-        </div>
+  <label for="login-identifier">Email or username</label>
+  <div class="input-icon">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/>
+    </svg>
+    <input id="login-identifier" type="text" placeholder="name@example.com or username"
+           autocomplete="username" required>
+  </div>
+</div>
 
         <div class="field">
           <label for="login-password">Password</label>
@@ -684,11 +685,11 @@ document.getElementById("login-form").addEventListener("submit", async function 
     var data = await Api.request("/auth/login", {
       method: "POST",
       body: JSON.stringify({
-        email: document.getElementById("login-email").value,
+        identifier: document.getElementById("login-identifier").value.trim(),
         password: document.getElementById("login-password").value,
       }),
     });
-    Api.setToken(data.token);
+      Api.setToken(data.token);
     Api.setUser(data.user);
     routeAfterLogin(data.user);
   } catch (err) {
