@@ -1678,40 +1678,67 @@ html[data-theme="light"] .tc-stat { background: rgba(0,0,0,0.03); }
     margin-bottom: 20px;
   }
   @media (max-width: 800px) { .wallet-stats { grid-template-columns: 1fr 1fr; } }
+
+  /* Base card — all cards share this shape */
   .wallet-stat {
-    background: var(--panel);
-    border: 1px solid var(--line);
     border-radius: 13px;
     padding: 20px;
+    color: #FFFFFF;
+    border: 1px solid transparent;
     backdrop-filter: blur(20px);
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   }
   .wallet-stat:hover {
-    border-color: var(--gold);
-    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.22), 0 14px 30px rgba(59, 130, 246, 0.16);
+    transform: translateY(-3px);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.3);
   }
+
   .wallet-stat .ws-icon {
     width: 34px; height: 34px; border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
     color: #FFFFFF; margin-bottom: 12px;
+    /* Glassy icon background works on any card color */
+    background: rgba(255, 255, 255, 0.2) !important;
   }
   .wallet-stat .ws-icon svg { width: 16px; height: 16px; }
+
   .wallet-stat .ws-label {
     font-size: 10.5px; letter-spacing: 0.1em;
-    text-transform: uppercase; color: var(--text-dimmer);
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.75);
     font-weight: 600; margin-bottom: 6px;
   }
   .wallet-stat .ws-value {
     font-family: var(--mono); font-size: 22px;
-    color: var(--text);
+    color: #FFFFFF;
   }
+
+  /* ---------- Color variants — one per card ---------- */
+
+  /* 1. Supported — Blue (already the primary) */
   .wallet-stat.primary {
     background: linear-gradient(135deg, #3B82F6, #1D4ED8);
     border-color: rgba(96, 165, 250, 0.4);
   }
-  .wallet-stat.primary .ws-label { color: rgba(255,255,255,0.75); }
-  .wallet-stat.primary .ws-value { color: #FFFFFF; }
-  .wallet-stat.primary .ws-icon { background: rgba(255,255,255,0.2); }
+
+  /* 2. Linked — Green */
+  .wallet-stat.linked {
+    background: linear-gradient(135deg, #22C55E, #15803D);
+    border-color: rgba(74, 222, 128, 0.4);
+  }
+
+  /* 3. Security — Purple */
+  .wallet-stat.security {
+    background: linear-gradient(135deg, #A855F7, #7E22CE);
+    border-color: rgba(192, 132, 252, 0.4);
+  }
+
+  /* 4. Networks — Orange */
+  .wallet-stat.networks {
+    background: linear-gradient(135deg, #F59E0B, #B45309);
+    border-color: rgba(251, 191, 36, 0.4);
+  }
 
   .wallet-search { position: relative; margin-bottom: 16px; }
   .wallet-search input {
@@ -5019,34 +5046,39 @@ const copyModal = {
         </div>
       </div>
 
-      <div class="wallet-stats">
-        <div class="wallet-stat primary">
-          <div class="ws-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="17" cy="14" r="1"/></svg></div>
-          <div class="ws-label">Supported</div>
-          <div class="ws-value">${WALLETS.length}</div>
-        </div>
-        <div class="wallet-stat">
-          <div class="ws-icon" style="background: linear-gradient(135deg, #4ADE80, #15803D);">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          </div>
-          <div class="ws-label">Linked</div>
-          <div class="ws-value" id="wallet-linked-count">0</div>
-        </div>
-        <div class="wallet-stat">
-          <div class="ws-icon" style="background: linear-gradient(135deg, #C084FC, #7E22CE);">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          </div>
-          <div class="ws-label">Security</div>
-          <div class="ws-value" style="font-size:16px;">High</div>
-        </div>
-        <div class="wallet-stat">
-          <div class="ws-icon" style="background: linear-gradient(135deg, #FBBF24, #B45309);">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg>
-          </div>
-          <div class="ws-label">Networks</div>
-          <div class="ws-value">8+</div>
-        </div>
-      </div>
+<div class="wallet-stats">
+  <div class="wallet-stat primary">
+    <div class="ws-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="17" cy="14" r="1"/></svg>
+    </div>
+    <div class="ws-label">Supported</div>
+    <div class="ws-value">${WALLETS.length}</div>
+  </div>
+
+  <div class="wallet-stat linked">
+    <div class="ws-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+    </div>
+    <div class="ws-label">Linked</div>
+    <div class="ws-value" id="wallet-linked-count">0</div>
+  </div>
+
+  <div class="wallet-stat security">
+    <div class="ws-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <div class="ws-label">Security</div>
+    <div class="ws-value" style="font-size:16px;">High</div>
+  </div>
+
+  <div class="wallet-stat networks">
+    <div class="ws-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg>
+    </div>
+    <div class="ws-label">Networks</div>
+    <div class="ws-value">8+</div>
+  </div>
+</div>
 
       <div class="wallet-search">
         <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
