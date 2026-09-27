@@ -25,7 +25,8 @@
   --radius-md: calc(12px * var(--scale));
   --radius-lg: calc(18px * var(--scale));
 
-  --max-content-width: calc(1440px * var(--scale));
+  /* Capped width — do NOT multiply by --scale or it becomes huge */
+  --max-content-width: 1440px;
 }
 html { font-size: 16px; }
 body {
@@ -108,7 +109,7 @@ a { color: var(--gold-bright); }
 .wrap { max-width: 1120px; margin: 0 auto; padding: 0 32px; }
 .narrow { max-width: 460px; margin: 0 auto; padding: 0 24px; }
 
-/* ---------- Global focus reset (kills default yellow outline) ---------- */
+/* ---------- Global focus reset ---------- */
 *:focus { outline: none; }
 *:focus-visible {
   outline: 2px solid var(--gold);
@@ -251,7 +252,6 @@ html[data-theme="light"] header.nav { background: rgba(240, 244, 251, 0.88); }
 }
 .btn-solid:hover::after { left: 130%; }
 
-/* Force children (anchors, spans) to inherit white text */
 .btn-solid a,
 .btn-solid span { color: #FFFFFF !important; }
 
@@ -560,14 +560,15 @@ html[data-theme="light"] .sso-btn { background: rgba(0,0,0,0.03); }
 .auth-footer a:hover { text-decoration: underline; }
 
 /* ============================================================
-   THEME TOGGLE — bottom-right corner
+   THEME TOGGLE — draggable, position controlled by JS
+   ============================================================
+   IMPORTANT: Do NOT set `bottom`, `top`, `left`, or `right` here.
+   JS sets `left`/`top` inline, and any static positioning in this
+   rule will fight the drag behaviour.
    ============================================================ */
 .theme-toggle {
   position: fixed;
-  bottom: 24px;
-  right: auto;
-  top: auto;
-  z-index: 20;
+  z-index: 9999;
   width: 46px;
   height: 46px;
   border-radius: 50%;
@@ -576,12 +577,16 @@ html[data-theme="light"] .sso-btn { background: rgba(0,0,0,0.03); }
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   color: var(--gold-bright);
-  cursor: pointer;
+  cursor: grab;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.25s, box-shadow 0.25s;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform 0.15s ease, opacity 0.2s ease, border-color 0.2s ease, box-shadow 0.25s;
+  /* left/top are set by JS — no need to declare them here */
 }
 .theme-toggle:hover {
   transform: translateY(-3px) rotate(-15deg);
@@ -594,13 +599,22 @@ html[data-theme="light"] .theme-toggle .icon-sun { display: none; }
 html[data-theme="dark"] .theme-toggle .icon-moon,
 :root:not([data-theme]) .theme-toggle .icon-moon { display: none; }
 
-@media (max-width: 480px) {
-  .theme-toggle {
-    bottom: 16px;
-    right: 16px;
-    width: 40px;
-    height: 40px;
-  }
+/* Drag state — suppress transition so dragging feels instant */
+.theme-toggle.dragging {
+  cursor: grabbing;
+  opacity: 0.9;
+  transform: scale(1.08);
+  transition: none;
+}
+/* Snap animation after release */
+.theme-toggle.snapping {
+  transition: left 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+              top  0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* On mobile, keep it slightly smaller (size, not transform) */
+@media (max-width: 700px) {
+  .theme-toggle { width: 40px; height: 40px; }
   .theme-toggle svg { width: 16px; height: 16px; }
 }
 
@@ -791,7 +805,7 @@ html[data-theme="light"] .tb-notif-panel {
 @keyframes spinSm { to { transform: rotate(360deg); } }
 
 /* ============================================================
-   LOAN HISTORY TABLE (for the user's loan page)
+   LOAN HISTORY TABLE
    ============================================================ */
 .loan-table { width: 100%; border-collapse: collapse; }
 .loan-table th, .loan-table td {
@@ -809,8 +823,9 @@ html[data-theme="light"] .tb-notif-panel {
 }
 .loan-table td.mono { font-family: var(--mono); color: var(--text); }
 .loan-table tr:hover td { background: rgba(59, 130, 246, 0.04); }
+
 /* ============================================================
-   BRAND LOGO — shared across every page (logo only, no text)
+   BRAND LOGO — shared across every page
    ============================================================ */
 .wsc-logo {
   display: inline-flex;
@@ -830,37 +845,9 @@ html[data-theme="light"] .tb-notif-panel {
   filter: drop-shadow(0 0 6px rgba(212, 175, 106, 0.35));
 }
 
-/* Size variants */
 .wsc-logo.wsc-logo-sm .wsc-logo-img { height: 30px; }
 .wsc-logo.wsc-logo-lg .wsc-logo-img { height: 56px; max-width: 300px; }
 
 html[data-theme="light"] .wsc-logo-img {
   filter: drop-shadow(0 0 4px rgba(180, 140, 60, 0.25));
-}
-/* ---------- Draggable theme toggle ---------- */
-.theme-toggle {
-  position: fixed;
-  z-index: 9999;
-  cursor: grab;
-  touch-action: none;         /* prevent scroll while dragging on mobile */
-  user-select: none;
-  -webkit-user-select: none;
-  /* Suppress the default anchor transition so dragging feels instant */
-  transition: transform 0.15s ease, opacity 0.2s ease, border-color 0.2s ease;
-}
-.theme-toggle.dragging {
-  cursor: grabbing;
-  opacity: 0.9;
-  transform: scale(1.08);
-  transition: none;
-}
-.theme-toggle.snapping {
-  transition: left 0.28s cubic-bezier(0.22, 1, 0.36, 1),
-              top  0.28s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* On mobile, keep it slightly smaller so it doesn't cover content */
-@media (max-width: 700px) {
-  .theme-toggle { transform: scale(0.9); }
-  .theme-toggle.dragging { transform: scale(1); }
 }
