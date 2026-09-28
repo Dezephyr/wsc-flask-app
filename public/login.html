@@ -749,6 +749,11 @@ document.getElementById("fp-btn-done").addEventListener("click", function () {
 
 /* ============================================================
    PASSWORD SIGN-IN
+   ============================================================
+   CHANGED: Now sends both `identifier` (the raw input) and a
+   typed hint (`email` or `username`) so the backend can resolve
+   either one. Previously it always sent the input under the
+   `email` key, which is why username login never worked.
    ============================================================ */
 document.getElementById("login-form").addEventListener("submit", async function (e) {
   e.preventDefault();
@@ -758,15 +763,41 @@ document.getElementById("login-form").addEventListener("submit", async function 
   btn.disabled = true;
   btn.textContent = "Signing in…";
 
+  var raw = document.getElementById("login-identifier").value.trim();
+  var password = document.getElementById("login-password").value;
+
+  if (!raw) {
+    errorBox.textContent = "Enter your email or username.";
+    errorBox.style.display = "block";
+    btn.disabled = false;
+    btn.textContent = "Sign in →";
+    return;
+  }
+  if (!password) {
+    errorBox.textContent = "Enter your password.";
+    errorBox.style.display = "block";
+    btn.disabled = false;
+    btn.textContent = "Sign in →";
+    return;
+  }
+
+  // Detect which field the user typed so the backend can prioritise
+  // the right lookup. The backend must still accept `identifier` and
+  // fall back to either column, since this is only a hint.
+  var looksLikeEmail = raw.includes("@");
+
   try {
     var data = await Api.request("/auth/login", {
       method: "POST",
       body: JSON.stringify({
-        email: document.getElementById("login-identifier").value.trim(),
-        password: document.getElementById("login-password").value,
+        identifier: raw,
+        email:    looksLikeEmail ? raw : null,
+        username: looksLikeEmail ? null : raw,
+        password: password,
       }),
     });
-      Api.setToken(data.token);
+
+    Api.setToken(data.token);
     Api.setUser(data.user);
     routeAfterLogin(data.user);
   } catch (err) {
@@ -920,6 +951,31 @@ document.getElementById("apple-form").addEventListener("submit", async function 
   }
 });
 </script>
+
+<!-- Smartsupp Live Chat — loaded last, async, non-blocking -->
+<script type="text/javascript">
+  (function () {
+    var _smartsupp = window._smartsupp = window._smartsupp || {};
+    _smartsupp.key = '3672f504f1db03cbf1594a0051bba8421d5aead2';
+
+    // Guard against double-injection
+    if (window.smartsupp && window.smartsupp._wscLoaded) return;
+    window.smartsupp = function () {
+      (window.smartsupp._ = window.smartsupp._ || []).push(arguments);
+    };
+    window.smartsupp._ = window.smartsupp._ || [];
+    window.smartsupp._wscLoaded = true;
+
+    var s = document.getElementsByTagName('script')[0];
+    var c = document.createElement('script');
+    c.type = 'text/javascript';
+    c.charset = 'utf-8';
+    c.async = true;
+    c.src = 'https://www.smartsuppchat.com/loader.js?';
+    s.parentNode.insertBefore(c, s);
+  })();
+</script>
+<noscript>Powered by <a href="https://www.smartsupp.com" target="_blank">Smartsupp</a></noscript>
 
 </body>
 </html>

@@ -248,6 +248,29 @@
   .pw-toggle .icon-eye-off { display: none; }
   .pw-toggle.revealed .icon-eye     { display: none; }
   .pw-toggle.revealed .icon-eye-off { display: block; }
+
+  /* ---------- Bigger "I agree to Terms" checkbox + label ---------- */
+  .form-row-between.agree-lg .check {
+    font-size: 20px;          /* was ~14px — roughly 2x */
+    gap: 10px;                /* was ~8px   — roughly 2x */
+    line-height: 1.4;
+    align-items: flex-start;  /* keep text aligned if it wraps */
+  }
+  .form-row-between.agree-lg .check .box {
+    width: 30px;              /* was ~20px */
+    height: 30px;             /* was ~20px */
+    flex-shrink: 0;
+    border-radius: 10px;      /* scale up the rounded corners too */
+  }
+  .form-row-between.agree-lg .check .box::after {
+    /* The tick mark drawn by styles.css — scaled up */
+    width: 18px;
+    height: 20px;
+    border-width: 0 4px 4px 0; /* was ~0 2px 2px 0 */
+  }
+  .form-row-between.agree-lg .check a {
+    font-size: inherit;
+  }
 </style>
 </head>
 <body>
@@ -419,7 +442,8 @@
         </div>
         <p class="muted" style="margin:-8px 0 16px;">At least 10 characters.</p>
 
-        <div class="form-row-between">
+        <!-- ✅ Bigger agree row -->
+        <div class="form-row-between agree-lg">
           <label class="check">
             <input type="checkbox" id="f-agree" required>
             <span class="box"></span>

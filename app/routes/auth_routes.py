@@ -160,18 +160,37 @@ def signup():
 @bp.post("/login")
 def login():
     body = request.get_json(silent=True) or {}
-    email = (body.get("email") or "").strip().lower()
+
+    # Accept either "identifier" (new) or "email" (old) from the client.
+    # The value can be an email address OR a username.
+    identifier = (
+        body.get("identifier")
+        or body.get("email")
+        or ""
+    ).strip()
+
     password = body.get("password") or ""
-    if not email or not password:
-        return jsonify({"error": "email and password are required"}), 400
+
+    if not identifier or not password:
+        return jsonify({"error": "Email/username and password are required"}), 400
+
+    identifier_lower = identifier.lower()
 
     db = get_db()
-    row = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
 
-    # Invalid credentials: close and 401 — no login event is recorded
+    # Match on email (case-insensitive) OR username (case-insensitive).
+    # COALESCE guards against NULL usernames on legacy rows.
+    row = db.execute(
+        """SELECT * FROM users
+           WHERE LOWER(email) = ?
+              OR LOWER(COALESCE(username, '')) = ?
+           LIMIT 1""",
+        (identifier_lower, identifier_lower)
+    ).fetchone()
+
     if not row or not verify_password(password, row["password_hash"]):
         db.close()
-        return jsonify({"error": "Invalid email or password"}), 401
+        return jsonify({"error": "Invalid email/username or password"}), 401
 
     # Successful login — record the event, then commit once.
     _record_login_event(db, row["id"], row["email"])
@@ -270,6 +289,7 @@ def update_preferences():
         db.commit()
     db.close()
     return jsonify({"ok": True})
+
 
 @bp.post("/bootstrap-admin")
 def bootstrap_admin():
