@@ -223,6 +223,31 @@
     cursor: pointer; padding: 0; font-family: inherit;
   }
   .fp-back:hover { color: var(--gold-bright); }
+
+  /* ---------- Password visibility toggle ---------- */
+  .input-icon.has-toggle input { padding-right: 46px; }
+  .pw-toggle {
+    position: absolute;
+    right: 8px; top: 50%;
+    transform: translateY(-50%);
+    width: 34px; height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-dimmer);
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 0;
+    transition: color 0.15s, background 0.15s;
+  }
+  .pw-toggle:hover { color: var(--gold-bright); background: rgba(255,255,255,0.05); }
+  .pw-toggle:focus { outline: none; box-shadow: 0 0 0 3px var(--gold-glow); }
+  .pw-toggle svg { width: 18px; height: 18px; }
+  .pw-toggle .icon-eye-off { display: none; }
+  .pw-toggle.revealed .icon-eye     { display: none; }
+  .pw-toggle.revealed .icon-eye-off { display: block; }
 </style>
 </head>
 <body>
@@ -355,20 +380,40 @@
         <div class="row-2">
           <div class="field">
             <label for="f-password">Password</label>
-            <div class="input-icon">
+            <div class="input-icon has-toggle">
               <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
               <input id="f-password" type="password" placeholder="••••••••" minlength="10" required>
+              <button type="button" class="pw-toggle" data-target="f-password" aria-label="Show password">
+                <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg class="icon-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              </button>
             </div>
           </div>
           <div class="field">
             <label for="f-confirm">Confirm password</label>
-            <div class="input-icon">
+            <div class="input-icon has-toggle">
               <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
               <input id="f-confirm" type="password" placeholder="••••••••" minlength="10" required>
+              <button type="button" class="pw-toggle" data-target="f-confirm" aria-label="Show password">
+                <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg class="icon-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -437,11 +482,21 @@
 
         <div class="field">
           <label for="apple-password">Password</label>
-          <div class="input-icon">
+          <div class="input-icon has-toggle">
             <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
             </svg>
             <input id="apple-password" type="password" placeholder="••••••••" required>
+            <button type="button" class="pw-toggle" data-target="apple-password" aria-label="Show password">
+              <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg class="icon-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -475,8 +530,6 @@ var GOOGLE_CLIENT_ID = "541360242801-2d3skgfh1o2hoopnlquq063l4dvou0q3.apps.googl
 
 /* ============================================================
    POST-SIGNUP ROUTING
-   Ask the backend whether KYC is required, then route accordingly.
-   Falls back to required=true if the settings fetch fails.
    ============================================================ */
 async function routeAfterSignup(created) {
   if (!created) {
@@ -511,6 +564,22 @@ function showPanelById(id) {
   var el = document.getElementById(id);
   if (el) el.classList.add("active");
 }
+
+/* ============================================================
+   PASSWORD VISIBILITY TOGGLE
+   ============================================================ */
+document.querySelectorAll(".pw-toggle").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    var target = document.getElementById(btn.dataset.target);
+    if (!target) return;
+    var showing = target.type === "text";
+    target.type = showing ? "password" : "text";
+    btn.classList.toggle("revealed", !showing);
+    btn.setAttribute("aria-label", showing ? "Show password" : "Hide password");
+    // Keep focus in the input so the user can keep typing
+    target.focus();
+  });
+});
 
 /* ============================================================
    COUNTRY LIST
