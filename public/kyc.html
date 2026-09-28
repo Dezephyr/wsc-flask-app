@@ -359,7 +359,7 @@
     margin: 20px 0 32px;
   }
 
-    /* Skip-for-now link */
+  /* Skip-for-now link — styled to match the primary "Continue" button */
   .kyc-skip-row {
     text-align: center;
     margin-top: 22px;
@@ -367,24 +367,38 @@
     border-top: 1px solid rgba(255, 255, 255, 0.06);
   }
   .kyc-skip-row a {
-    font-size: 13px;
-    color: var(--text-dimmer);
-    text-decoration: none;
-    transition: color 0.2s;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-  }
-  .kyc-skip-row a:hover {
-    color: var(--gold-bright);
-    text-decoration: underline;
+    justify-content: center;
+    gap: 8px;
+    min-width: 120px;
+    padding: 14px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: #fff;
+    background: linear-gradient(180deg, #5b9aff, #2f6bff);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 12px;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(47, 107, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
   }
   .kyc-skip-row a::after {
     content: "→";
     font-family: var(--mono);
-    font-size: 12px;
-    opacity: 0.6;
+    font-size: 13px;
+    opacity: 0.9;
   }
+  .kyc-skip-row a:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(47, 107, 255, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    text-decoration: none;
+    color: #fff;
+  }
+
   /* Utility */
   .hidden { display: none !important; }
 </style>
