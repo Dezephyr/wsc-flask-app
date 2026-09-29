@@ -40,7 +40,7 @@
   .lp-nav-links { display: flex; align-items: center; gap: 22px; }
   .lp-nav-links a { color: var(--text-dim); text-decoration: none; font-size: 14px; transition: color 0.2s; }
   .lp-nav-links a:hover { color: var(--text); }
-  
+
 
   /* Language selector */
   .lang-select { position: relative; }
@@ -1190,7 +1190,7 @@
     </div>
   </section>
 
- 
+
   <!-- TRUST -->
   <div class="lp-trust reveal-stagger">
     <div class="lp-trust-item"><div class="value">IEX</div><div class="label">Real-time market feed</div></div>
@@ -1672,7 +1672,7 @@ function googleTranslateElementInit() {
   }, 'google_translate_element');
 }
 </script>
-<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
 
 <!-- Smartsupp Live Chat script -->
 <script type="text/javascript">
@@ -1687,6 +1687,8 @@ window.smartsupp||(function(d) {
 </script>
 <noscript>Powered by <a href="https://www.smartsupp.com" target="_blank">Smartsupp</a></noscript>
 
+<script>
+  /* ---------- Preloader ---------- */
   (function () {
     var pre = document.getElementById("wsc-preloader");
     if (!pre) return;
@@ -1703,7 +1705,7 @@ window.smartsupp||(function(d) {
         // Remove from the DOM after the fade completes
         setTimeout(function () {
           if (pre.parentNode) pre.parentNode.removeChild(pre);
-        }, 60);
+        }, 600);
       }, wait);
     }
 
@@ -1714,51 +1716,51 @@ window.smartsupp||(function(d) {
       window.addEventListener("load", hide);
     }
 
-    // Safety net: force-hide after 5 seconds no matter what
-    setTimeout(hide, 500);
+    // Safety net: force-hide after 8 seconds no matter what
+    setTimeout(hide, 8000);
   })();
 
   /* ---------- Landing nav burger ---------- */
   (function () {
-  const nav      = document.getElementById("lp-nav");
-  const burger   = document.getElementById("lp-nav-burger");
-  const backdrop = document.getElementById("lp-nav-backdrop");
-  const links    = document.getElementById("lp-nav-links");
-  if (!nav || !burger || !backdrop) return;
+    const nav      = document.getElementById("lp-nav");
+    const burger   = document.getElementById("lp-nav-burger");
+    const backdrop = document.getElementById("lp-nav-backdrop");
+    const links    = document.getElementById("lp-nav-links");
+    if (!nav || !burger || !backdrop) return;
 
-  function openMenu() {
-    nav.classList.add("menu-open");
-    burger.setAttribute("aria-expanded", "true");
-    backdrop.classList.add("show");
-  }
-  function closeMenu() {
-    nav.classList.remove("menu-open");
-    burger.setAttribute("aria-expanded", "false");
-    backdrop.classList.remove("show");
-  }
-  function toggleMenu() {
-    if (nav.classList.contains("menu-open")) closeMenu();
-    else openMenu();
-  }
+    function openMenu() {
+      nav.classList.add("menu-open");
+      burger.setAttribute("aria-expanded", "true");
+      backdrop.classList.add("show");
+    }
+    function closeMenu() {
+      nav.classList.remove("menu-open");
+      burger.setAttribute("aria-expanded", "false");
+      backdrop.classList.remove("show");
+    }
+    function toggleMenu() {
+      if (nav.classList.contains("menu-open")) closeMenu();
+      else openMenu();
+    }
 
-  burger.addEventListener("click", toggleMenu);
-  backdrop.addEventListener("click", closeMenu);
+    burger.addEventListener("click", toggleMenu);
+    backdrop.addEventListener("click", closeMenu);
 
-  // Close when any link inside the panel is tapped
-  if (links) {
-    links.querySelectorAll("a").forEach(a => {
-      a.addEventListener("click", () => {
-        // Give the browser a tick to start the anchor scroll, then close
-        setTimeout(closeMenu, 80);
+    // Close when any link inside the panel is tapped
+    if (links) {
+      links.querySelectorAll("a").forEach(a => {
+        a.addEventListener("click", () => {
+          // Give the browser a tick to start the anchor scroll, then close
+          setTimeout(closeMenu, 80);
+        });
       });
-    });
-  }
+    }
 
-  // Close on Escape
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && nav.classList.contains("menu-open")) closeMenu();
-  });
-})();
+    // Close on Escape
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && nav.classList.contains("menu-open")) closeMenu();
+    });
+  })();
 </script>
 
 <!-- PWA Install Prompt (iOS + Android) -->
