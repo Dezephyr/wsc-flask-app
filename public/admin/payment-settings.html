@@ -24,17 +24,49 @@
     letter-spacing: 0.06em; text-transform: uppercase;
     font-weight: 600;
   }
+
+  /* Wrapper so the row scrolls horizontally on narrow screens instead of
+     stacking into a vertical mess. */
+  #ps-crypto-list {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+  #ps-crypto-list::-webkit-scrollbar { height: 6px; }
+  #ps-crypto-list::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.12);
+    border-radius: 3px;
+  }
+  html[data-theme="light"] #ps-crypto-list::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.15);
+  }
+
   .ps-coin-row {
     display: grid;
-    grid-template-columns: 90px 1fr 1.4fr 1fr 90px 90px 50px;
+    grid-template-columns:
+      minmax(70px, 90px)    /* coin */
+      minmax(90px, 1fr)     /* network */
+      minmax(180px, 2fr)    /* address */
+      minmax(110px, 130px)  /* live price */
+      minmax(110px, 130px)  /* gas fee */
+      minmax(70px, 80px)    /* enabled */
+      36px;                 /* remove btn */
     gap: 10px;
     align-items: center;
     padding: 10px 0;
     border-bottom: 1px solid var(--line-soft);
+    min-width: 720px; /* forces horizontal scroll on small screens */
   }
-  @media (max-width: 1100px) {
-    .ps-coin-row { grid-template-columns: 1fr 1fr; }
+
+  /* Keep the header row aligned with the body rows */
+  .ps-coin-row:first-child { min-width: 720px; }
+
+  /* On phones, shrink the min-width so it doesn't feel too wide */
+  @media (max-width: 640px) {
+    .ps-coin-row { min-width: 640px; }
+    .ps-coin-row:first-child { min-width: 640px; }
   }
+
   .ps-coin-row input,
   .ps-coin-row select {
     width: 100%;
@@ -45,6 +77,7 @@
     border-radius: 6px;
     font-size: 12.5px;
     font-family: var(--mono);
+    box-sizing: border-box;
   }
   .ps-coin-row input:focus,
   .ps-coin-row select:focus {
@@ -52,6 +85,16 @@
     border-color: var(--input-border-focus);
     box-shadow: 0 0 0 3px var(--gold-glow);
   }
+
+  /* Slightly smaller monospace for the long address field */
+  .ps-coin-row input[data-f="address"] {
+    font-size: 11.5px;
+  }
+  .ps-coin-row input[data-f="coin"] {
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
   .ps-coin-remove {
     width: 36px; height: 36px;
     border-radius: 8px;
@@ -61,19 +104,82 @@
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     transition: all 0.2s;
+    flex-shrink: 0;
   }
   .ps-coin-remove:hover { background: var(--tick-down); color: #fff; }
   .ps-coin-remove svg { width: 14px; height: 14px; }
+
   .ps-coin-head {
     font-size: 10.5px; letter-spacing: 0.06em;
     text-transform: uppercase; color: var(--text-dimmer);
     font-weight: 600;
   }
+
+  /* Live price / gas cells */
+  .ps-live-cell {
+    display: flex; flex-direction: column; gap: 1px;
+    padding: 6px 9px;
+    border-radius: 6px;
+    background: rgba(74,222,128,0.06);
+    border: 1px solid rgba(74,222,128,0.22);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--tick-up);
+    min-height: 34px;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .ps-live-cell.gas {
+    background: rgba(251,191,36,0.06);
+    border-color: rgba(251,191,36,0.25);
+    color: #FDE68A;
+  }
+  .ps-live-cell .lbl {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dimmer);
+    font-family: var(--sans);
+    font-weight: 600;
+  }
+  .ps-live-cell .val {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ps-live-cell.loading {
+    color: var(--text-dimmer);
+    background: rgba(255,255,255,0.03);
+    border-color: var(--line-soft);
+  }
+  html[data-theme="light"] .ps-live-cell.loading {
+    background: rgba(0,0,0,0.03);
+  }
+
   .ps-footer {
     display: flex; gap: 10px; align-items: center;
     margin-top: 22px; padding-top: 18px;
     border-top: 1px solid var(--line);
+    flex-wrap: wrap;
   }
+  .ps-refresh-note {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--text-dimmer);
+    margin-bottom: 14px; line-height: 1.5;
+    flex-wrap: wrap;
+  }
+  .ps-refresh-note svg { width: 14px; height: 14px; flex-shrink: 0; color: var(--gold-bright); }
+  .ps-spin {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid rgba(96,165,250,0.25);
+    border-top-color: var(--gold-bright);
+    border-radius: 50%;
+    animation: psSpin 0.7s linear infinite;
+    vertical-align: -2px;
+    margin-right: 6px;
+  }
+  @keyframes psSpin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -96,6 +202,10 @@
 <script src="/js/api.js"></script>
 <script src="/admin/shared.js"></script>
 <script>
+/* Keeps track of the live-price refresh timer so we can clear it
+   when the admin leaves the page. */
+let psPriceTimer = null;
+
 AdminShell.mount({
   activeKey: "payment-settings",
   title: "Payment Settings",
@@ -128,27 +238,27 @@ AdminShell.mount({
           <div class="error-box" id="pw-error" style="margin-top:14px;"></div>
           <button class="btn btn-solid" id="pw-save" style="margin-top:14px;">Save policy</button>
         </div>
-        
+
         <!-- KYC requirement toggle -->
-<div class="adm-card ps-card">
-  <h3>KYC requirement <span class="pill">Platform-wide</span></h3>
-  <div style="display:flex; align-items:flex-start; gap:14px; padding:14px; border-radius:12px; background:rgba(59,130,246,0.06); border:1px solid rgba(96,165,250,0.2);">
-    <input type="checkbox" id="kyc-required-toggle"
-           style="width:auto; margin-top:3px; flex-shrink:0; transform:scale(1.2);">
-    <label for="kyc-required-toggle" style="cursor:pointer; flex:1; margin:0;">
-      <div style="font-size:13.5px; color:var(--text); font-weight:600; margin-bottom:4px;">
-        Require identity verification (KYC) after signup
-      </div>
-      <div style="font-size:12.5px; color:var(--text-dim); line-height:1.6; margin:0;">
-        When enabled, new users are redirected to the KYC form immediately after creating
-        an account. When disabled, they land straight on their dashboard.
-      </div>
-    </label>
-  </div>
-  <div class="success-box" id="kyc-success" style="margin-top:14px;"></div>
-  <div class="error-box" id="kyc-error" style="margin-top:14px;"></div>
-  <button class="btn btn-solid" id="kyc-save" style="margin-top:14px;">Save KYC policy</button>
-</div>
+        <div class="adm-card ps-card">
+          <h3>KYC requirement <span class="pill">Platform-wide</span></h3>
+          <div style="display:flex; align-items:flex-start; gap:14px; padding:14px; border-radius:12px; background:rgba(59,130,246,0.06); border:1px solid rgba(96,165,250,0.2);">
+            <input type="checkbox" id="kyc-required-toggle"
+                   style="width:auto; margin-top:3px; flex-shrink:0; transform:scale(1.2);">
+            <label for="kyc-required-toggle" style="cursor:pointer; flex:1; margin:0;">
+              <div style="font-size:13.5px; color:var(--text); font-weight:600; margin-bottom:4px;">
+                Require identity verification (KYC) after signup
+              </div>
+              <div style="font-size:12.5px; color:var(--text-dim); line-height:1.6; margin:0;">
+                When enabled, new users are redirected to the KYC form immediately after creating
+                an account. When disabled, they land straight on their dashboard.
+              </div>
+            </label>
+          </div>
+          <div class="success-box" id="kyc-success" style="margin-top:14px;"></div>
+          <div class="error-box" id="kyc-error" style="margin-top:14px;"></div>
+          <button class="btn btn-solid" id="kyc-save" style="margin-top:14px;">Save KYC policy</button>
+        </div>
 
         <!-- Bank transfer -->
         <div class="adm-card ps-card">
@@ -218,16 +328,32 @@ AdminShell.mount({
         <!-- Crypto -->
         <div class="adm-card ps-card">
           <h3>Crypto deposits <span class="pill">On-chain</span></h3>
-          <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
             <input type="checkbox" id="crypto-enabled" style="width:auto; transform:scale(1.1);">
             <label for="crypto-enabled" style="margin:0; cursor:pointer; font-size:13px;">Enable crypto deposits</label>
+          </div>
+
+          <div class="ps-refresh-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+            <span>
+              Live prices and gas fees update automatically every 60 seconds.
+              You don't need to enter prices manually.
+            </span>
+            <button class="btn" id="ps-refresh-prices" style="margin-left:auto; padding:6px 12px; font-size:12px;">
+              Refresh now
+            </button>
           </div>
 
           <div class="ps-coin-row" style="border-bottom:1px solid var(--line);">
             <div class="ps-coin-head">Coin</div>
             <div class="ps-coin-head">Network</div>
             <div class="ps-coin-head">Deposit address</div>
-            <div class="ps-coin-head">Manual price (USD)</div>
+            <div class="ps-coin-head">Live price (USD)</div>
+            <div class="ps-coin-head">Gas fee</div>
             <div class="ps-coin-head">Enabled</div>
             <div class="ps-coin-head"></div>
           </div>
@@ -235,7 +361,8 @@ AdminShell.mount({
 
           <button class="btn" id="ps-add-coin" style="margin-top:14px;">+ Add coin</button>
           <p class="muted" style="font-size:12px; line-height:1.6; margin-top:10px;">
-            Live prices are fetched from CoinMarketCap if configured. The manual price is a fallback.
+            Prices come from CoinGecko / CoinMarketCap. Gas fees come from the network's
+            current fee estimator. Both are fetched server-side and cached briefly.
           </p>
         </div>
 
@@ -252,18 +379,29 @@ AdminShell.mount({
     `;
 
     loadWalletSetting();
-    loadKycSetting(); 
+    loadKycSetting();
     loadPaymentSettings();
 
     document.getElementById("pw-save").addEventListener("click", saveWalletSetting);
-    document.getElementById("kyc-save").addEventListener("click", saveKycSetting); 
-    document.getElementById("pw-save").addEventListener("click", saveWalletSetting);
+    document.getElementById("kyc-save").addEventListener("click", saveKycSetting);
     document.getElementById("ps-save-all").addEventListener("click", saveAllPaymentSettings);
     document.getElementById("ps-reset").addEventListener("click", loadPaymentSettings);
     document.getElementById("ps-add-coin").addEventListener("click", () => addCoinRow({}, true));
+    document.getElementById("ps-refresh-prices").addEventListener("click", refreshLivePrices);
+
+    // Auto-refresh live prices while the page is open
+    if (psPriceTimer) clearInterval(psPriceTimer);
+    psPriceTimer = setInterval(() => {
+      if (!document.getElementById("ps-crypto-list")) {
+        clearInterval(psPriceTimer);
+        psPriceTimer = null;
+        return;
+      }
+      refreshLivePrices(true); // silent refresh
+    }, 60000);
   }
-  
 });
+
 async function loadKycSetting() {
   try {
     const s = await AdminShell.api("/admin/kyc-required");
@@ -364,6 +502,9 @@ async function loadPaymentSettings() {
     list.innerHTML = "";
     crypto.forEach(c => addCoinRow(c, false));
 
+    // Kick off a live-price fetch right away
+    refreshLivePrices(true);
+
     if (statusEl) statusEl.textContent = "Loaded " + new Date().toLocaleTimeString();
   } catch (err) {
     if (statusEl) statusEl.textContent = "Load failed: " + err.message;
@@ -374,25 +515,141 @@ function addCoinRow(c, isNew) {
   const list = document.getElementById("ps-crypto-list");
   const row = document.createElement("div");
   row.className = "ps-coin-row";
+
+  // Store coin/network on the row so the price refresher can find it
+  row.dataset.coin    = (c.coin || "").toUpperCase();
+  row.dataset.network = c.network || "";
+
   row.innerHTML = `
     <input type="text" data-f="coin" placeholder="BTC" value="${(c.coin || "").toUpperCase()}">
     <input type="text" data-f="network" placeholder="Bitcoin" value="${c.network || ""}">
     <input type="text" data-f="address" placeholder="bc1q…" value="${c.address || ""}">
-    <input type="text" data-f="price_usd" placeholder="0.00" value="${c.price_usd != null ? c.price_usd : ""}">
+    <div class="ps-live-cell loading" data-live="price">
+      <span class="lbl">Live price</span>
+      <span class="val">—</span>
+    </div>
+    <div class="ps-live-cell gas loading" data-live="gas">
+      <span class="lbl">Gas fee</span>
+      <span class="val">—</span>
+    </div>
     <select data-f="enabled">
       <option value="1" ${c.enabled !== false ? "selected" : ""}>Yes</option>
       <option value="0" ${c.enabled === false ? "selected" : ""}>No</option>
     </select>
-    <input type="text" data-f="fee_note" placeholder="Network fee" value="${c.fee_note || ""}">
     <button class="ps-coin-remove" title="Remove">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
     </button>
   `;
   row.querySelector(".ps-coin-remove").addEventListener("click", () => row.remove());
+
+  // When the admin edits the coin symbol, refresh that row's live price
+  row.querySelector('[data-f="coin"]').addEventListener("input", (e) => {
+    row.dataset.coin = e.target.value.toUpperCase().trim();
+  });
+  row.querySelector('[data-f="coin"]').addEventListener("blur", () => refreshLivePrices(true));
+  row.querySelector('[data-f="network"]').addEventListener("input", (e) => {
+    row.dataset.network = e.target.value.trim();
+  });
+  row.querySelector('[data-f="network"]').addEventListener("blur", () => refreshLivePrices(true));
+
   list.appendChild(row);
   if (isNew) {
     const first = row.querySelector('input[data-f="coin"]');
     if (first) first.focus();
+  }
+}
+
+/* ============================================================
+   Live price + gas fee fetching
+   Backend endpoint: GET /admin/crypto-live-prices?coins=BTC,ETH,SOL
+   Expected response:
+   {
+     prices: {
+       BTC: { usd: 63421.55, gas_usd: 1.82, source: "coingecko" },
+       ETH: { usd: 3120.44, gas_usd: 0.94, source: "coingecko" }
+     }
+   }
+   ============================================================ */
+async function refreshLivePrices(silent) {
+  const rows = Array.from(document.querySelectorAll("#ps-crypto-list .ps-coin-row"));
+  if (!rows.length) return;
+
+  const coins = Array.from(new Set(
+    rows.map(r => (r.dataset.coin || "").toUpperCase()).filter(Boolean)
+  ));
+  if (!coins.length) return;
+
+  const btn = document.getElementById("ps-refresh-prices");
+  if (btn && !silent) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="ps-spin"></span>Fetching…';
+  }
+
+  // Mark cells as loading
+  rows.forEach(r => {
+    const p = r.querySelector('[data-live="price"]');
+    const g = r.querySelector('[data-live="gas"]');
+    if (p) { p.classList.add("loading"); p.querySelector(".val").textContent = "…"; }
+    if (g) { g.classList.add("loading"); g.querySelector(".val").textContent = "…"; }
+  });
+
+  try {
+    const qs = encodeURIComponent(coins.join(","));
+    const data = await AdminShell.api("/admin/crypto-live-prices?coins=" + qs);
+    const prices = (data && data.prices) || {};
+
+    rows.forEach(r => {
+      const coin = (r.dataset.coin || "").toUpperCase();
+      const info = prices[coin];
+      const p = r.querySelector('[data-live="price"]');
+      const g = r.querySelector('[data-live="gas"]');
+
+      if (info && typeof info.usd === "number") {
+        if (p) {
+          p.classList.remove("loading");
+          p.querySelector(".val").textContent = "$" + info.usd.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: info.usd < 1 ? 6 : 2,
+          });
+        }
+      } else {
+        if (p) {
+          p.classList.remove("loading");
+          p.querySelector(".val").textContent = "Unavailable";
+        }
+      }
+
+      if (info && typeof info.gas_usd === "number") {
+        if (g) {
+          g.classList.remove("loading");
+          g.querySelector(".val").textContent = "~$" + info.gas_usd.toFixed(2);
+        }
+      } else {
+        if (g) {
+          g.classList.remove("loading");
+          g.querySelector(".val").textContent = "—";
+        }
+      }
+    });
+
+    const statusEl = document.getElementById("ps-status");
+    if (statusEl && !silent) {
+      statusEl.textContent = "Prices updated " + new Date().toLocaleTimeString();
+    }
+  } catch (err) {
+    rows.forEach(r => {
+      const p = r.querySelector('[data-live="price"]');
+      const g = r.querySelector('[data-live="gas"]');
+      if (p) { p.classList.remove("loading"); p.querySelector(".val").textContent = "—"; }
+      if (g) { g.classList.remove("loading"); g.querySelector(".val").textContent = "—"; }
+    });
+    const statusEl = document.getElementById("ps-status");
+    if (statusEl && !silent) statusEl.textContent = "Price fetch failed: " + err.message;
+  } finally {
+    if (btn && !silent) {
+      btn.disabled = false;
+      btn.textContent = "Refresh now";
+    }
   }
 }
 
@@ -419,13 +676,20 @@ function readPaymentSettingsFromForm() {
     const g = (f) => (row.querySelector(`[data-f="${f}"]`) || {}).value || "";
     const coin = g("coin").toUpperCase().trim();
     if (!coin) return;
+
+    // price_usd is now fetched server-side. We still send the last-known
+    // value if the backend populated it so it isn't wiped on save.
+    const lastKnown = psState.crypto.find(c =>
+      (c.coin || "").toUpperCase() === coin
+    );
+
     crypto.push({
       id: coin.toLowerCase() + "_" + (g("network") || "mainnet").toLowerCase().replace(/\s+/g, "_"),
       coin,
       network: g("network").trim(),
       address: g("address").trim(),
-      price_usd: parseFloat(g("price_usd")) || 0,
-      fee_note: g("fee_note").trim() || null,
+      price_usd: lastKnown ? lastKnown.price_usd : null,
+      fee_note: g("fee_note") ? g("fee_note").trim() : null,
       enabled: g("enabled") === "1",
     });
   });

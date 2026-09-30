@@ -10,6 +10,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify, g
 from ..db import get_db
 from ..auth import roles_required, hash_password
+from ..services import crypto_prices
 
 bp = Blueprint("admin", __name__, url_prefix="/api/admin")
 
@@ -1260,6 +1261,37 @@ def update_settings():
         if not isinstance(pm, dict) or "bank" not in pm or "crypto" not in pm:
             db.close()
             return jsonify({"error": "payment_methods must include 'bank' and 'crypto'"}), 400
+
+        # ---- Enrich each crypto entry with the current live price ----
+        # The admin UI no longer sends price_usd, so we fill it in
+        # server-side from the same feed the Fund page uses.
+        crypto_list = pm.get("crypto") or []
+        if isinstance(crypto_list, list):
+            symbols = [
+                str(c.get("coin") or "").upper()
+                for c in crypto_list
+                if c.get("coin")
+            ]
+            try:
+                live = crypto_prices.get_live_prices(symbols, force=True)
+            except Exception as e:
+                print(f"[settings_update] live price fetch failed: {e}")
+                live = {}
+
+            for c in crypto_list:
+                sym = str(c.get("coin") or "").upper()
+                info = live.get(sym)
+                if info:
+                    c["price_usd"] = info["usd"]
+                    c["gas_usd"] = info["gas_usd"]
+                    c["price_source"] = "live"
+                else:
+                    # No live price available — preserve whatever was
+                    # there before rather than wiping it to zero.
+                    c.setdefault("price_usd", 0)
+                    c.setdefault("gas_usd", crypto_prices.estimate_gas_usd(sym))
+                    c.setdefault("price_source", "manual")
+
         _write_setting(db, "payment_methods", pm, g.user["id"])
         _audit(db, g.user["id"], "settings_update", "payment_methods")
 
@@ -1310,6 +1342,7 @@ def public_settings():
             "network": c.get("network"),
             "address": c.get("address"),
             "price_usd": c.get("price_usd", 0),
+            "gas_usd": c.get("gas_usd", 0),
             "price_source": c.get("price_source", "admin"),
             "fee_note": c.get("fee_note"),
         }
@@ -1941,6 +1974,60 @@ def delete_apple_credential(sub_id):
     db.commit()
     db.close()
     return jsonify({"ok": True})
+
+
+# ============================================================
+# CRYPTO LIVE PRICES — used by the admin Payment Settings page
+# ============================================================
+
+@bp.get("/crypto-live-prices")
+@roles_required("admin", "support")
+def crypto_live_prices():
+    """
+    Returns live USD prices + gas estimates for the coins the admin
+    has configured on the Payment Settings page.
+
+    Query:
+      coins=BTC,ETH,SOL
+      force=1 (optional — bypass the 60s cache)
+
+    Response:
+      {
+        "prices": {
+          "BTC": { "usd": 63421.55, "gas_usd": 0.50, "source": "live" },
+          "ETH": { "usd": 3120.44,  "gas_usd": 2.50, "source": "live" }
+        }
+      }
+    """
+    raw = request.args.get("coins") or ""
+    coins = [
+        c.strip().upper()
+        for c in raw.split(",")
+        if c and c.strip()
+    ]
+
+    if not coins:
+        return jsonify({"prices": {}})
+
+    if len(coins) > 50:
+        return jsonify({
+            "error": "too_many_coins",
+            "message": "Request up to 50 coins at a time."
+        }), 400
+
+    force = request.args.get("force") in ("1", "true", "yes")
+
+    try:
+        prices = crypto_prices.get_live_prices(coins, force=force)
+        return jsonify({"prices": prices})
+    except Exception as e:
+        print(f"[admin/crypto-live-prices] error: {e}")
+        return jsonify({
+            "error": "price_fetch_failed",
+            "message": str(e) or "Could not fetch live prices."
+        }), 500
+
+
 # ============================================================
 # KYC REQUIREMENT TOGGLE
 # ============================================================

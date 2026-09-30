@@ -33,6 +33,10 @@
 <script src="/js/api.js"></script>
 <script src="/admin/shared.js"></script>
 <script>
+/* Declared up here so every function below can safely reference it. */
+let ctAvatarDataUrl = null;
+let ctCache = [];
+
 AdminShell.mount({
   activeKey: "traders",
   title: "Copy Traders",
@@ -51,7 +55,17 @@ AdminShell.mount({
             <input type="hidden" id="ct-id">
             <div class="adm-field"><label for="ct-name">Display name</label><input id="ct-name" type="text"></div>
             <div class="adm-field"><label for="ct-bio">Short bio (optional)</label><input id="ct-bio" type="text"></div>
-            <div class="adm-field"><label for="ct-avatar">Avatar URL (optional)</label><input id="ct-avatar" type="text"></div>
+            <div class="adm-field">
+              <label for="ct-avatar-file">Avatar image (optional)</label>
+              <input id="ct-avatar-file" type="file" accept="image/*">
+              <input type="hidden" id="ct-avatar">
+              <div id="ct-avatar-preview-wrap" style="margin-top:10px;display:none;">
+                <img id="ct-avatar-preview" alt="Avatar preview"
+                     style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:1px solid var(--line);">
+                <button type="button" class="btn-sm reject" id="ct-avatar-remove"
+                        style="margin-left:8px;vertical-align:top;">Remove</button>
+              </div>
+            </div>
             <div class="adm-field"><label for="ct-external">Provider trader ID</label><input id="ct-external" type="text"></div>
             <div class="adm-field"><label for="ct-provider">Provider</label><input id="ct-provider" type="text"></div>
             <div class="adm-grid-2">
@@ -97,13 +111,12 @@ AdminShell.mount({
         </div>
       </div>
     `;
+    ctWireAvatarInput();
     loadCopyTraders();
     document.getElementById("ct-save").addEventListener("click", saveTrader);
     document.getElementById("ct-reset").addEventListener("click", resetTraderForm);
   }
 });
-
-let ctCache = [];
 
 async function loadCopyTraders() {
   const wrap = document.getElementById("ct-list-wrap");
@@ -142,20 +155,56 @@ async function loadCopyTraders() {
 
 function bindTraderActions() {
   document.querySelectorAll("[data-ct-edit]").forEach(btn => btn.addEventListener("click", () => {
-    const t = ctCache.find(x => x.id === btn.dataset.ctEdit);
+    const t = ctCache.find(x => String(x.id) === String(btn.dataset.ctEdit));
     if (!t) return;
+
     document.getElementById("ct-form-title").textContent = "Edit trader";
     document.getElementById("ct-id").value = t.id;
-    const map = {name:"display_name", bio:"bio", avatar:"avatar_url", external:"external_id",
-                 provider:"provider", roi:"roi", winrate:"win_rate", trades:"total_trades",
-                 slots:"max_followers", tier:"tier", rating:"rating", reviews:"reviews",
-                 equity:"equity", min:"minimum_investment"};
+
+    const map = {
+      name: "display_name", bio: "bio", avatar: "avatar_url", external: "external_id",
+      provider: "provider", roi: "roi", winrate: "win_rate", trades: "total_trades",
+      slots: "max_followers", tier: "tier", rating: "rating", reviews: "reviews",
+      equity: "equity", min: "minimum_investment"
+    };
     Object.keys(map).forEach(k => {
-      document.getElementById("ct-"+k).value = t[map[k]] != null ? t[map[k]] : "";
+      const el = document.getElementById("ct-" + k);
+      if (el) el.value = t[map[k]] != null ? t[map[k]] : "";
     });
+
     document.getElementById("ct-risk").value = t.risk_level || "low";
     document.getElementById("ct-elite").value = t.elite ? "1" : "0";
     document.getElementById("ct-active").value = t.active ? "1" : "0";
+
+    /* ---------- Avatar state on edit ---------- */
+    const avatarHidden  = document.getElementById("ct-avatar");
+    const avatarPreview = document.getElementById("ct-avatar-preview");
+    const avatarWrap    = document.getElementById("ct-avatar-preview-wrap");
+    const avatarFile    = document.getElementById("ct-avatar-file");
+
+    if (t.avatar_url && String(t.avatar_url).startsWith("data:")) {
+      // Stored as a data URL from a previous upload
+      ctAvatarDataUrl = t.avatar_url;
+      avatarHidden.value = t.avatar_url;
+      avatarPreview.src = t.avatar_url;
+      avatarWrap.style.display = "";
+      if (avatarFile) avatarFile.value = "";
+    } else if (t.avatar_url) {
+      // Legacy URL — show it but leave the file input empty.
+      // Saving without re-uploading keeps the old URL.
+      ctAvatarDataUrl = null;
+      avatarHidden.value = t.avatar_url;
+      avatarPreview.src = t.avatar_url;
+      avatarWrap.style.display = "";
+      if (avatarFile) avatarFile.value = "";
+    } else {
+      ctAvatarDataUrl = null;
+      avatarHidden.value = "";
+      avatarPreview.src = "";
+      avatarWrap.style.display = "none";
+      if (avatarFile) avatarFile.value = "";
+    }
+
     document.getElementById("ct-form-title").scrollIntoView({ behavior: "smooth" });
   }));
 
@@ -226,16 +275,76 @@ async function saveTrader() {
 function resetTraderForm() {
   document.getElementById("ct-form-title").textContent = "Add a trader";
   document.getElementById("ct-id").value = "";
+
   ["ct-name","ct-bio","ct-avatar","ct-external","ct-provider","ct-roi",
    "ct-winrate","ct-trades","ct-slots","ct-tier","ct-rating","ct-reviews",
-   "ct-equity","ct-min"].forEach(id => document.getElementById(id).value = "");
+   "ct-equity","ct-min"].forEach(id => {
+     const el = document.getElementById(id);
+     if (el) el.value = "";
+   });
+
   document.getElementById("ct-risk").value = "low";
   document.getElementById("ct-elite").value = "0";
   document.getElementById("ct-active").value = "1";
   document.getElementById("ct-tier").value = "PRO";
   document.getElementById("ct-rating").value = "5.0";
   document.getElementById("ct-reviews").value = "5";
+
+  /* Reset the avatar UI */
+  ctAvatarDataUrl = null;
+  const fileInput = document.getElementById("ct-avatar-file");
+  if (fileInput) fileInput.value = "";
+  const wrap = document.getElementById("ct-avatar-preview-wrap");
+  if (wrap) wrap.style.display = "none";
+  const preview = document.getElementById("ct-avatar-preview");
+  if (preview) preview.src = "";
+}
+
+/* ---------- Avatar upload handling ---------- */
+function ctWireAvatarInput() {
+  const fileInput = document.getElementById("ct-avatar-file");
+  const hidden    = document.getElementById("ct-avatar");
+  const preview   = document.getElementById("ct-avatar-preview");
+  const wrap      = document.getElementById("ct-avatar-preview-wrap");
+  const removeBtn = document.getElementById("ct-avatar-remove");
+
+  if (fileInput && !fileInput.dataset.wired) {
+    fileInput.dataset.wired = "1";
+    fileInput.addEventListener("change", () => {
+      const f = fileInput.files && fileInput.files[0];
+      if (!f) return;
+      if (!f.type.startsWith("image/")) {
+        alert("Please choose an image file.");
+        fileInput.value = "";
+        return;
+      }
+      if (f.size > 2 * 1024 * 1024) {
+        alert("Image must be smaller than 2 MB.");
+        fileInput.value = "";
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        ctAvatarDataUrl = reader.result;
+        hidden.value = ctAvatarDataUrl;
+        preview.src = ctAvatarDataUrl;
+        wrap.style.display = "";
+      };
+      reader.readAsDataURL(f);
+    });
+  }
+
+  if (removeBtn && !removeBtn.dataset.wired) {
+    removeBtn.dataset.wired = "1";
+    removeBtn.addEventListener("click", () => {
+      ctAvatarDataUrl = null;
+      if (hidden) hidden.value = "";
+      if (fileInput) fileInput.value = "";
+      if (wrap) wrap.style.display = "none";
+      if (preview) preview.src = "";
+    });
+  }
 }
 </script>
 </body>
-</html>
+</html>s
