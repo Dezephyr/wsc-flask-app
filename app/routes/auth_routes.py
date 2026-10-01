@@ -140,6 +140,15 @@ def signup():
     db.commit()
     db.close()
 
+    # ---- Welcome email (best-effort — never blocks signup) ----
+    # Sent only on signup, never on login. Failures are logged but never
+    # prevent the account from being created.
+    try:
+        from ..services import mailer
+        mailer.send_welcome(email, name=full_name)
+    except Exception as e:
+        print(f"[signup] welcome email failed for {email}: {e}")
+
     user_row = {"id": user_id, "email": email, "role": "user"}
     return jsonify({
         "token": issue_token(user_row),
@@ -193,6 +202,7 @@ def login():
         return jsonify({"error": "Invalid email/username or password"}), 401
 
     # Successful login — record the event, then commit once.
+    # No welcome email here — that only fires on signup.
     _record_login_event(db, row["id"], row["email"])
     db.commit()
     db.close()
