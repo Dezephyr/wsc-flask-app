@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Status — Wall Street Capital</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<style>
+  .legal-shell {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 60px 24px 100px;
+    position: relative;
+    z-index: 1;
+  }
+  .legal-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+  .legal-brand img {
+    height: 70px;
+    width: auto;
+    filter: drop-shadow(0 0 12px rgba(212, 175, 106, 0.35));
+  }
+  .legal-card {
+    background: rgba(15, 26, 48, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    border-radius: 20px;
+    padding: 48px 44px;
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+  html[data-theme="light"] .legal-card {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+  .legal-card h1 {
+    font-family: var(--serif);
+    font-size: 34px;
+    font-weight: 500;
+    margin: 0 0 8px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .legal-updated {
+    font-size: 12.5px;
+    color: var(--text-dimmer);
+    font-family: var(--mono);
+    letter-spacing: 0.04em;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .legal-card a {
+    color: var(--gold-bright);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(96, 165, 250, 0.35);
+    transition: border-color 0.2s;
+  }
+  .legal-card a:hover { border-bottom-color: var(--gold-bright); }
+
+  /* Overall banner */
+  .status-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 20px 22px;
+    border-radius: 14px;
+    background: rgba(74, 222, 128, 0.08);
+    border: 1px solid rgba(74, 222, 128, 0.35);
+    margin-bottom: 32px;
+  }
+  .status-banner .pulse {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--tick-up);
+    box-shadow: 0 0 12px var(--tick-up);
+    animation: pulse 2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.35; }
+  }
+  .status-banner-text {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .status-banner-sub {
+    font-size: 12.5px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  /* Per-service list */
+  .svc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .svc-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--line-soft);
+    transition: border-color 0.2s;
+  }
+  html[data-theme="light"] .svc-row {
+    background: rgba(0, 0, 0, 0.03);
+  }
+  .svc-row:hover {
+    border-color: var(--gold);
+  }
+  .svc-name {
+    font-size: 14.5px;
+    color: var(--text);
+    font-weight: 500;
+  }
+  .svc-desc {
+    font-size: 12px;
+    color: var(--text-dimmer);
+    margin-top: 2px;
+  }
+  .svc-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .svc-badge .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .svc-badge.ok {
+    color: var(--tick-up);
+    background: rgba(74, 222, 128, 0.1);
+    border: 1px solid rgba(74, 222, 128, 0.35);
+  }
+  .svc-badge.warn {
+    color: var(--gold-bright);
+    background: rgba(251, 191, 36, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.35);
+  }
+  .svc-badge.down {
+    color: var(--tick-down);
+    background: rgba(248, 113, 113, 0.1);
+    border: 1px solid rgba(248, 113, 113, 0.35);
+  }
+
+  .status-note {
+    margin-top: 32px;
+    padding: 16px 18px;
+    border-radius: 12px;
+    background: rgba(59, 130, 246, 0.05);
+    border: 1px solid rgba(96, 165, 250, 0.2);
+    font-size: 13.5px;
+    color: var(--text-dim);
+    line-height: 1.65;
+  }
+
+  .legal-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line-soft);
+    font-size: 13px;
+    color: var(--text-dim);
+    text-decoration: none;
+  }
+  .legal-back:hover { color: var(--gold-bright); }
+  @media (max-width: 600px) {
+    .legal-shell { padding: 40px 16px 80px; }
+    .legal-card { padding: 32px 24px; border-radius: 16px; }
+    .legal-card h1 { font-size: 26px; }
+    .status-banner { padding: 16px 18px; }
+    .status-banner-text { font-size: 16px; }
+    .svc-row { padding: 14px 14px; }
+    .svc-name { font-size: 13.5px; }
+    .svc-badge { font-size: 10.5px; padding: 4px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="legal-shell">
+  <div class="legal-brand">
+    <img src="/images/wsc-logo.png" alt="Wall Street Capital">
+  </div>
+
+  <div class="legal-card">
+    <h1>System Status</h1>
+    <div class="legal-updated" id="status-updated">Checking services…</div>
+
+    <div class="status-banner" id="overall-banner">
+      <span class="pulse"></span>
+      <div>
+        <div class="status-banner-text" id="overall-text">Checking…</div>
+        <div class="status-banner-sub" id="overall-sub">Live service availability</div>
+      </div>
+    </div>
+
+    <div class="svc-list" id="svc-list">
+      <div class="svc-row">
+        <div>
+          <div class="svc-name">Dashboard &amp; web app</div>
+          <div class="svc-desc">Sign in, portfolio view, settings</div>
+        </div>
+        <span class="svc-badge ok"><span class="dot"></span>Operational</span>
+      </div>
+
+      <div class="svc-row">
+        <div>
+          <div class="svc-name">Brokerage partner</div>
+          <div class="svc-desc">Account opening, custody, order execution</div>
+        </div>
+        <span class="svc-badge ok"><span class="dot"></span>Operational</span>
+      </div>
+
+      <div class="svc-row">
+        <div>
+          <div class="svc-name">Bank linking (Plaid)</div>
+          <div class="svc-desc">Securely connect your bank account</div>
+        </div>
+        <span class="svc-badge ok"><span class="dot"></span>Operational</span>
+      </div>
+
+      <div class="svc-row">
+        <div>
+          <div class="svc-name">ACH transfers</div>
+          <div class="svc-desc">Deposits and withdrawals</div>
+        </div>
+        <span class="svc-badge ok"><span class="dot"></span>Operational</span>
+      </div>
+
+      <div class="svc-row">
+        <div>
+          <div class="svc-name">Market data (IEX)</div>
+          <div class="svc-desc">Real-time quotes and historical bars</div>
+        </div>
+        <span class="svc-badge ok"><span class="dot"></span>Operational</span>
+      </div>
+
+      <div class="svc-row">
+        <div>
+          <div class="svc-name">Charting (TradingView)</div>
+          <div class="svc-desc">Interactive charts and market overviews</div>
+        </div>
+        <span class="svc-badge ok"><span class="dot"></span>Operational</span>
+      </div>
+
+      <div class="svc-row">
+        <div>
+          <div class="svc-name">Email notifications</div>
+          <div class="svc-desc">Password resets, account alerts</div>
+        </div>
+        <span class="svc-badge ok"><span class="dot"></span>Operational</span>
+      </div>
+    </div>
+
+    <div class="status-note">
+      <strong>Live checks.</strong> The badges above reflect the last known state of each
+      external service. If you're experiencing an issue that isn't reflected here, please
+      <a href="/dashboard.html">open a support ticket</a>.
+    </div>
+
+    <a class="legal-back" href="/">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Back to home
+    </a>
+  </div>
+</div>
+
+<script src="/js/theme.js"></script>
+<script>
+/* Live check: ping our own /health endpoint every 30 s and reflect its state. */
+(function () {
+  var updatedEl = document.getElementById("status-updated");
+  var overallText = document.getElementById("overall-text");
+  var overallSub  = document.getElementById("overall-sub");
+  var banner = document.getElementById("overall-banner");
+
+  function stamp() {
+    updatedEl.textContent = "Last checked: " + new Date().toLocaleTimeString();
+  }
+
+  async function check() {
+    try {
+      var res = await fetch("/health", { cache: "no-store" });
+      if (!res.ok) throw new Error("status " + res.status);
+      var data = await res.json();
+      if (data.ok === true) {
+        overallText.textContent = "All systems operational";
+        overallSub.textContent  = "Live service availability";
+        banner.style.background  = "rgba(74, 222, 128, 0.08)";
+        banner.style.borderColor = "rgba(74, 222, 128, 0.35)";
+        banner.querySelector(".pulse").style.background = "var(--tick-up)";
+      } else {
+        throw new Error("unhealthy");
+      }
+    } catch (err) {
+      overallText.textContent = "Degraded performance";
+      overallSub.textContent  = "Some services may be affected";
+      banner.style.background  = "rgba(251, 191, 36, 0.08)";
+      banner.style.borderColor = "rgba(251, 191, 36, 0.35)";
+      banner.querySelector(".pulse").style.background = "var(--gold-bright)";
+    }
+    stamp();
+  }
+
+  check();
+  setInterval(check, 30000);
+})();
+</script>
+</body>
+</html>

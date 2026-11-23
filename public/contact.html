@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact Support — Wall Street Capital</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<style>
+  .legal-shell {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 60px 24px 100px;
+    position: relative;
+    z-index: 1;
+  }
+  .legal-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+  .legal-brand img {
+    height: 70px;
+    width: auto;
+    filter: drop-shadow(0 0 12px rgba(212, 175, 106, 0.35));
+  }
+  .legal-card {
+    background: rgba(15, 26, 48, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    border-radius: 20px;
+    padding: 48px 44px;
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+  html[data-theme="light"] .legal-card {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+  .legal-card h1 {
+    font-family: var(--serif);
+    font-size: 34px;
+    font-weight: 500;
+    margin: 0 0 8px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .legal-sub {
+    font-size: 14.5px;
+    line-height: 1.7;
+    color: var(--text-dim);
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .legal-card h2 {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 500;
+    margin: 36px 0 14px;
+    color: var(--gold-bright);
+  }
+  .legal-card p {
+    font-size: 14.5px;
+    line-height: 1.75;
+    color: var(--text-dim);
+    margin: 0 0 16px;
+  }
+  .legal-card a {
+    color: var(--gold-bright);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(96, 165, 250, 0.35);
+    transition: border-color 0.2s;
+  }
+  .legal-card a:hover { border-bottom-color: var(--gold-bright); }
+  .legal-card strong { color: var(--text); font-weight: 600; }
+
+  /* Contact channels grid */
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  @media (max-width: 600px) {
+    .contact-grid { grid-template-columns: 1fr; }
+  }
+
+  .contact-tile {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 18px;
+    border-radius: 14px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--line-soft);
+    transition: border-color 0.2s, transform 0.2s;
+    text-decoration: none !important;
+    border-bottom: 1px solid var(--line-soft) !important;
+  }
+  html[data-theme="light"] .contact-tile {
+    background: rgba(0, 0, 0, 0.03);
+  }
+  .contact-tile:hover {
+    border-color: var(--gold) !important;
+    transform: translateY(-2px);
+  }
+  .contact-tile .ct-ico {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    background: linear-gradient(135deg, #60A5FA, #1D4ED8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    flex-shrink: 0;
+  }
+  .contact-tile .ct-ico svg { width: 18px; height: 18px; }
+  .contact-tile .ct-meta { min-width: 0; }
+  .contact-tile .ct-name {
+    font-family: var(--serif);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 3px;
+    line-height: 1.2;
+  }
+  .contact-tile .ct-desc {
+    font-size: 12.5px;
+    color: var(--text-dimmer);
+    line-height: 1.5;
+  }
+
+  /* Contact form */
+  .ct-form-field { margin-bottom: 16px; }
+  .ct-form-field label {
+    display: block;
+    font-size: 12.5px;
+    color: var(--text-dim);
+    font-weight: 500;
+    margin-bottom: 7px;
+  }
+  .ct-form-field input,
+  .ct-form-field select,
+  .ct-form-field textarea {
+    width: 100%;
+    padding: 13px 15px;
+    border-radius: 11px;
+    background: rgba(0, 8, 24, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  html[data-theme="light"] .ct-form-field input,
+  html[data-theme="light"] .ct-form-field select,
+  html[data-theme="light"] .ct-form-field textarea {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+  .ct-form-field textarea {
+    font-family: var(--sans);
+    resize: vertical;
+    min-height: 140px;
+  }
+  .ct-form-field input:focus,
+  .ct-form-field select:focus,
+  .ct-form-field textarea:focus {
+    outline: none;
+    border-color: rgba(96, 165, 250, 0.65);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.14);
+  }
+
+  .ct-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 600px) {
+    .ct-form-row { grid-template-columns: 1fr; }
+  }
+
+  .ct-submit {
+    width: 100%;
+    padding: 14px 20px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(135deg, #60A5FA, #1D4ED8);
+    color: #FFFFFF;
+    font-family: var(--sans);
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+    box-shadow: 0 8px 22px rgba(59, 130, 246, 0.32);
+    margin-top: 6px;
+  }
+  .ct-submit:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px rgba(59, 130, 246, 0.48);
+  }
+  .ct-submit:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .ct-submit svg { width: 16px; height: 16px; }
+
+  .ct-error {
+    display: none;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(248, 113, 113, 0.1);
+    border: 1px solid rgba(248, 113, 113, 0.35);
+    color: var(--tick-down);
+    font-size: 13px;
+    line-height: 1.55;
+    margin-bottom: 16px;
+  }
+  .ct-success {
+    display: none;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: rgba(74, 222, 128, 0.1);
+    border: 1px solid rgba(74, 222, 128, 0.35);
+    color: var(--tick-up);
+    font-size: 13.5px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  /* Hours table */
+  .hours-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+  }
+  .hours-table td {
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--line-soft);
+    font-size: 13.5px;
+    color: var(--text-dim);
+  }
+  .hours-table td:last-child {
+    text-align: right;
+    font-family: var(--mono);
+    color: var(--text);
+    font-size: 12.5px;
+  }
+  .hours-table tr:last-child td { border-bottom: none; }
+  .hours-table tr:hover td {
+    background: rgba(59, 130, 246, 0.04);
+  }
+
+  .legal-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line-soft);
+    font-size: 13px;
+    color: var(--text-dim);
+    text-decoration: none;
+  }
+  .legal-back:hover { color: var(--gold-bright); }
+
+  @media (max-width: 600px) {
+    .legal-shell { padding: 40px 16px 80px; }
+    .legal-card { padding: 32px 24px; border-radius: 16px; }
+    .legal-card h1 { font-size: 26px; }
+    .legal-card h2 { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="legal-shell">
+  <div class="legal-brand">
+    <img src="/images/wsc-logo.png" alt="Wall Street Capital">
+  </div>
+
+  <div class="legal-card">
+    <h1>Contact Support</h1>
+    <p class="legal-sub">
+      Need help with your account, a deposit, or an order? Send us a message and
+      we'll get back to you as soon as possible. Business-hours tickets are
+      typically answered within a few hours.
+    </p>
+
+    <!-- Contact channels -->
+    <div class="contact-grid">
+      <a class="contact-tile" href="/dashboard.html">
+        <div class="ct-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <div class="ct-meta">
+          <div class="ct-name">Open a support ticket</div>
+          <div class="ct-desc">Fastest option if you have an account</div>
+        </div>
+      </a>
+
+      <a class="contact-tile" href="mailto:support@wallstreetcapital.app">
+        <div class="ct-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/>
+          </svg>
+        </div>
+        <div class="ct-meta">
+          <div class="ct-name">Email us</div>
+          <div class="ct-desc">support@wallstreetcapital.app</div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Contact form -->
+    <h2>Send us a message</h2>
+
+    <div class="ct-error" id="contact-error"></div>
+    <div class="ct-success" id="contact-success"></div>
+
+    <form id="contact-form" autocomplete="off">
+      <div class="ct-form-row">
+        <div class="ct-form-field">
+          <label for="cf-name">Your name</label>
+          <input id="cf-name" type="text" placeholder="Jane Doe" required>
+        </div>
+        <div class="ct-form-field">
+          <label for="cf-email">Email address</label>
+          <input id="cf-email" type="email" placeholder="name@example.com" required>
+        </div>
+      </div>
+
+      <div class="ct-form-field">
+        <label for="cf-subject">Subject</label>
+        <select id="cf-subject" required>
+          <option value="">Choose a topic…</option>
+          <option value="account">Account access &amp; login</option>
+          <option value="deposit">Deposits &amp; funding</option>
+          <option value="withdrawal">Withdrawals</option>
+          <option value="kyc">Identity verification (KYC)</option>
+          <option value="trading">Trading &amp; orders</option>
+          <option value="technical">Technical problem</option>
+          <option value="billing">Fees &amp; billing</option>
+          <option value="other">Something else</option>
+        </select>
+      </div>
+
+      <div class="ct-form-field">
+        <label for="cf-message">Message</label>
+        <textarea id="cf-message" placeholder="Tell us what happened, and include any relevant order IDs, ticket numbers, or screenshots…" required></textarea>
+      </div>
+
+      <button class="ct-submit" type="submit" id="cf-submit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>
+        </svg>
+        Send message
+      </button>
+    </form>
+
+    <!-- Hours -->
+    <h2>Support hours</h2>
+    <table class="hours-table">
+      <tbody>
+        <tr><td>Monday – Friday</td><td>08:00 – 20:00 ET</td></tr>
+        <tr><td>Saturday</td><td>10:00 – 16:00 ET</td></tr>
+        <tr><td>Sunday</td><td>Closed</td></tr>
+        <tr><td>US market holidays</td><td>Closed</td></tr>
+      </tbody>
+    </table>
+
+    <p style="margin-top:20px;">
+      <strong>Urgent account issue?</strong> If you believe your account has been
+      compromised, email <a href="mailto:security@wallstreetcapital.app">security@wallstreetcapital.app</a>
+      immediately and include "URGENT" in the subject line.
+    </p>
+
+    <a class="legal-back" href="/">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Back to home
+    </a>
+  </div>
+</div>
+
+<script src="/js/theme.js"></script>
+<script>
+(function () {
+  var form     = document.getElementById("contact-form");
+  var errEl    = document.getElementById("contact-error");
+  var okEl     = document.getElementById("contact-success");
+  var submitBtn = document.getElementById("cf-submit");
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    errEl.style.display = "none";
+    okEl.style.display  = "none";
+
+    var name    = document.getElementById("cf-name").value.trim();
+    var email   = document.getElementById("cf-email").value.trim();
+    var subject = document.getElementById("cf-subject").value;
+    var message = document.getElementById("cf-message").value.trim();
+
+    function fail(msg) {
+      errEl.textContent = msg;
+      errEl.style.display = "block";
+    }
+
+    if (!name)     return fail("Please enter your name.");
+    if (!email)    return fail("Please enter your email address.");
+    if (!subject)  return fail("Please choose a topic.");
+    if (!message)  return fail("Please write a message.");
+    if (message.length > 4000) return fail("Message is too long (max 4000 characters).");
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Sending…";
+
+    try {
+      var res = await fetch("/api/support-tickets/public", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name, email: email, subject: subject, message: message }),
+      });
+
+      var data = {};
+      try { data = await res.json(); } catch (_) {}
+
+      if (!res.ok) throw new Error(data.error || ("Server error " + res.status));
+
+      okEl.innerHTML =
+        "Thanks, " + name.replace(/[<>&]/g, "") + ". Your message has been received. " +
+        "We'll reply to <strong>" + email.replace(/[<>&]/g, "") + "</strong> shortly. " +
+        (data.ticket_id ? "<br><span style='font-size:12.5px;color:var(--text-dimmer);'>Reference: " + data.ticket_id + "</span>" : "");
+      okEl.style.display = "block";
+
+      form.reset();
+    } catch (err) {
+      fail(err.message || "Could not send your message. Please try again.");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg>Send message';
+    }
+  });
+})();
+</script>
+</body>
+</html>

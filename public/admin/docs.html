@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compliance Docs — Admin</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="stylesheet" href="/admin/shared.css">
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="adm-app" id="adm-app"></div>
+
+<script src="/js/theme.js"></script>
+<script src="/js/api.js"></script>
+<script src="/admin/shared.js"></script>
+<script>
+AdminShell.mount({
+  activeKey: "docs",
+  title: "Compliance Docs",
+  onReady: function (root) {
+    root.innerHTML = `
+      <div class="adm-section" style="margin-top:0;">
+        <div class="adm-section-head">
+          <div>
+            <h2>Compliance documents</h2>
+            <p class="desc">Register metadata for regulatory documents. File storage is external — this records the pointer.</p>
+          </div>
+        </div>
+        <div class="adm-grid-2">
+          <div class="adm-card">
+            <h3>Add document</h3>
+            <div class="adm-field"><label for="d-title">Title</label><input id="d-title" type="text"></div>
+            <div class="adm-field"><label for="d-category">Category</label><input id="d-category" type="text"></div>
+            <div class="adm-field"><label for="d-path">File path / URL</label><input id="d-path" type="text"></div>
+            <button class="btn btn-solid" id="save-doc">Add document</button>
+            <div class="success-box" id="doc-success" style="margin-top:14px;"></div>
+            <div class="error-box" id="doc-error" style="margin-top:14px;"></div>
+          </div>
+          <div class="adm-card">
+            <h3>Existing documents</h3>
+            <div id="doc-list-wrap"><div class="empty-state"><span class="loading">Loading documents</span></div></div>
+          </div>
+        </div>
+      </div>
+    `;
+    loadDocs();
+    document.getElementById("save-doc").addEventListener("click", saveDoc);
+  }
+});
+
+async function loadDocs() {
+  const wrap = document.getElementById("doc-list-wrap");
+  try {
+    const rows = await AdminShell.api("/admin/compliance-docs");
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="empty-state">No documents yet.</div>';
+      return;
+    }
+    const E = AdminShell.escapeHtml;
+    const html = rows.map(r => `
+      <tr>
+        <td>${E(r.title)}</td>
+        <td>${E(r.category)}</td>
+      </tr>`).join("");
+    wrap.innerHTML = `<table><thead><tr><th>Title</th><th>Category</th></tr></thead><tbody>${html}</tbody></table>`;
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state">${AdminShell.escapeHtml(err.message)}</div>`;
+  }
+}
+
+async function saveDoc() {
+  const title = document.getElementById("d-title").value.trim();
+  const category = document.getElementById("d-category").value.trim();
+  const path = document.getElementById("d-path").value.trim();
+  const okBox = document.getElementById("doc-success");
+  const errBox = document.getElementById("doc-error");
+  okBox.style.display = "none"; errBox.style.display = "none";
+
+  if (!title || !category || !path) {
+    errBox.textContent = "All fields required.";
+    errBox.style.display = "block";
+    return;
+  }
+
+  try {
+    await AdminShell.api("/admin/compliance-docs", {
+      method: "POST",
+      body: JSON.stringify({ title, category, file_path: path }),
+    });
+    okBox.textContent = "Document added.";
+    okBox.style.display = "block";
+    ["d-title","d-category","d-path"].forEach(id => document.getElementById(id).value = "");
+    loadDocs();
+  } catch (err) {
+    errBox.textContent = err.message;
+    errBox.style.display = "block";
+  }
+}
+</script>
+</body>
+</html>

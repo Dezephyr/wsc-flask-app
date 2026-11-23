@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login Activity — Admin</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="stylesheet" href="/admin/shared.css">
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="adm-app" id="adm-app"></div>
+
+<script src="/js/theme.js"></script>
+<script src="/js/api.js"></script>
+<script src="/admin/shared.js"></script>
+<script>
+AdminShell.mount({
+  activeKey: "login-activity",
+  title: "Login Activity",
+  onReady: function (root) {
+    root.innerHTML = `
+      <div class="adm-section" style="margin-top:0;">
+        <div class="adm-section-head">
+          <div>
+            <h2>Login activity</h2>
+            <p class="desc">Every successful sign-in across the platform. Use this to spot unusual access patterns or troubleshoot "I can't log in" reports.</p>
+          </div>
+        </div>
+
+        <div class="adm-dash-grid" id="la-stats" style="margin-bottom:20px;">
+          <div class="adm-stat">
+            <div class="adm-stat-head">
+              <div class="adm-stat-label">Today</div>
+              <div class="adm-stat-ico blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              </div>
+            </div>
+            <div class="adm-stat-value" id="la-today">—</div>
+            <div class="adm-stat-sub">Logins since midnight</div>
+          </div>
+          <div class="adm-stat">
+            <div class="adm-stat-head">
+              <div class="adm-stat-label">Last 7 days</div>
+              <div class="adm-stat-ico green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+              </div>
+            </div>
+            <div class="adm-stat-value" id="la-week">—</div>
+            <div class="adm-stat-sub">Rolling week</div>
+          </div>
+          <div class="adm-stat">
+            <div class="adm-stat-head">
+              <div class="adm-stat-label">Unique users</div>
+              <div class="adm-stat-ico purple">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              </div>
+            </div>
+            <div class="adm-stat-value" id="la-unique">—</div>
+            <div class="adm-stat-sub">Distinct accounts</div>
+          </div>
+          <div class="adm-stat">
+            <div class="adm-stat-head">
+              <div class="adm-stat-label">All time</div>
+              <div class="adm-stat-ico cyan">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              </div>
+            </div>
+            <div class="adm-stat-value" id="la-total">—</div>
+            <div class="adm-stat-sub">Every recorded login</div>
+          </div>
+        </div>
+
+        <div class="adm-card">
+          <div class="adm-field">
+            <label for="la-filter">Filter</label>
+            <input id="la-filter" type="text" placeholder="Search by email, IP, or name…">
+          </div>
+          <div id="la-table-wrap">
+            <div class="empty-state"><span class="loading">Loading login events</span></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    loadLoginStats();
+    loadLoginEvents();
+
+    document.getElementById("la-filter").addEventListener("input", (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      document.querySelectorAll("#la-table-wrap tbody tr").forEach(tr => {
+        tr.style.display = tr.textContent.toLowerCase().includes(q) ? "" : "none";
+      });
+    });
+  }
+});
+
+async function loadLoginStats() {
+  try {
+    const s = await AdminShell.api("/admin/login-events/stats");
+    document.getElementById("la-today").textContent  = s.today.toLocaleString();
+    document.getElementById("la-week").textContent   = s.week.toLocaleString();
+    document.getElementById("la-unique").textContent = s.unique_users.toLocaleString();
+    document.getElementById("la-total").textContent  = s.total.toLocaleString();
+  } catch (err) { /* silent */ }
+}
+
+async function loadLoginEvents() {
+  const wrap = document.getElementById("la-table-wrap");
+  try {
+    const rows = await AdminShell.api("/admin/login-events?limit=300");
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="empty-state">No login events recorded yet.</div>';
+      return;
+    }
+    const E = AdminShell.escapeHtml;
+    const html = rows.map(r => `
+      <tr>
+        <td>
+          <div style="font-weight:600;">${E(r.full_name || "—")}</div>
+          <div class="muted" style="font-size:11.5px;">${E(r.email || "")}</div>
+        </td>
+        <td>
+          <span class="badge ${r.role === "admin" ? "ok" : r.role === "support" ? "warn" : "neutral"}">${E(r.role || "user")}</span>
+        </td>
+        <td class="mono">${E(r.ip || "—")}</td>
+        <td class="muted" style="font-size:11.5px;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+            title="${E(r.user_agent || "")}">
+          ${E(r.user_agent || "—")}
+        </td>
+        <td class="mono" style="font-size:11.5px;">
+          ${r.created_at ? new Date(r.created_at).toLocaleString() : "—"}
+        </td>
+      </tr>`).join("");
+
+    wrap.innerHTML = `<table>
+      <thead><tr><th>User</th><th>Role</th><th>IP</th><th>User agent</th><th>When</th></tr></thead>
+      <tbody>${html}</tbody>
+    </table>`;
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state">Could not load login events: ${AdminShell.escapeHtml(err.message)}</div>`;
+  }
+}
+</script>
+</body>
+</html>

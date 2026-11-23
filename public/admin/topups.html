@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deposits (Top-ups) — Wall Street Capital</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/admin/shared.css">
+  <style>
+    /* A little styling to make the proof download button look clean */
+    .proof-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: rgba(96, 165, 250, 0.15);
+      color: var(--gold-bright);
+      border: 1px solid rgba(96, 165, 250, 0.3);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .proof-link:hover {
+      background: rgba(96, 165, 250, 0.25);
+      border-color: var(--gold);
+    }
+    .proof-link svg {
+      width: 14px;
+      height: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-bg"></div>
+  <div class="adm-app" id="adm-app"></div>
+
+  <script src="/js/theme.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/admin/shared.js"></script>
+  <script>
+    AdminShell.mount({
+      activeKey: "topups",
+      title: "Deposits",
+      onReady: function (root) {
+        root.innerHTML = `
+          <div class="adm-section" style="margin-top:0;">
+            <div class="adm-section-head">
+              <div>
+                <h2>Deposits &amp; Top-ups</h2>
+                <p class="desc">Review payment proofs and credit user balances.</p>
+              </div>
+            </div>
+            <div class="adm-card">
+              <table class="adm-table" id="topups-table">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Amount</th>
+                    <th>Method</th>
+                    <th>Reference</th>
+                    <th>Proof</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="topups-body">
+                  <tr><td colspan="7" style="text-align:center;">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+
+        loadTopups();
+      }
+    });
+
+    async function loadTopups() {
+      const tbody = document.getElementById("topups-body");
+      try {
+        const rows = await AdminShell.api("/admin/topups");
+        
+        if (rows.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No deposits found.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = rows.map(r => {
+          // Logic to show View and Download buttons
+          let fileUrl = null;
+          if (r.proof_path) {
+              let cleanPath = r.proof_path.replace(/^\/+/, ''); // Remove any leading slashes
+              if (!cleanPath.startsWith('uploads/')) {
+                  cleanPath = 'uploads/' + cleanPath;
+              }
+              fileUrl = '/' + cleanPath;
+          }
+
+          const proofLink = fileUrl 
+            ? `<div style="display:flex; gap:8px;">
+                 <!-- View Button (Opens in new tab) -->
+                 <a href="${fileUrl}" target="_blank" class="proof-link" style="background: rgba(96, 165, 250, 0.15); border-color: rgba(96, 165, 250, 0.3);">
+                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                   View
+                 </a>
+                 <!-- Download Button (Forces download via Backend) -->
+                 <a href="/api/admin/topups/${r.id}/download" class="proof-link" style="background: rgba(74, 222, 128, 0.15); border-color: rgba(74, 222, 128, 0.3); color: var(--tick-up);">
+                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                   Download
+                 </a>
+               </div>` 
+            : `<span style="color:var(--text-dimmer); font-size:12px;">No proof attached</span>`;   
+
+          const isPending = r.status === "pending_review";
+
+          return `
+            <tr>
+              <td>
+                <div style="font-weight:600; color:var(--text);">${r.user_name || r.user_email}</div>
+                <div style="font-size:12px; color:var(--text-dim);">${r.user_email}</div>
+              </td>
+              <td><strong style="color:var(--text);">$${parseFloat(r.amount_usd).toFixed(2)}</strong></td>
+              <td style="text-transform:capitalize;">${r.method.replace("_", " ")}</td>
+              <td style="font-family:var(--mono); font-size:12px;">${r.reference || "—"}</td>
+              <td>${proofLink}</td>
+              <td>
+                <span class="adm-badge ${isPending ? 'amber' : (r.status === 'approved' ? 'green' : 'rose')}">
+                  ${r.status.replace("_", " ")}
+                </span>
+              </td>
+              <td>
+                ${isPending ? `
+                  <div style="display:flex; gap:8px;">
+                    <button class="btn btn-sm btn-solid" onclick="approveTopup('${r.id}')" style="padding:4px 8px; font-size:12px; background:#4ADE80; color:#000;">Approve</button>
+                    <button class="btn btn-sm btn-outline" onclick="rejectTopup('${r.id}')" style="padding:4px 8px; font-size:12px; border-color:#F87171; color:#F87171;">Reject</button>
+                  </div>
+                ` : `<span style="color:var(--text-dimmer); font-size:12px;">Completed</span>`}
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">Error: ${err.message}</td></tr>`;
+      }
+    }
+
+    async function approveTopup(id) {
+      if (!confirm("Approve this deposit and credit the user's balance?")) return;
+      try {
+        await AdminShell.api(`/admin/topups/${id}/approve`, { method: "POST" });
+        alert("Approved and balance credited!");
+        loadTopups();
+      } catch (err) {
+        alert("Failed to approve: " + err.message);
+      }
+    }
+
+    async function rejectTopup(id) {
+      const reason = prompt("Enter rejection reason:");
+      if (reason === null) return;
+      try {
+        await AdminShell.api(`/admin/topups/${id}/reject`, { 
+          method: "POST",
+          body: JSON.stringify({ reason })
+        });
+        alert("Rejected.");
+        loadTopups();
+      } catch (err) {
+        alert("Failed to reject: " + err.message);
+      }
+    }
+  </script>
+</body>
+</html>

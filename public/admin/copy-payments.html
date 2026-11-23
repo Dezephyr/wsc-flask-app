@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Copy Payments — Wall Street Capital</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/admin/shared.css">
+</head>
+<body>
+  <div class="auth-bg"></div>
+  <div class="adm-app" id="adm-app"></div>
+
+  <script src="/js/theme.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/admin/shared.js"></script>
+  <script>
+    AdminShell.mount({
+      activeKey: "copypayments",
+      title: "Copy Payments",
+      onReady: function (root) {
+        root.innerHTML = `
+          <div class="adm-section" style="margin-top:0;">
+            <div class="adm-section-head">
+              <div>
+                <h2>Copy Payments</h2>
+                <p class="desc">Review payment proofs and approve user copy requests.</p>
+              </div>
+            </div>
+            <div class="adm-card">
+              <table class="adm-table" id="copies-table">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Trader</th>
+                    <th>Amount</th>
+                    <th>Source</th>
+                    <th>Proof</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="copies-body">
+                  <tr><td colspan="7" style="text-align:center;">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+
+        loadCopies();
+      }
+    });
+
+    async function loadCopies() {
+      const tbody = document.getElementById("copies-body");
+      try {
+        const rows = await AdminShell.api("/admin/copy-payments");
+        
+        if (rows.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No copy requests found.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = rows.map(r => {
+          // Assuming you add a 'proof_url' column later
+          const proofLink = r.proof_url 
+            ? `<a href="${r.proof_url}" target="_blank" style="color:var(--gold-bright);">View Proof</a>` 
+            : `<span style="color:var(--text-dimmer);">None</span>`;
+            
+          const isPending = r.payment_status === "pending_review";
+
+          return `
+            <tr>
+              <td>
+                <div style="font-weight:600; color:var(--text);">${r.user_name || r.user_email}</div>
+                <div style="font-size:12px; color:var(--text-dim);">${r.user_email}</div>
+              </td>
+              <td>${r.trader_name}</td>
+              <td>$${parseFloat(r.amount_usd).toFixed(2)}</td>
+              <td>${r.source}</td>
+              <td>${proofLink}</td>
+              <td>
+                <span class="adm-badge ${isPending ? 'amber' : (r.payment_status === 'settled' ? 'green' : 'rose')}">
+                  ${r.payment_status}
+                </span>
+              </td>
+              <td>
+                ${isPending ? `
+                  <div style="display:flex; gap:8px;">
+                    <button class="btn btn-sm btn-solid" onclick="approveCopy('${r.id}')" style="padding:4px 8px; font-size:12px; background:#4ADE80; color:#000;">Approve</button>
+                    <button class="btn btn-sm btn-outline" onclick="rejectCopy('${r.id}')" style="padding:4px 8px; font-size:12px; border-color:#F87171; color:#F87171;">Reject</button>
+                  </div>
+                ` : `<span style="color:var(--text-dimmer); font-size:12px;">Completed</span>`}
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">Error loading data: ${err.message}</td></tr>`;
+      }
+    }
+
+    async function approveCopy(id) {
+      if (!confirm("Approve this copy trade request?")) return;
+      try {
+        await AdminShell.api(`/admin/copy-payments/${id}/approve`, { method: "POST" });
+        alert("Approved successfully!");
+        loadCopies();
+      } catch (err) {
+        alert("Failed to approve: " + err.message);
+      }
+    }
+
+    async function rejectCopy(id) {
+      const reason = prompt("Enter rejection reason:");
+      if (reason === null) return;
+      try {
+        await AdminShell.api(`/admin/copy-payments/${id}/reject`, { 
+          method: "POST",
+          body: JSON.stringify({ reason })
+        });
+        alert("Rejected.");
+        loadCopies();
+      } catch (err) {
+        alert("Failed to reject: " + err.message);
+      }
+    }
+  </script>
+</body>
+</html>

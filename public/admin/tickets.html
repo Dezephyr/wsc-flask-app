@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Support Tickets — Admin</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="stylesheet" href="/admin/shared.css">
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="adm-app" id="adm-app"></div>
+
+<script src="/js/theme.js"></script>
+<script src="/js/api.js"></script>
+<script src="/admin/shared.js"></script>
+<script>
+AdminShell.mount({
+  activeKey: "tickets",
+  title: "Support Tickets",
+  onReady: function (root) {
+    root.innerHTML = `
+      <div class="adm-section" style="margin-top:0;">
+        <div class="adm-section-head">
+          <div>
+            <h2>Support tickets</h2>
+            <p class="desc">Reply in-thread or close when resolved.</p>
+          </div>
+        </div>
+        <div class="adm-card">
+          <div id="ticket-list-wrap"><div class="empty-state"><span class="loading">Loading tickets</span></div></div>
+        </div>
+      </div>
+    `;
+    loadTickets();
+  }
+});
+
+async function loadTickets() {
+  const wrap = document.getElementById("ticket-list-wrap");
+  try {
+    const rows = await AdminShell.api("/admin/support-tickets");
+    AdminShell.setCount("count-tickets", rows.length || 0);
+
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="empty-state">No tickets.</div>';
+      return;
+    }
+
+    const E = AdminShell.escapeHtml;
+    const html = rows.map(r => {
+      const statusClass = r.status === "closed" ? "ok" : r.status === "in_progress" ? "warn" : "neutral";
+      return `
+        <tr>
+          <td class="muted" style="font-size:12px;">${E(r.email || "")}</td>
+          <td>${E(r.subject || "")}</td>
+          <td><span class="badge ${statusClass}">${E(r.status || "")}</span></td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <button class="btn-sm neutral" data-ticket-reply="${r.id}">Reply</button>
+              <button class="btn-sm approve" data-ticket-close="${r.id}">Close</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join("");
+
+    wrap.innerHTML = `<table><thead><tr><th>User</th><th>Subject</th><th>Status</th><th>Actions</th></tr></thead><tbody>${html}</tbody></table>`;
+    bindTicketActions();
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state">Could not load tickets: ${AdminShell.escapeHtml(err.message)}</div>`;
+  }
+}
+
+function bindTicketActions() {
+  document.querySelectorAll("[data-ticket-close]").forEach(btn => btn.addEventListener("click", async () => {
+    btn.disabled = true; btn.textContent = "…";
+    try {
+      await AdminShell.api(`/admin/support-tickets/${btn.dataset.ticketClose}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: "closed" })
+      });
+      loadTickets();
+    } catch (e) {
+      alert(e.message);
+      btn.disabled = false; btn.textContent = "Close";
+    }
+  }));
+
+  document.querySelectorAll("[data-ticket-reply]").forEach(btn => btn.addEventListener("click", () => {
+    const message = prompt("Reply:");
+    if (!message) return;
+    AdminShell.api(`/admin/support-tickets/${btn.dataset.ticketReply}/replies`, {
+      method: "POST",
+      body: JSON.stringify({ message })
+    }).then(loadTickets).catch(e => alert(e.message));
+  }));
+}
+</script>
+</body>
+</html>

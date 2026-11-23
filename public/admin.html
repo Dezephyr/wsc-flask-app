@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="refresh" content="0; url=/login.html">
+<title>Admin — Wall Street Capital</title>
+<script>
+  // If an admin session already exists, go straight to the panel.
+  // Otherwise, redirect to login.
+  (function () {
+    try {
+      var raw = localStorage.getItem("wsc_user");
+      var token = localStorage.getItem("wsc_token");
+      var user = raw ? JSON.parse(raw) : null;
+      var isStaff = user && (user.role === "admin" || user.role === "support");
+      if (token && isStaff) {
+        window.location.replace("/admin/index.html");
+      } else {
+        window.location.replace("/login.html?next=/admin/index.html");
+      }
+    } catch (e) {
+      window.location.replace("/login.html");
+    }
+  })();
+</script>
+</head>
+<body>
+<noscript>
+  <p>Redirecting… <a href="/login.html">Click here if you are not redirected.</a></p>
+</noscript>
+</body>
+</html>

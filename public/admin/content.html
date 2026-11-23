@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Content Pages — Admin</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="stylesheet" href="/admin/shared.css">
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="adm-app" id="adm-app"></div>
+
+<script src="/js/theme.js"></script>
+<script src="/js/api.js"></script>
+<script src="/admin/shared.js"></script>
+<script>
+AdminShell.mount({
+  activeKey: "content",
+  title: "Content Pages",
+  onReady: function (root) {
+    root.innerHTML = `
+      <div class="adm-section" style="margin-top:0;">
+        <div class="adm-section-head">
+          <div>
+            <h2>Content pages</h2>
+            <p class="desc">Edit marketing copy, disclosures, and legal pages. Body is Markdown.</p>
+          </div>
+        </div>
+        <div class="adm-grid-2">
+          <div class="adm-card">
+            <h3>Create or update page</h3>
+            <div class="adm-field"><label for="c-slug">Page slug</label><input id="c-slug" type="text" placeholder="privacy-policy"></div>
+            <div class="adm-field"><label for="c-title">Title</label><input id="c-title" type="text"></div>
+            <div class="adm-field"><label for="c-body">Body (Markdown)</label><textarea id="c-body" rows="12"></textarea></div>
+            <button class="btn btn-solid" id="save-content">Save page</button>
+            <div class="success-box" id="content-success" style="margin-top:14px;"></div>
+            <div class="error-box" id="content-error" style="margin-top:14px;"></div>
+          </div>
+          <div class="adm-card">
+            <h3>Existing pages</h3>
+            <div id="content-list-wrap"><div class="empty-state"><span class="loading">Loading pages</span></div></div>
+          </div>
+        </div>
+      </div>
+    `;
+    loadContent();
+    document.getElementById("save-content").addEventListener("click", saveContent);
+  }
+});
+
+let contentCache = [];
+
+async function loadContent() {
+  const wrap = document.getElementById("content-list-wrap");
+  try {
+    const rows = await AdminShell.api("/admin/content");
+    contentCache = rows || [];
+
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="empty-state">No pages yet.</div>';
+      return;
+    }
+
+    const E = AdminShell.escapeHtml;
+    const html = rows.map(r => `
+      <tr>
+        <td class="mono">${E(r.slug)}</td>
+        <td>${E(r.title)}</td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <button class="btn-sm neutral" data-c-edit="${E(r.slug)}">Edit</button>
+            <button class="btn-sm reject" data-c-delete="${E(r.slug)}">Delete</button>
+          </div>
+        </td>
+      </tr>`).join("");
+
+    wrap.innerHTML = `<table><thead><tr><th>Slug</th><th>Title</th><th>Actions</th></tr></thead><tbody>${html}</tbody></table>`;
+    bindContentActions();
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state">${AdminShell.escapeHtml(err.message)}</div>`;
+  }
+}
+
+function bindContentActions() {
+  document.querySelectorAll("[data-c-edit]").forEach(btn => btn.addEventListener("click", () => {
+    const slug = btn.dataset.cEdit;
+    const r = contentCache.find(x => x.slug === slug);
+    if (!r) return;
+    document.getElementById("c-slug").value = r.slug || "";
+    document.getElementById("c-title").value = r.title || "";
+    document.getElementById("c-body").value = r.body_markdown || "";
+    document.getElementById("c-slug").scrollIntoView({ behavior: "smooth" });
+  }));
+
+  document.querySelectorAll("[data-c-delete]").forEach(btn => btn.addEventListener("click", async () => {
+    const slug = btn.dataset.cDelete;
+    if (!confirm(`Delete page "${slug}"?`)) return;
+    btn.disabled = true; btn.textContent = "…";
+    try {
+      await AdminShell.api(`/admin/content/${encodeURIComponent(slug)}`, { method: "DELETE" });
+      loadContent();
+    } catch (e) {
+      alert(e.message);
+      btn.disabled = false; btn.textContent = "Delete";
+    }
+  }));
+}
+
+async function saveContent() {
+  const slug = document.getElementById("c-slug").value.trim();
+  const title = document.getElementById("c-title").value.trim();
+  const body = document.getElementById("c-body").value;
+  const okBox = document.getElementById("content-success");
+  const errBox = document.getElementById("content-error");
+  okBox.style.display = "none"; errBox.style.display = "none";
+
+  if (!slug || !title || !body) {
+    errBox.textContent = "All fields required.";
+    errBox.style.display = "block";
+    return;
+  }
+
+  try {
+    await AdminShell.api(`/admin/content/${encodeURIComponent(slug)}`, {
+      method: "PUT",
+      body: JSON.stringify({ title, body_markdown: body }),
+    });
+    okBox.textContent = "Saved.";
+    okBox.style.display = "block";
+    loadContent();
+  } catch (err) {
+    errBox.textContent = err.message;
+    errBox.style.display = "block";
+  }
+}
+</script>
+</body>
+</html>

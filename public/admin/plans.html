@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Investment Plans — Admin</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="stylesheet" href="/admin/shared.css">
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="adm-app" id="adm-app"></div>
+
+<script src="/js/theme.js"></script>
+<script src="/js/api.js"></script>
+<script src="/admin/shared.js"></script>
+<script>
+AdminShell.mount({
+  activeKey: "plans",
+  title: "Investment Plans",
+  onReady: function (root) {
+    root.innerHTML = `
+      <div class="adm-section" style="margin-top:0;">
+        <div class="adm-section-head">
+          <div>
+            <h2>Investment plans</h2>
+            <p class="desc">Define plans users can invest in.</p>
+          </div>
+        </div>
+        <div class="adm-grid-2">
+          <div class="adm-card">
+            <h3 id="pl-form-title">Add a plan</h3>
+            <input type="hidden" id="pl-id">
+            <div class="adm-field"><label for="pl-name">Plan name</label><input id="pl-name" type="text" placeholder="Starter"></div>
+            <div class="adm-field"><label for="pl-description">Description</label><textarea id="pl-description" rows="3"></textarea></div>
+            <div class="adm-grid-2">
+              <div class="adm-field"><label for="pl-roi">ROI % (over term)</label><input id="pl-roi" type="text" placeholder="12.5"></div>
+              <div class="adm-field"><label for="pl-duration">Duration (days)</label><input id="pl-duration" type="number" placeholder="30"></div>
+            </div>
+            <div class="adm-grid-2">
+              <div class="adm-field"><label for="pl-min">Min amount (USD)</label><input id="pl-min" type="text" placeholder="100"></div>
+              <div class="adm-field"><label for="pl-max">Max amount (USD, optional)</label><input id="pl-max" type="text"></div>
+            </div>
+            <div class="adm-grid-2">
+              <div class="adm-field">
+                <label for="pl-compounding">Compounding</label>
+                <select id="pl-compounding"><option value="none">None</option><option value="daily">Daily</option></select>
+              </div>
+              <div class="adm-field">
+                <label for="pl-payout">Payout mode</label>
+                <select id="pl-payout"><option value="at_maturity">At maturity</option><option value="daily">Daily</option></select>
+              </div>
+            </div>
+            <div class="adm-grid-2">
+              <div class="adm-field"><label for="pl-order">Sort order</label><input id="pl-order" type="number" value="100"></div>
+              <div class="adm-field">
+                <label for="pl-active">Active</label>
+                <select id="pl-active"><option value="1">Yes</option><option value="0">No</option></select>
+              </div>
+            </div>
+            <button class="btn btn-solid" id="pl-save">Save plan</button>
+            <button class="btn" id="pl-reset" style="margin-left:8px;">Reset</button>
+            <div class="success-box" id="pl-success" style="margin-top:14px;"></div>
+            <div class="error-box" id="pl-error" style="margin-top:14px;"></div>
+          </div>
+          <div class="adm-card">
+            <h3>Current plans</h3>
+            <div id="pl-list-wrap"><div class="empty-state"><span class="loading">Loading plans</span></div></div>
+          </div>
+        </div>
+      </div>
+    `;
+    loadPlans();
+    document.getElementById("pl-save").addEventListener("click", savePlan);
+    document.getElementById("pl-reset").addEventListener("click", resetPlanForm);
+  }
+});
+
+let plCache = [];
+
+async function loadPlans() {
+  const wrap = document.getElementById("pl-list-wrap");
+  try {
+    const rows = await AdminShell.api("/admin/plans");
+    plCache = rows || [];
+    AdminShell.setCount("count-plans", plCache.length);
+
+    if (!rows.length) { wrap.innerHTML = '<div class="empty-state">No plans yet.</div>'; return; }
+
+    const E = AdminShell.escapeHtml;
+    const html = rows.map(p => {
+      const statusBadge = p.active ? '<span class="badge ok">Active</span>' : '<span class="badge neutral">Hidden</span>';
+      return `
+        <tr>
+          <td><div style="font-weight:600;">${E(p.name)}</div></td>
+          <td class="mono">${parseFloat(p.roi_pct).toFixed(2)}%</td>
+          <td class="mono">${p.duration_days}d</td>
+          <td class="mono">$${parseFloat(p.min_amount).toFixed(2)}</td>
+          <td>${statusBadge}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <button class="btn-sm neutral" data-pl-edit="${p.id}">Edit</button>
+              <button class="btn-sm reject" data-pl-delete="${p.id}">Delete</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join("");
+
+    wrap.innerHTML = `<table><thead><tr><th>Plan</th><th>ROI</th><th>Days</th><th>Min</th><th>Status</th><th>Actions</th></tr></thead><tbody>${html}</tbody></table>`;
+    bindPlanActions();
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state">Could not load plans: ${AdminShell.escapeHtml(err.message)}</div>`;
+  }
+}
+
+function bindPlanActions() {
+  document.querySelectorAll("[data-pl-edit]").forEach(btn => btn.addEventListener("click", () => {
+    const p = plCache.find(x => x.id === btn.dataset.plEdit);
+    if (!p) return;
+    document.getElementById("pl-form-title").textContent = "Edit plan";
+    document.getElementById("pl-id").value = p.id;
+    document.getElementById("pl-name").value = p.name || "";
+    document.getElementById("pl-description").value = p.description || "";
+    document.getElementById("pl-roi").value = p.roi_pct || "";
+    document.getElementById("pl-duration").value = p.duration_days || "";
+    document.getElementById("pl-min").value = p.min_amount || "";
+    document.getElementById("pl-max").value = p.max_amount || "";
+    document.getElementById("pl-compounding").value = p.compounding || "none";
+    document.getElementById("pl-payout").value = p.payout_mode || "at_maturity";
+    document.getElementById("pl-order").value = p.sort_order || 100;
+    document.getElementById("pl-active").value = p.active ? "1" : "0";
+    document.getElementById("pl-form-title").scrollIntoView({ behavior: "smooth" });
+  }));
+
+  document.querySelectorAll("[data-pl-delete]").forEach(btn => btn.addEventListener("click", async () => {
+    if (!confirm("Delete this plan?")) return;
+    btn.disabled = true; btn.textContent = "…";
+    try {
+      await AdminShell.api(`/admin/plans/${btn.dataset.plDelete}`, { method: "DELETE" });
+      loadPlans();
+    } catch (e) {
+      alert(e.message);
+      btn.disabled = false; btn.textContent = "Delete";
+    }
+  }));
+}
+
+async function savePlan() {
+  const okBox = document.getElementById("pl-success");
+  const errBox = document.getElementById("pl-error");
+  okBox.style.display = "none"; errBox.style.display = "none";
+
+  const id = document.getElementById("pl-id").value;
+  const g = (x) => document.getElementById("pl-" + x).value;
+
+  const payload = {
+    name: g("name").trim(),
+    description: g("description").trim() || null,
+    roi_pct: g("roi"),
+    duration_days: g("duration"),
+    min_amount: g("min"),
+    max_amount: g("max") || null,
+    compounding: g("compounding"),
+    payout_mode: g("payout"),
+    sort_order: parseInt(g("order")) || 100,
+    active: g("active") === "1",
+  };
+
+  if (!payload.name || !payload.roi_pct || !payload.duration_days || !payload.min_amount) {
+    errBox.textContent = "Name, ROI, duration, and min amount are required.";
+    errBox.style.display = "block";
+    return;
+  }
+
+  try {
+    if (id) {
+      await AdminShell.api(`/admin/plans/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+      okBox.textContent = "Plan updated.";
+    } else {
+      await AdminShell.api("/admin/plans", { method: "POST", body: JSON.stringify(payload) });
+      okBox.textContent = "Plan created.";
+    }
+    okBox.style.display = "block";
+    resetPlanForm();
+    loadPlans();
+  } catch (err) {
+    errBox.textContent = err.message;
+    errBox.style.display = "block";
+  }
+}
+
+function resetPlanForm() {
+  document.getElementById("pl-form-title").textContent = "Add a plan";
+  document.getElementById("pl-id").value = "";
+  ["pl-name","pl-description","pl-roi","pl-duration","pl-min","pl-max"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("pl-compounding").value = "none";
+  document.getElementById("pl-payout").value = "at_maturity";
+  document.getElementById("pl-order").value = "100";
+  document.getElementById("pl-active").value = "1";
+}
+</script>
+</body>
+</html>

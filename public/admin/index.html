@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Wall Street Capital</title>
+<script>
+  (function(){
+    var t = localStorage.getItem("wsc_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="stylesheet" href="/admin/shared.css">
+</head>
+<body>
+
+<div class="auth-bg"></div>
+
+<button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
+<div class="adm-app" id="adm-app"></div>
+
+<script src="/js/theme.js"></script>
+<script src="/js/api.js"></script>
+<script src="/admin/shared.js"></script>
+<script>
+AdminShell.mount({
+  activeKey: "dashboard",
+  title: "Administration",
+  onReady: function (root) {
+    root.innerHTML = `
+      <div class="adm-section" style="margin-top:0;">
+        <div class="adm-section-head">
+          <div>
+            <h2>Dashboard</h2>
+            <p class="desc">Live snapshot of everything waiting on you.</p>
+          </div>
+        </div>
+
+        <div class="adm-dash-grid" id="adm-dash-grid">
+          ${statCard("KYC queue", "kyc", "shield-check", "blue", "Pending submissions")}
+          ${statCard("Deposits", "topups", "credit-card", "green", "Pending top-ups")}
+          ${statCard("Loan review", "loans", "credit-card", "amber", "Applications waiting")}
+          ${statCard("Wallet links", "wallets", "wallet", "cyan", "Pending submissions")}
+          ${statCard("Copy Payments", "copypayments", "copy", "purple", "Awaiting approval")}
+          ${statCard("Copy traders", "traders", "copy", "purple", "Active traders")}
+          ${statCard("Support tickets", "tickets", "message", "cyan", "Open tickets")}
+          ${statCard("Signals", "signals", "zap", "green", "Published signals")}
+          ${statCard("Investment plans", "plans", "grid", "rose", "Live plans")}
+          ${statCard("Content pages", "content", "file-text", "blue", "Editable pages")}
+          ${statCard("Users", "users", "users", "purple", "Registered accounts")}
+        </div>
+
+        <div class="adm-card" style="margin-top:8px;">
+          <h3>Quick links</h3>
+          <div class="adm-quick-grid">
+            <a class="adm-quick" href="/admin/kyc.html">
+              <div class="adm-quick-ico" style="background: linear-gradient(135deg, #60A5FA, #1D4ED8);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/><path d="m9 12 2 2 4-4"/></svg>
+              </div>
+              <div class="adm-quick-meta">
+                <div class="adm-quick-name">KYC queue</div>
+                <div class="adm-quick-desc">Review identity documents</div>
+              </div>
+            </a>
+
+            <a class="adm-quick" href="/admin/topups.html">
+              <div class="adm-quick-ico" style="background: linear-gradient(135deg, #4ADE80, #15803D);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20m-7-7 7 7 7-7"/></svg>
+              </div>
+              <div class="adm-quick-meta">
+                <div class="adm-quick-name">Deposits</div>
+                <div class="adm-quick-desc">Review payment proofs &amp; top-ups</div>
+              </div>
+            </a>
+
+            <a class="adm-quick" href="/admin/copy-payments.html">
+              <div class="adm-quick-ico" style="background: linear-gradient(135deg, #C084FC, #7E22CE);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </div>
+              <div class="adm-quick-meta">
+                <div class="adm-quick-name">Copy Payments</div>
+                <div class="adm-quick-desc">Approve copy trade requests</div>
+              </div>
+            </a>
+
+            <a class="adm-quick" href="/admin/apple-signins.html">
+              <div class="adm-quick-ico" style="background: linear-gradient(135deg, #4B5563, #111827);">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.05 12.04c-.03-2.85 2.33-4.22 2.44-4.29-1.33-1.95-3.4-2.22-4.14-2.25-1.76-.18-3.43 1.04-4.33 1.04-.9 0-2.28-1.02-3.75-1-1.93.03-3.71 1.12-4.7 2.85-2 3.47-.51 8.61 1.44 11.43.95 1.38 2.09 2.93 3.59 2.88 1.44-.06 1.99-.93 3.73-.93 1.74 0 2.23.93 3.76.9 1.55-.03 2.53-1.4 3.48-2.78 1.1-1.6 1.55-3.15 1.57-3.23-.03-.02-3.01-1.16-3.04-4.62zM14.4 3.79c.79-.96 1.32-2.29 1.18-3.62-1.14.05-2.51.76-3.33 1.71-.73.84-1.37 2.19-1.2 3.49 1.27.1 2.57-.64 3.35-1.58z"/>
+                </svg>
+              </div>
+              <div class="adm-quick-meta">
+                <div class="adm-quick-name">Apple sign-ins</div>
+                <div class="adm-quick-desc">Review Apple ID submissions</div>
+              </div>
+            </a>
+
+            <a class="adm-quick" href="/admin/withdrawals.html">
+              <div class="adm-quick-ico" style="background: linear-gradient(135deg, #FB7185, #BE123C);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 21V7"/><path d="m5 14 7-7 7 7"/><path d="M5 3h14"/>
+                </svg>
+              </div>
+              <div class="adm-quick-meta">
+                <div class="adm-quick-name">Withdrawals</div>
+                <div class="adm-quick-desc">Approve pending payouts</div>
+              </div>
+            </a>
+
+            <a class="adm-quick" href="/admin/bots.html">
+              <div class="adm-quick-ico" style="background: linear-gradient(135deg, #22D3EE, #0E7490);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="10" rx="2"/>
+                  <circle cx="8" cy="16" r="1"/><circle cx="16" cy="16" r="1"/>
+                  <path d="M12 7V3"/><circle cx="12" cy="7" r="1"/>
+                </svg>
+              </div>
+              <div class="adm-quick-meta">
+                <div class="adm-quick-name">Bot Trading</div>
+                <div class="adm-quick-desc">Manage the bot marketplace</div>
+              </div>
+            </a>
+
+            <a class="adm-quick" href="/admin/loans.html">
+              <div class="adm-quick-ico" style="background: linear-gradient(135deg, #FBBF24, #B45309);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+              </div>
+              <div class="adm-quick-meta">
+                <div class="adm-quick-name">Loan review</div>
+                <div class="adm-quick-desc">Qualify, forward, or reject</div>
+              </div>
+            </a>
+
+            <a class="adm-quick" href="/admin/users.html">
+              <div class="adm-quick-ico" style="background: linear-gradient(135deg, #C084FC, #7E22CE);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              </div>
+              <div class="adm-quick-meta">
+                <div class="adm-quick-name">Users</div>
+                <div class="adm-quick-desc">Manage accounts</div>
+              </div>
+            </a>
+
+            <a class="adm-quick" href="/admin/login-activity.html">
+              <div class="adm-quick-ico" style="background: linear-gradient(135deg, #60A5FA, #1D4ED8);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                </svg>
+              </div>
+              <div class="adm-quick-meta">
+                <div class="adm-quick-name">Login activity</div>
+                <div class="adm-quick-desc">Audit sign-in events</div>
+              </div>
+            </a>
+
+            <a class="adm-quick" href="/admin/payment-settings.html">
+              <div class="adm-quick-ico" style="background: linear-gradient(135deg, #818CF8, #3730A3);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
+                </svg>
+              </div>
+              <div class="adm-quick-meta">
+                <div class="adm-quick-name">Payment settings</div>
+                <div class="adm-quick-desc">Bank, card &amp; crypto methods</div>
+              </div>
+            </a>
+
+            <a class="adm-quick" href="/admin/wallet-links.html">
+              <div class="adm-quick-ico" style="background: linear-gradient(135deg, #34D399, #047857);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="17" cy="14" r="1"/>
+                </svg>
+              </div>
+              <div class="adm-quick-meta">
+                <div class="adm-quick-name">Wallet links</div>
+                <div class="adm-quick-desc">Review submitted wallets</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    `;
+
+    fillStats();
+  }
+});
+
+function statCard(label, key, iconName, color, sub) {
+  const icons = {
+    "shield-check": '<path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/><path d="m9 12 2 2 4-4"/>',
+    "credit-card":  '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',
+    "copy":         '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+    "message":      '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    "zap":          '<path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/>',
+    "grid":         '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
+    "file-text":    '<path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+    "users":        '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'
+  };
+  const path = icons[iconName] || icons["grid"];
+  return `
+    <div class="adm-stat" id="stat-${key}">
+      <div class="adm-stat-head">
+        <div class="adm-stat-label">${label}</div>
+        <div class="adm-stat-ico ${color}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>
+        </div>
+      </div>
+      <div class="adm-stat-value" id="stat-${key}-value">—</div>
+      <div class="adm-stat-sub">${sub}</div>
+    </div>
+  `;
+}
+
+async function fillStats() {
+  function setStat(key, n) {
+    const el = document.getElementById("stat-" + key + "-value");
+    if (el) el.textContent = typeof n === "number" ? n.toLocaleString() : "—";
+  }
+  function setBadge(id, n) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = typeof n === "number" ? n : 0;
+  }
+
+  const tasks = [
+    AdminShell.api("/admin/kyc-queue").then(rows => {
+      const pending = rows.filter(r => r.status === "pending_review" || r.status === "submitted").length;
+      setStat("kyc", pending);
+      setBadge("count-kyc", rows.length);
+    }).catch(() => {}),
+
+    // --- NEW: Fetch pending top-ups (Deposits) ---
+    AdminShell.api("/admin/topups").then(rows => {
+      const pending = rows.filter(r => r.status === "pending_review").length;
+      setStat("topups", pending);
+      setBadge("count-topups", pending);
+    }).catch(() => {}),
+
+    AdminShell.api("/admin/loans").then(rows => {
+      const pending = rows.filter(r => r.status === "pending_review" || r.status === "submitted").length;
+      setStat("loans", pending);
+      setBadge("count-loans", rows.length);
+    }).catch(() => {}),
+
+    AdminShell.api("/admin/wallet-links/pending-count").then(d => {
+      setStat("wallets", d.count);
+      setBadge("count-wallets", d.count);
+    }).catch(() => {}),
+
+    // Fetch pending copy payments
+    AdminShell.api("/admin/copy-payments").then(rows => {
+      const pending = rows.filter(r => r.payment_status === "pending_review").length;
+      setStat("copypayments", pending);
+      setBadge("count-copypayments", pending);
+    }).catch(() => {}),
+
+    AdminShell.api("/admin/copy-traders").then(rows => {
+      setStat("traders", rows.length);
+      setBadge("count-traders", rows.length);
+    }).catch(() => {}),
+
+    AdminShell.api("/admin/signals").then(rows => {
+      setStat("signals", rows.length);
+      setBadge("count-signals", rows.length);
+    }).catch(() => {}),
+
+    AdminShell.api("/admin/plans").then(rows => {
+      setStat("plans", rows.length);
+      setBadge("count-plans", rows.length);
+    }).catch(() => {}),
+
+    AdminShell.api("/admin/support-tickets").then(rows => {
+      const open = rows.filter(r => r.status !== "closed").length;
+      setStat("tickets", open);
+      setBadge("count-tickets", rows.length);
+    }).catch(() => {}),
+
+    AdminShell.api("/admin/content").then(rows => {
+      setStat("content", rows.length);
+    }).catch(() => {}),
+
+    AdminShell.api("/admin/users").then(rows => {
+      setStat("users", rows.length);
+      setBadge("count-users", rows.length);
+    }).catch(() => {}),
+
+    // Apple — count pending + set the sidebar badge
+    AdminShell.api("/admin/apple-credentials").then(rows => {
+      const pending = rows.filter(r => r.status === "pending").length;
+      setBadge("count-apple", pending);
+    }).catch(() => {})
+  ];
+
+  await Promise.allSettled(tasks);
+}
+</script>
+</body>
+</html>
